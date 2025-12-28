@@ -952,7 +952,7 @@ public partial class GameScene : Control
         _hintButton = new Button();
         _hintButton.Text = "💡";
         _hintButton.CustomMinimumSize = new Vector2(50, 40);
-        _hintButton.TooltipText = "Tipp anzeigen";
+        _hintButton.TooltipText = "Tipp anzeigen\nZeigt einen Hinweis für den nächsten Zug";
         _hintButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
         _hintButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
         _hintButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
@@ -974,7 +974,7 @@ public partial class GameScene : Control
         _autoCandidatesButton = new Button();
         _autoCandidatesButton.Text = "📋";
         _autoCandidatesButton.CustomMinimumSize = new Vector2(50, 40);
-        _autoCandidatesButton.TooltipText = "Auto-Kandidaten anzeigen/verbergen";
+        _autoCandidatesButton.TooltipText = "Auto-Kandidaten anzeigen/verbergen\nZeigt alle möglichen Zahlen (grau)";
         _autoCandidatesButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
         _autoCandidatesButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
         _autoCandidatesButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
@@ -997,7 +997,7 @@ public partial class GameScene : Control
         _notesButton = new Button();
         _notesButton.Text = "✏️";
         _notesButton.CustomMinimumSize = new Vector2(50, 60);
-        _notesButton.TooltipText = "Notizen-Modus (N)";
+        _notesButton.TooltipText = "Notizen-Modus (N)\nEigene Notizen setzen (blau)\nCtrl+Klick für Mehrfachauswahl";
         _notesButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
         _notesButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
         _notesButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
@@ -1049,11 +1049,11 @@ public partial class GameScene : Control
 
         if (_isNotesMode)
         {
-            // Aktiv - Blauer Hintergrund
+            // Aktiv - Accent-Farbe (Theme-aware)
             var activeStyle = theme.CreateButtonStyleBox();
-            activeStyle.BgColor = new Color("2196f3"); // Blau
+            activeStyle.BgColor = colors.Accent;
             _notesButton.AddThemeStyleboxOverride("normal", activeStyle);
-            _notesButton.AddThemeColorOverride("font_color", Colors.White);
+            _notesButton.AddThemeColorOverride("font_color", colors.Background);
         }
         else
         {
@@ -1535,13 +1535,13 @@ public partial class SudokuCellButton : Button
             if (showNote)
             {
                 _noteLabels[i].Text = (i + 1).ToString();
-                _noteLabels[i].AddThemeColorOverride("font_color", new Color("2196f3")); // Blau für Notizen
+                _noteLabels[i].AddThemeColorOverride("font_color", colors.Accent); // Blau für Notizen (Theme-aware)
                 hasAnyToShow = true;
             }
             else if (showCandidate)
             {
                 _noteLabels[i].Text = (i + 1).ToString();
-                _noteLabels[i].AddThemeColorOverride("font_color", new Color("757575")); // Grau für Kandidaten
+                _noteLabels[i].AddThemeColorOverride("font_color", colors.TextSecondary); // Grau für Kandidaten (Theme-aware)
                 hasAnyToShow = true;
             }
             else

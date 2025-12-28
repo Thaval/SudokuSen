@@ -4,7 +4,7 @@ Ein vollständiges klassisches 9x9 Sudoku-Spiel, entwickelt mit Godot 4.5 und C#
 
 ## 📁 Projektstruktur
 
-```
+```text
 MySudoku/
 ├── project.godot              # Godot-Projektkonfiguration
 ├── MySudoku.csproj           # C# Projektdatei
@@ -57,6 +57,7 @@ MySudoku/
 ## 🎮 Features
 
 ### Hauptmenü
+
 - **Spiel fortsetzen** - Nur sichtbar bei vorhandenem Spielstand
 - **Neues Spiel** - Startet Schwierigkeitsauswahl
 - **Einstellungen** - Theme, Deadly Mode, etc.
@@ -67,12 +68,14 @@ MySudoku/
 - Vollständige Tastaturnavigation
 
 ### Schwierigkeitsauswahl
+
 - **Leicht** - ~46 vorgegebene Zahlen
 - **Mittel** - ~36 vorgegebene Zahlen
 - **Schwer** - ~26 vorgegebene Zahlen
 - Alle Rätsel haben eine **eindeutige Lösung**
 
 ### Spiel-Szene
+
 - 9x9 Grid mit klaren 3x3-Block-Trennungen
 - Vorgegebene Zahlen (Givens) sind nicht editierbar
 - **Eingabe:**
@@ -92,6 +95,7 @@ MySudoku/
 - **Timer** - Zeigt verstrichene Zeit
 
 ### Einstellungen
+
 - Theme-Auswahl (Hell/Dunkel)
 - Deadly Mode Toggle
 - Vollständige Zahlen ausblenden/ausgrauen
@@ -99,6 +103,7 @@ MySudoku/
 - Persistent gespeichert in `user://settings.json`
 
 ### Verlauf
+
 - Liste aller Spiele mit:
   - Datum/Uhrzeit
   - Schwierigkeit
@@ -108,6 +113,7 @@ MySudoku/
 - Farbige Status-Indikatoren
 
 ### Statistik
+
 - Spiele gesamt
 - Wins/Losses
 - Gewinnrate mit Fortschrittsbalken
@@ -116,6 +122,7 @@ MySudoku/
 - Durchschnittliche Fehler pro Schwierigkeit
 
 ### Tipps & Tricks
+
 - 12 Sudoku-Techniken
 - Carousel-Navigation (Zurück/Weiter)
 - Tastatursteuerung (Links/Rechts)
@@ -123,22 +130,26 @@ MySudoku/
 ## 🔧 Technische Details
 
 ### Architektur
+
 - **Models:** Reine Datenklassen (SudokuCell, SudokuGameState, etc.)
 - **Logic:** Spiellogik ohne Godot-Abhängigkeiten (Generator, Solver)
 - **Services:** Autoload-Singletons für globalen Zustand
 - **UI:** Control-basierte Scene-Controller
 
 ### Sudoku-Generator
+
 1. Erstellt vollständiges, gültiges 9x9 Grid (Backtracking)
 2. Entfernt Zahlen basierend auf Schwierigkeit
 3. Prüft Eindeutigkeit per Solver (CountSolutions ≤ 1)
 
 ### Persistenz
+
 - `user://settings.json` - Einstellungen
 - `user://savegame.json` - Aktuelles Spiel
 - `user://history.json` - Spielverlauf
 
 ### Theme-System
+
 - Programmatisches UI-Styling
 - Hell/Dunkel Theme
 - StyleBoxFlat für alle UI-Elemente
@@ -147,49 +158,59 @@ MySudoku/
 ## 🚀 Setup in Godot
 
 ### 1. Projekt öffnen
+
 Öffne das Projekt in Godot 4.5.
 
 ### 2. C# Build
+
 Build das C#-Projekt:
-```
+
+```bash
 dotnet build
 ```
+
 Oder in Godot: Projekt → C# Lösung erstellen
 
 ### 3. Autoloads prüfen
+
 Die Autoloads sollten bereits konfiguriert sein:
+
 - `SaveService` → `res://Scripts/Services/SaveService.cs`
 - `AppState` → `res://Scripts/Services/AppState.cs`
 - `ThemeService` → `res://Scripts/Services/ThemeService.cs`
 
 ### 4. Main Scene
+
 Main Scene ist gesetzt auf: `res://Scenes/Main.tscn`
 
 ### 5. Starten
+
 F5 oder Play-Button drücken.
 
 ## 🎮 Steuerung
 
-| Aktion | Eingabe |
-|--------|---------|
-| Zelle auswählen | Mausklick |
-| Zahl setzen | 1-9 (Tastatur oder Numpad) |
-| Zahl löschen | Entf, Backspace, oder Radiergummi |
-| Zurück | ESC |
-| Navigation | Pfeiltasten, Tab |
-| Bestätigen | Enter, Space |
+| Aktion           | Eingabe                            |
+| ---------------- | ---------------------------------- |
+| Zelle auswählen  | Mausklick                          |
+| Zahl setzen      | 1-9 (Tastatur oder Numpad)         |
+| Zahl löschen     | Entf, Backspace, oder Radiergummi  |
+| Zurück           | ESC                                |
+| Navigation       | Pfeiltasten, Tab                   |
+| Bestätigen       | Enter, Space                       |
 
 ## 📝 Node-Hierarchien
 
 ### Main.tscn
-```
+
+```text
 Main (Control)
 ├── Background (ColorRect)
 └── SceneContainer (Control)
 ```
 
 ### MainMenu.tscn
-```
+
+```text
 MainMenu (Control)
 └── CenterContainer
     └── Panel (PanelContainer)
@@ -210,7 +231,8 @@ MainMenu (Control)
 ```
 
 ### GameScene.tscn
-```
+
+```text
 GameScene (Control)
 ├── VBoxContainer
 │   ├── Header (HBoxContainer)
