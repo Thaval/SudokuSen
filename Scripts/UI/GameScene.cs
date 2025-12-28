@@ -78,6 +78,7 @@ public partial class GameScene : Control
 
         // Events
         _backButton.Pressed += OnBackPressed;
+        _backButton.TooltipText = "Zurück zum Hauptmenü (ESC)\nSpiel wird automatisch gespeichert";
 
         // Grid erstellen
         CreateGrid();
@@ -246,6 +247,7 @@ public partial class GameScene : Control
         _highlightedNumber = cell.Value != 0 ? cell.Value : 0;
 
         UpdateGrid();
+        UpdateNumberCounts(); // Highlight im Numpad aktualisieren
     }
 
     private bool HasSelection()
@@ -313,6 +315,7 @@ public partial class GameScene : Control
             var button = new Button();
             button.Text = i.ToString();
             button.CustomMinimumSize = new Vector2(50, 60);
+            button.TooltipText = $"Zahl {i} setzen (Taste {i})";
             int num = i; // Capture für Lambda
             button.Pressed += () => OnNumberPadPressed(num);
             _numberButtons[i] = button;
@@ -323,6 +326,7 @@ public partial class GameScene : Control
         var eraserButton = new Button();
         eraserButton.Text = "⌫";
         eraserButton.CustomMinimumSize = new Vector2(50, 60);
+        eraserButton.TooltipText = "Zahl löschen (Entf/Backspace)";
         eraserButton.Pressed += () => OnNumberPadPressed(0);
         _numberButtons[0] = eraserButton;
         _numberPad.AddChild(eraserButton);
@@ -524,12 +528,15 @@ public partial class GameScene : Control
         if (_gameState == null) return;
 
         var saveService = GetNode<SaveService>("/root/SaveService");
+        var theme = GetNode<ThemeService>("/root/ThemeService");
+        var colors = theme.CurrentColors;
         bool hideCompleted = saveService.Settings.HideCompletedNumbers;
 
         for (int i = 1; i <= 9; i++)
         {
             int count = _gameState.CountNumber(i);
             bool isComplete = count >= 9;
+            bool isHighlighted = i == _highlightedNumber;
 
             if (isComplete)
             {
@@ -547,6 +554,20 @@ public partial class GameScene : Control
             {
                 _numberButtons[i].Visible = true;
                 _numberButtons[i].Disabled = false;
+            }
+
+            // Highlight aktive Zahl im Numpad
+            if (isHighlighted && !isComplete)
+            {
+                var highlightStyle = theme.CreateButtonStyleBox();
+                highlightStyle.BgColor = colors.CellBackgroundHighlighted;
+                _numberButtons[i].AddThemeStyleboxOverride("normal", highlightStyle);
+                _numberButtons[i].AddThemeColorOverride("font_color", colors.TextPrimary);
+            }
+            else if (!isComplete)
+            {
+                _numberButtons[i].AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+                _numberButtons[i].AddThemeColorOverride("font_color", colors.TextPrimary);
             }
         }
     }
@@ -619,6 +640,7 @@ public partial class GameScene : Control
         }
 
         UpdateGrid();
+        UpdateNumberCounts(); // Highlight im Numpad aktualisieren
     }
 
     private void OnCellHovered(int row, int col)
@@ -761,15 +783,15 @@ public partial class GameScene : Control
 
     private void ShowWinOverlay()
     {
-        var overlay = CreateOverlay("Gratulation!",
-            $"Du hast das Sudoku gelöst!\n\nZeit: {_timerLabel.Text}\nFehler: {_gameState?.Mistakes ?? 0}",
+        var overlay = CreateOverlay("🎉 Gratulation!",
+            $"Du hast das Sudoku gelöst!\n\n⏱️ Zeit: {_timerLabel.Text}\n❌ Fehler: {_gameState?.Mistakes ?? 0}",
             new Color("4caf50"));
         _overlayContainer.AddChild(overlay);
     }
 
     private void ShowGameOverOverlay()
     {
-        var overlay = CreateOverlay("Game Over",
+        var overlay = CreateOverlay("💀 Game Over",
             "Du hast 3 Fehler gemacht.\nDas Spiel ist beendet.",
             new Color("f44336"));
         _overlayContainer.AddChild(overlay);

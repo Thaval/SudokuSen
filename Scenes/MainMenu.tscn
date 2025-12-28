@@ -58,37 +58,37 @@ theme_override_constants/separation = 12
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-text = "Spiel fortsetzen"
+text = "▶️ Spiel fortsetzen"
 
 [node name="StartButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-text = "Neues Spiel"
+text = "🆕 Neues Spiel"
 
 [node name="SettingsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-text = "Einstellungen"
+text = "⚙️ Einstellungen"
 
 [node name="HistoryButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-text = "Verlauf"
+text = "📜 Verlauf"
 
 [node name="StatsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-text = "Statistik"
+text = "📊 Statistik"
 
 [node name="TipsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-text = "Tipps & Tricks"
+text = "💡 Tipps & Tricks"
 
 [node name="HSeparator2" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 layout_mode = 2
@@ -97,4 +97,4 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-text = "Beenden"
+text = "🚪 Beenden"

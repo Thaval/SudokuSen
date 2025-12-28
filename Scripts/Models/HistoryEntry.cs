@@ -60,10 +60,10 @@ public class HistoryEntry
     {
         return Status switch
         {
-            GameStatus.Won => "Gewonnen",
-            GameStatus.Lost => "Verloren",
-            GameStatus.Abandoned => "Abgebrochen",
-            GameStatus.InProgress => "Läuft",
+            GameStatus.Won => "✓ Gewonnen",
+            GameStatus.Lost => "✗ Verloren",
+            GameStatus.Abandoned => "⏸ Abgebrochen",
+            GameStatus.InProgress => "▶ Läuft",
             _ => "Unbekannt"
         };
     }
@@ -72,9 +72,9 @@ public class HistoryEntry
     {
         return Difficulty switch
         {
-            Difficulty.Easy => "Leicht",
-            Difficulty.Medium => "Mittel",
-            Difficulty.Hard => "Schwer",
+            Difficulty.Easy => "🟢 Leicht",
+            Difficulty.Medium => "🟡 Mittel",
+            Difficulty.Hard => "🔴 Schwer",
             _ => "Unbekannt"
         };
     }
