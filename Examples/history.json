@@ -1,0 +1,32 @@
+[
+  {
+    "Id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "StartTime": "2025-12-27T15:30:00",
+    "EndTime": "2025-12-27T15:45:30",
+    "Difficulty": 0,
+    "DurationSeconds": 930.5,
+    "Mistakes": 2,
+    "Status": 1,
+    "WasDeadlyMode": false
+  },
+  {
+    "Id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+    "StartTime": "2025-12-26T20:00:00",
+    "EndTime": "2025-12-26T20:25:15",
+    "Difficulty": 1,
+    "DurationSeconds": 1515.0,
+    "Mistakes": 3,
+    "Status": 2,
+    "WasDeadlyMode": true
+  },
+  {
+    "Id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+    "StartTime": "2025-12-25T18:00:00",
+    "EndTime": "2025-12-25T18:55:00",
+    "Difficulty": 2,
+    "DurationSeconds": 3300.0,
+    "Mistakes": 0,
+    "Status": 1,
+    "WasDeadlyMode": false
+  }
+]

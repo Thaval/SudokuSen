@@ -1,0 +1,14 @@
+{
+  "Cells": [
+    {"Row": 0, "Col": 0, "Value": 5, "IsGiven": true, "Solution": 5},
+    {"Row": 0, "Col": 1, "Value": 3, "IsGiven": true, "Solution": 3},
+    {"Row": 0, "Col": 2, "Value": 0, "IsGiven": false, "Solution": 4},
+    {"Row": 0, "Col": 3, "Value": 0, "IsGiven": false, "Solution": 6}
+  ],
+  "Difficulty": 1,
+  "StartTime": "2025-12-28T10:00:00",
+  "ElapsedSeconds": 125.5,
+  "Mistakes": 1,
+  "IsDeadlyMode": false,
+  "Status": 0
+}

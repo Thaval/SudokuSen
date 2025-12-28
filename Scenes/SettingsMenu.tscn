@@ -1,0 +1,101 @@
+[gd_scene load_steps=2 format=3 uid="uid://settings_scene"]
+
+[ext_resource type="Script" path="res://Scripts/UI/SettingsMenu.cs" id="1_settings"]
+
+[node name="SettingsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Einstellungen"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SettingsContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ThemeRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="ThemeLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ThemeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Theme"
+
+[node name="ThemeOption" type="OptionButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ThemeRow"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+
+[node name="DeadlyRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="DeadlyLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/DeadlyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Deadly Modus (3 Fehler = Game Over)"
+
+[node name="DeadlyCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/DeadlyRow"]
+layout_mode = 2
+
+[node name="HideRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="HideLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/HideRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Vollständige Zahlen ausblenden"
+
+[node name="HideCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/HideRow"]
+layout_mode = 2
+
+[node name="HighlightRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="HighlightLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/HighlightRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Zeile/Spalte/Block highlighten"
+
+[node name="HighlightCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/HighlightRow"]
+layout_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Zurück"

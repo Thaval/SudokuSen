@@ -1,0 +1,108 @@
+[gd_scene load_steps=2 format=3 uid="uid://game_scene"]
+
+[ext_resource type="Script" path="res://Scripts/UI/GameScene.cs" id="1_game"]
+
+[node name="GameScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_game")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="Button" parent="VBoxContainer/Header"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+text = "← Menü"
+
+[node name="Spacer" type="Control" parent="VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DifficultyLabel" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+text = "Schwierigkeit: Mittel"
+
+[node name="Spacer2" type="Control" parent="VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TimerLabel" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "00:00"
+
+[node name="Spacer3" type="Control" parent="VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MistakesLabel" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+text = "Fehler: 0"
+
+[node name="GridCenterContainer" type="CenterContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GridWrapper" type="VBoxContainer" parent="VBoxContainer/GridCenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ColLabelsContainer" type="HBoxContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ColLabelsSpacer" type="Control" parent="VBoxContainer/GridCenterContainer/GridWrapper/ColLabelsContainer"]
+custom_minimum_size = Vector2(24, 20)
+layout_mode = 2
+
+[node name="ColLabels" type="HBoxContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper/ColLabelsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="GridRowContainer" type="HBoxContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="RowLabels" type="VBoxContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer"]
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="GridPanel" type="PanelContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer"]
+custom_minimum_size = Vector2(450, 450)
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer/GridPanel"]
+layout_mode = 2
+columns = 9
+
+[node name="NumberPadContainer" type="CenterContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="NumberPad" type="HBoxContainer" parent="VBoxContainer/NumberPadContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OverlayContainer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
