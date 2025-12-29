@@ -5,6 +5,10 @@ namespace MySudoku.Models;
 /// </summary>
 public class SettingsData
 {
+    // Storage Configuration (at top - most important)
+    /// <summary>Custom storage path for save data. Empty = default (user://)</summary>
+    public string CustomStoragePath { get; set; } = "";
+
     /// <summary>Aktuelles Theme (0 = Hell, 1 = Dunkel)</summary>
     public int ThemeIndex { get; set; } = 0;
 
@@ -215,6 +219,7 @@ public class SettingsData
     {
         return new SettingsData
         {
+            CustomStoragePath = CustomStoragePath,
             ThemeIndex = ThemeIndex,
             DeadlyModeEnabled = DeadlyModeEnabled,
             HideCompletedNumbers = HideCompletedNumbers,

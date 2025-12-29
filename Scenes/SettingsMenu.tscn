@@ -45,7 +45,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(500, 620)
+custom_minimum_size = Vector2(560, 650)
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -53,7 +53,7 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
-custom_minimum_size = Vector2(0, 620)
+custom_minimum_size = Vector2(0, 650)
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel/ScrollContainer"]
 layout_mode = 2
@@ -68,10 +68,54 @@ theme_override_constants/separation = 20
 
 [node name="SettingsContainer" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StorageTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "📁 Speicherort"
+
+[node name="StoragePathRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StoragePathLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/StoragePathRow"]
+layout_mode = 2
+size_flags_horizontal = 0
+custom_minimum_size = Vector2(100, 0)
+text = "Pfad"
+
+[node name="StoragePathEdit" type="LineEdit" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/StoragePathRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(280, 32)
+placeholder_text = "Standard (user://)"
+
+[node name="StoragePathBrowse" type="Button" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/StoragePathRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(36, 32)
+text = "..."
+tooltip_text = "Ordner auswählen"
+
+[node name="StoragePathInfo" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "Aktueller Speicherort wird unten angezeigt"
+autowrap_mode = 2
+
+[node name="StorageSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
 theme_override_constants/separation = 16
+
+[node name="AppearanceTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "🎨 Darstellung"
 
 [node name="ThemeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
 [node name="ThemeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ThemeRow"]
 layout_mode = 2
@@ -153,16 +197,20 @@ text = "100%"
 
 [node name="UiScaleSlider" type="HSlider" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(150, 24)
 min_value = 75.0
 max_value = 150.0
 step = 5.0
 value = 100.0
 
+[node name="NotesAssistSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
 [node name="NotesAssistTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Notiz-Assistent"
+text = "✏️ Notiz-Assistent"
 
 [node name="SmartCleanupRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
@@ -186,10 +234,14 @@ text = "Auto-Notizen Button im Spiel"
 [node name="HouseAutoFillCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HouseAutoFillRow"]
 layout_mode = 2
 
+[node name="ChallengeSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
 [node name="ChallengeTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Challenge Modes (für neue Spiele)"
+text = "🏆 Challenge Modes (für neue Spiele)"
 
 [node name="ChallengeNoNotesRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
@@ -237,10 +289,14 @@ text = "Time Attack"
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 
+[node name="TechniquesSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
 [node name="TechniquesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Techniken pro Schwierigkeit"
+text = "🧠 Techniken pro Schwierigkeit"
 
 [node name="TechniquesDescription" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2

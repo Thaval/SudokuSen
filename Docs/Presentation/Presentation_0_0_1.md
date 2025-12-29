@@ -354,7 +354,7 @@ The Tips & Tricks menu teaches you essential solving techniques:
 
 ![Tips Menu](screenshots/0.0.1/TipsMenu.png)
 
-*Browse 16 strategy tips – from basic techniques to advanced patterns like X-Wing and Swordfish.*
+*Browse 26 comprehensive tips – from basic techniques to advanced patterns like X-Wing and Swordfish.*
 
 **Beginner techniques (Easy):**
 

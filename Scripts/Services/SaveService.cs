@@ -7,9 +7,12 @@ namespace MySudoku.Services;
 /// </summary>
 public partial class SaveService : Node
 {
+    // Settings are always stored in user:// (to bootstrap custom path)
     private const string SETTINGS_PATH = "user://settings.json";
-    private const string SAVEGAME_PATH = "user://savegame.json";
-    private const string HISTORY_PATH = "user://history.json";
+    
+    // These paths can be overridden via CustomStoragePath
+    private const string DEFAULT_SAVEGAME_FILE = "savegame.json";
+    private const string DEFAULT_HISTORY_FILE = "history.json";
 
     public SettingsData Settings { get; private set; } = new();
     public SudokuGameState? CurrentGame { get; private set; }
@@ -20,6 +23,44 @@ public partial class SaveService : Node
         WriteIndented = true
     };
 
+    /// <summary>
+    /// Gets the effective storage path for save data (user:// or custom path)
+    /// </summary>
+    public string GetStorageBasePath()
+    {
+        if (string.IsNullOrWhiteSpace(Settings.CustomStoragePath))
+            return "user://";
+        
+        // Ensure path ends with separator
+        string path = Settings.CustomStoragePath.Replace('\\', '/');
+        if (!path.EndsWith('/'))
+            path += '/';
+        return path;
+    }
+
+    /// <summary>
+    /// Gets the full path for savegame file
+    /// </summary>
+    public string GetSavegamePath() => GetStorageBasePath() + DEFAULT_SAVEGAME_FILE;
+
+    /// <summary>
+    /// Gets the full path for history file
+    /// </summary>
+    public string GetHistoryPath() => GetStorageBasePath() + DEFAULT_HISTORY_FILE;
+
+    /// <summary>
+    /// Gets the resolved absolute path of the current storage directory
+    /// </summary>
+    public string GetResolvedStoragePath()
+    {
+        string basePath = GetStorageBasePath();
+        if (basePath.StartsWith("user://"))
+        {
+            return ProjectSettings.GlobalizePath(basePath);
+        }
+        return basePath.TrimEnd('/');
+    }
+
     public override void _Ready()
     {
         LoadAll();
@@ -28,8 +69,28 @@ public partial class SaveService : Node
     public void LoadAll()
     {
         LoadSettings();
+        EnsureStorageDirectory();
         LoadSaveGame();
         LoadHistory();
+    }
+
+    /// <summary>
+    /// Ensures the custom storage directory exists
+    /// </summary>
+    private void EnsureStorageDirectory()
+    {
+        if (string.IsNullOrWhiteSpace(Settings.CustomStoragePath))
+            return;
+
+        string path = Settings.CustomStoragePath.Replace('\\', '/');
+        if (!DirAccess.DirExistsAbsolute(path))
+        {
+            var err = DirAccess.MakeDirRecursiveAbsolute(path);
+            if (err != Error.Ok)
+            {
+                GD.PrintErr($"Konnte Speicherpfad nicht erstellen: {path} - {err}");
+            }
+        }
     }
 
     #region Settings
@@ -75,11 +136,12 @@ public partial class SaveService : Node
 
     public void LoadSaveGame()
     {
-        if (FileAccess.FileExists(SAVEGAME_PATH))
+        string savePath = GetSavegamePath();
+        if (FileAccess.FileExists(savePath))
         {
             try
             {
-                using var file = FileAccess.Open(SAVEGAME_PATH, FileAccess.ModeFlags.Read);
+                using var file = FileAccess.Open(savePath, FileAccess.ModeFlags.Read);
                 string json = file.GetAsText();
                 var saveData = JsonSerializer.Deserialize<SaveGameData>(json);
                 if (saveData != null)
@@ -98,9 +160,11 @@ public partial class SaveService : Node
     public void SaveCurrentGame(SudokuGameState gameState)
     {
         CurrentGame = gameState;
+        EnsureStorageDirectory();
         try
         {
-            using var file = FileAccess.Open(SAVEGAME_PATH, FileAccess.ModeFlags.Write);
+            string savePath = GetSavegamePath();
+            using var file = FileAccess.Open(savePath, FileAccess.ModeFlags.Write);
             var saveData = SaveGameData.FromGameState(gameState);
             string json = JsonSerializer.Serialize(saveData, _jsonOptions);
             file.StoreString(json);
@@ -114,9 +178,10 @@ public partial class SaveService : Node
     public void DeleteSaveGame()
     {
         CurrentGame = null;
-        if (FileAccess.FileExists(SAVEGAME_PATH))
+        string savePath = GetSavegamePath();
+        if (FileAccess.FileExists(savePath))
         {
-            DirAccess.RemoveAbsolute(SAVEGAME_PATH);
+            DirAccess.RemoveAbsolute(savePath);
         }
     }
 
@@ -126,11 +191,12 @@ public partial class SaveService : Node
 
     public void LoadHistory()
     {
-        if (FileAccess.FileExists(HISTORY_PATH))
+        string historyPath = GetHistoryPath();
+        if (FileAccess.FileExists(historyPath))
         {
             try
             {
-                using var file = FileAccess.Open(HISTORY_PATH, FileAccess.ModeFlags.Read);
+                using var file = FileAccess.Open(historyPath, FileAccess.ModeFlags.Read);
                 string json = file.GetAsText();
                 History = JsonSerializer.Deserialize<List<HistoryEntry>>(json) ?? new();
             }
@@ -150,9 +216,11 @@ public partial class SaveService : Node
 
     public void SaveHistory()
     {
+        EnsureStorageDirectory();
         try
         {
-            using var file = FileAccess.Open(HISTORY_PATH, FileAccess.ModeFlags.Write);
+            string historyPath = GetHistoryPath();
+            using var file = FileAccess.Open(historyPath, FileAccess.ModeFlags.Write);
             string json = JsonSerializer.Serialize(History, _jsonOptions);
             file.StoreString(json);
         }

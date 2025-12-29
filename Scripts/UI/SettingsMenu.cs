@@ -7,6 +7,13 @@ public partial class SettingsMenu : Control
 {
     private PanelContainer _panel = null!;
     private Label _title = null!;
+    
+    // Storage path
+    private LineEdit _storagePathEdit = null!;
+    private Button _storagePathBrowse = null!;
+    private Label _storagePathInfo = null!;
+    private FileDialog? _fileDialog;
+    
     private OptionButton _themeOption = null!;
     private CheckButton _deadlyCheck = null!;
     private CheckButton _hideCheck = null!;
@@ -38,6 +45,12 @@ public partial class SettingsMenu : Control
         _title = GetNode<Label>("Title");
 
         var settingsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer");
+        
+        // Storage path controls
+        _storagePathEdit = settingsContainer.GetNode<LineEdit>("StoragePathRow/StoragePathEdit");
+        _storagePathBrowse = settingsContainer.GetNode<Button>("StoragePathRow/StoragePathBrowse");
+        _storagePathInfo = settingsContainer.GetNode<Label>("StoragePathInfo");
+        
         _themeOption = settingsContainer.GetNode<OptionButton>("ThemeRow/ThemeOption");
         _deadlyCheck = settingsContainer.GetNode<CheckButton>("DeadlyRow/DeadlyCheck");
         _hideCheck = settingsContainer.GetNode<CheckButton>("HideRow/HideCheck");
@@ -81,7 +94,12 @@ public partial class SettingsMenu : Control
         // Werte laden
         LoadSettings();
 
-        // Events
+        // Events - Storage path
+        _storagePathEdit.TextSubmitted += OnStoragePathSubmitted;
+        _storagePathEdit.FocusExited += OnStoragePathFocusExited;
+        _storagePathBrowse.Pressed += OnStoragePathBrowsePressed;
+        
+        // Events - Theme & Display
         _themeOption.ItemSelected += OnThemeSelected;
         _deadlyCheck.Toggled += OnDeadlyToggled;
         _hideCheck.Toggled += OnHideToggled;
@@ -260,6 +278,10 @@ public partial class SettingsMenu : Control
         var saveService = GetNode<SaveService>("/root/SaveService");
         var settings = saveService.Settings;
 
+        // Storage path
+        _storagePathEdit.Text = settings.CustomStoragePath;
+        UpdateStoragePathInfo();
+
         _themeOption.Selected = settings.ThemeIndex;
         _deadlyCheck.ButtonPressed = settings.DeadlyModeEnabled;
         _hideCheck.ButtonPressed = settings.HideCompletedNumbers;
@@ -282,6 +304,13 @@ public partial class SettingsMenu : Control
 
         // Technik-Checkboxen laden
         LoadTechniqueSettings();
+    }
+
+    private void UpdateStoragePathInfo()
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        string resolvedPath = saveService.GetResolvedStoragePath();
+        _storagePathInfo.Text = $"📂 {resolvedPath}";
     }
 
     private void LoadTechniqueSettings()
@@ -332,6 +361,85 @@ public partial class SettingsMenu : Control
         SaveSettings();
         LoadTechniqueSettings();
     }
+
+    #region Storage Path
+
+    private void OnStoragePathSubmitted(string newText)
+    {
+        ApplyStoragePath(newText);
+    }
+
+    private void OnStoragePathFocusExited()
+    {
+        ApplyStoragePath(_storagePathEdit.Text);
+    }
+
+    private void ApplyStoragePath(string path)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        string cleanPath = path.Trim();
+        
+        // Validate path if not empty
+        if (!string.IsNullOrEmpty(cleanPath))
+        {
+            // Normalize path separators
+            cleanPath = cleanPath.Replace('\\', '/');
+            
+            // Check if path is valid and accessible
+            if (!DirAccess.DirExistsAbsolute(cleanPath))
+            {
+                var err = DirAccess.MakeDirRecursiveAbsolute(cleanPath);
+                if (err != Error.Ok)
+                {
+                    // Show error - path is invalid
+                    _storagePathInfo.Text = "❌ Ungültiger Pfad - konnte nicht erstellt werden";
+                    _storagePathEdit.Text = saveService.Settings.CustomStoragePath;
+                    return;
+                }
+            }
+        }
+
+        saveService.Settings.CustomStoragePath = cleanPath;
+        SaveSettings();
+        
+        // Reload data from new location
+        saveService.LoadAll();
+        UpdateStoragePathInfo();
+    }
+
+    private void OnStoragePathBrowsePressed()
+    {
+        if (_fileDialog == null)
+        {
+            _fileDialog = new FileDialog
+            {
+                FileMode = FileDialog.FileModeEnum.OpenDir,
+                Access = FileDialog.AccessEnum.Filesystem,
+                Title = "Speicherort auswählen",
+                Size = new Vector2I(600, 400)
+            };
+            _fileDialog.DirSelected += OnStoragePathSelected;
+            AddChild(_fileDialog);
+        }
+
+        // Set initial directory
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        string currentPath = saveService.GetResolvedStoragePath();
+        if (DirAccess.DirExistsAbsolute(currentPath))
+        {
+            _fileDialog.CurrentDir = currentPath;
+        }
+
+        _fileDialog.PopupCentered();
+    }
+
+    private void OnStoragePathSelected(string dir)
+    {
+        _storagePathEdit.Text = dir;
+        ApplyStoragePath(dir);
+    }
+
+    #endregion
 
     private void OnThemeSelected(long index)
     {
