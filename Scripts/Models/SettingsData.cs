@@ -32,6 +32,13 @@ public class SettingsData
     /// <summary>UI-Skalierung in Prozent (z.B. 100 = normal)</summary>
     public int UiScalePercent { get; set; } = 100;
 
+    // Notes assistant
+    /// <summary>Nach dem Setzen einer Zahl: entferne diese Zahl automatisch aus Notizen in Zeile/Spalte/Block</summary>
+    public bool SmartNoteCleanupEnabled { get; set; } = true;
+
+    /// <summary>Zeigt im Spiel einen Button zum Auto-Füllen von Notizen für die gewählte House-Auswahl (Zeile/Spalte/Block)</summary>
+    public bool HouseAutoFillEnabled { get; set; } = true;
+
     // Daily Sudoku
     public List<string> DailyCompletedDates { get; set; } = new(); // yyyy-MM-dd
     public string? DailyLastCompletedDate { get; set; }
@@ -90,7 +97,17 @@ public class SettingsData
         DailyCompletedDates.Add(date);
         DailyLastPlayedDate = date;
 
-        string yesterday = DateTime.Parse(date).AddDays(-1).ToString("yyyy-MM-dd");
+        if (!DateTime.TryParseExact(date, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out var completedDate))
+        {
+            // Fallback: still record completion without streak logic
+            DailyLastCompletedDate = date;
+            DailyStreakCurrent = Math.Max(1, DailyStreakCurrent);
+            if (DailyStreakCurrent > DailyStreakBest) DailyStreakBest = DailyStreakCurrent;
+            return;
+        }
+
+        string yesterday = completedDate.AddDays(-1).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
         if (!string.IsNullOrWhiteSpace(DailyLastCompletedDate) && DailyLastCompletedDate == yesterday)
         {
             DailyStreakCurrent++;
@@ -151,6 +168,8 @@ public class SettingsData
             LearnModeEnabled = LearnModeEnabled,
             ColorblindPaletteEnabled = ColorblindPaletteEnabled,
             UiScalePercent = UiScalePercent,
+            SmartNoteCleanupEnabled = SmartNoteCleanupEnabled,
+            HouseAutoFillEnabled = HouseAutoFillEnabled,
             DailyCompletedDates = new List<string>(DailyCompletedDates),
             DailyLastCompletedDate = DailyLastCompletedDate,
             DailyLastPlayedDate = DailyLastPlayedDate,

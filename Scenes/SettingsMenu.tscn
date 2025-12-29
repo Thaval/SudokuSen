@@ -45,106 +45,113 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(500, 0)
+custom_minimum_size = Vector2(500, 620)
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+custom_minimum_size = Vector2(0, 620)
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel/ScrollContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 32
 theme_override_constants/margin_top = 32
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="SettingsContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="SettingsContainer" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="ThemeRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="ThemeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="ThemeLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ThemeRow"]
+[node name="ThemeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ThemeRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Theme"
 
-[node name="ThemeOption" type="OptionButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ThemeRow"]
+[node name="ThemeOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ThemeRow"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 
-[node name="DeadlyRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="DeadlyRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="DeadlyLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/DeadlyRow"]
+[node name="DeadlyLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/DeadlyRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Deadly Modus (3 Fehler = Game Over)"
 
-[node name="DeadlyCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/DeadlyRow"]
+[node name="DeadlyCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/DeadlyRow"]
 layout_mode = 2
 
-[node name="HideRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="HideRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="HideLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/HideRow"]
+[node name="HideLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HideRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Vollständige Zahlen ausblenden"
 
-[node name="HideCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/HideRow"]
+[node name="HideCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HideRow"]
 layout_mode = 2
 
-[node name="HighlightRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="HighlightRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="HighlightLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/HighlightRow"]
+[node name="HighlightLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HighlightRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Zeile/Spalte/Block highlighten"
 
-[node name="HighlightCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/HighlightRow"]
+[node name="HighlightCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HighlightRow"]
 layout_mode = 2
 
-[node name="LearnRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="LearnRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="LearnLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/LearnRow"]
+[node name="LearnLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/LearnRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Lernmodus (Erklärung bei Fehlern)"
 
-[node name="LearnCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/LearnRow"]
+[node name="LearnCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/LearnRow"]
 layout_mode = 2
 
-[node name="ColorblindRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="ColorblindRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="ColorblindLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ColorblindRow"]
+[node name="ColorblindLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ColorblindRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Farbblind-Palette"
 
-[node name="ColorblindCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ColorblindRow"]
+[node name="ColorblindCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ColorblindRow"]
 layout_mode = 2
 
-[node name="UiScaleRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="UiScaleRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="UiScaleLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
+[node name="UiScaleLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "UI Größe"
 
-[node name="UiScaleValue" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
+[node name="UiScaleValue" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(48, 0)
 horizontal_alignment = 2
 text = "100%"
 
-[node name="UiScaleSlider" type="HSlider" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
+[node name="UiScaleSlider" type="HSlider" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(200, 0)
 min_value = 75.0
@@ -152,53 +159,80 @@ max_value = 150.0
 step = 5.0
 value = 100.0
 
-[node name="ChallengeTitle" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="NotesAssistTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Notiz-Assistent"
+
+[node name="SmartCleanupRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="SmartCleanupLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SmartCleanupRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Notizen bereinigen (nach Zahl setzen)"
+
+[node name="SmartCleanupCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SmartCleanupRow"]
+layout_mode = 2
+
+[node name="HouseAutoFillRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="HouseAutoFillLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HouseAutoFillRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Auto-Notizen Button im Spiel"
+
+[node name="HouseAutoFillCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HouseAutoFillRow"]
+layout_mode = 2
+
+[node name="ChallengeTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Challenge Modes (für neue Spiele)"
 
-[node name="ChallengeNoNotesRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="ChallengeNoNotesRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="ChallengeNoNotesLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ChallengeNoNotesRow"]
+[node name="ChallengeNoNotesLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeNoNotesRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Keine Notizen"
 
-[node name="ChallengeNoNotesCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ChallengeNoNotesRow"]
+[node name="ChallengeNoNotesCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeNoNotesRow"]
 layout_mode = 2
 
-[node name="ChallengePerfectRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="ChallengePerfectRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="ChallengePerfectLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ChallengePerfectRow"]
+[node name="ChallengePerfectLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengePerfectRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Perfect Run (1 Fehler = verloren)"
 
-[node name="ChallengePerfectCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ChallengePerfectRow"]
+[node name="ChallengePerfectCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengePerfectRow"]
 layout_mode = 2
 
-[node name="ChallengeHintsRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="ChallengeHintsRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="ChallengeHintsLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ChallengeHintsRow"]
+[node name="ChallengeHintsLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeHintsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Hint-Limit"
 
-[node name="ChallengeHintsOption" type="OptionButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ChallengeHintsRow"]
+[node name="ChallengeHintsOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeHintsRow"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 
-[node name="ChallengeTimeRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer"]
+[node name="ChallengeTimeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="ChallengeTimeLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ChallengeTimeRow"]
+[node name="ChallengeTimeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeTimeRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Time Attack"
 
-[node name="ChallengeTimeOption" type="OptionButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/ChallengeTimeRow"]
+[node name="ChallengeTimeOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeTimeRow"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2

@@ -110,7 +110,7 @@ public static class SudokuGenerator
                 positions.Add((row, col));
             }
         }
-        ShuffleList(positions);
+        ShuffleList(positions, rng);
 
         int removed = 0;
         foreach (var (row, col) in positions)

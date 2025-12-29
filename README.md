@@ -54,6 +54,11 @@ MySudoku/
     └── history.json
 ```
 
+## 📣 Präsentation (pro Version)
+
+- Aktuell: `Docs/Presentation/Presentation_0_0_1.md`
+- Vorlage/initial: `Docs/Presentation/Presentation.md`
+
 ## 🎮 Features
 
 ### Hauptmenü

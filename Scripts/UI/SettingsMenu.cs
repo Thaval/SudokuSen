@@ -17,6 +17,9 @@ public partial class SettingsMenu : Control
     private HSlider _uiScaleSlider = null!;
     private Label _uiScaleValue = null!;
 
+    private CheckButton _smartCleanupCheck = null!;
+    private CheckButton _houseAutoFillCheck = null!;
+
     private CheckButton _challengeNoNotesCheck = null!;
     private CheckButton _challengePerfectCheck = null!;
     private OptionButton _challengeHintsOption = null!;
@@ -28,7 +31,7 @@ public partial class SettingsMenu : Control
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("Title");
 
-        var settingsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer");
+        var settingsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer");
         _themeOption = settingsContainer.GetNode<OptionButton>("ThemeRow/ThemeOption");
         _deadlyCheck = settingsContainer.GetNode<CheckButton>("DeadlyRow/DeadlyCheck");
         _hideCheck = settingsContainer.GetNode<CheckButton>("HideRow/HideCheck");
@@ -38,6 +41,9 @@ public partial class SettingsMenu : Control
         _colorblindCheck = settingsContainer.GetNode<CheckButton>("ColorblindRow/ColorblindCheck");
         _uiScaleSlider = settingsContainer.GetNode<HSlider>("UiScaleRow/UiScaleSlider");
         _uiScaleValue = settingsContainer.GetNode<Label>("UiScaleRow/UiScaleValue");
+
+        _smartCleanupCheck = settingsContainer.GetNode<CheckButton>("SmartCleanupRow/SmartCleanupCheck");
+        _houseAutoFillCheck = settingsContainer.GetNode<CheckButton>("HouseAutoFillRow/HouseAutoFillCheck");
 
         _challengeNoNotesCheck = settingsContainer.GetNode<CheckButton>("ChallengeNoNotesRow/ChallengeNoNotesCheck");
         _challengePerfectCheck = settingsContainer.GetNode<CheckButton>("ChallengePerfectRow/ChallengePerfectCheck");
@@ -71,6 +77,9 @@ public partial class SettingsMenu : Control
         _learnCheck.Toggled += OnLearnToggled;
         _colorblindCheck.Toggled += OnColorblindToggled;
         _uiScaleSlider.ValueChanged += OnUiScaleChanged;
+
+        _smartCleanupCheck.Toggled += OnSmartCleanupToggled;
+        _houseAutoFillCheck.Toggled += OnHouseAutoFillToggled;
 
         _challengeNoNotesCheck.Toggled += OnChallengeNoNotesToggled;
         _challengePerfectCheck.Toggled += OnChallengePerfectToggled;
@@ -113,6 +122,9 @@ public partial class SettingsMenu : Control
 
         _uiScaleSlider.Value = settings.UiScalePercent;
         _uiScaleValue.Text = $"{settings.UiScalePercent}%";
+
+        _smartCleanupCheck.ButtonPressed = settings.SmartNoteCleanupEnabled;
+        _houseAutoFillCheck.ButtonPressed = settings.HouseAutoFillEnabled;
 
         _challengeNoNotesCheck.ButtonPressed = settings.ChallengeNoNotes;
         _challengePerfectCheck.ButtonPressed = settings.ChallengePerfectRun;
@@ -165,6 +177,20 @@ public partial class SettingsMenu : Control
 
         var themeService = GetNode<ThemeService>("/root/ThemeService");
         themeService.ApplyUiScale(pct);
+    }
+
+    private void OnSmartCleanupToggled(bool pressed)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.SmartNoteCleanupEnabled = pressed;
+        SaveSettings();
+    }
+
+    private void OnHouseAutoFillToggled(bool pressed)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.HouseAutoFillEnabled = pressed;
+        SaveSettings();
     }
 
     private void OnDeadlyToggled(bool pressed)
@@ -252,31 +278,41 @@ public partial class SettingsMenu : Control
 
         _title.AddThemeColorOverride("font_color", colors.TextPrimary);
 
-        // Labels
-        foreach (var child in GetTree().GetNodesInGroup(""))
-        {
-            // Alle Labels im Settings-Container
-        }
-
-        var settingsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer");
-        foreach (var row in settingsContainer.GetChildren())
-        {
-            if (row is HBoxContainer hbox)
-            {
-                foreach (var item in hbox.GetChildren())
-                {
-                    if (item is Label label)
-                    {
-                        label.AddThemeColorOverride("font_color", colors.TextPrimary);
-                    }
-                }
-            }
-        }
+        var settingsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer");
+        ApplyThemeRecursive(settingsContainer, theme, colors);
 
         // Back Button
         _backButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
         _backButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
         _backButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
         _backButton.AddThemeColorOverride("font_color", colors.TextPrimary);
+    }
+
+    private static void ApplyThemeRecursive(Node node, ThemeService theme, ThemeService.ThemeColors colors)
+    {
+        foreach (var child in node.GetChildren())
+        {
+            if (child is Label label)
+            {
+                if (label.Name.ToString().Contains("Title"))
+                    label.AddThemeColorOverride("font_color", colors.Accent);
+                else
+                    label.AddThemeColorOverride("font_color", colors.TextPrimary);
+            }
+            else if (child is BaseButton button)
+            {
+                button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+                button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
+                button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+                button.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
+                button.AddThemeColorOverride("font_color", colors.TextPrimary);
+                button.AddThemeColorOverride("font_disabled_color", colors.TextSecondary);
+            }
+
+            if (child is Node n)
+            {
+                ApplyThemeRecursive(n, theme, colors);
+            }
+        }
     }
 }

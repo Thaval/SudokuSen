@@ -10,6 +10,7 @@ public partial class GameScene : Control
     private Button _hintButton = null!;
     private Button _notesButton = null!;
     private Button _autoCandidatesButton = null!;
+    private Button _houseAutoFillButton = null!;
     private Label _difficultyLabel = null!;
     private Label _timerLabel = null!;
     private Label _mistakesLabel = null!;
@@ -36,6 +37,15 @@ public partial class GameScene : Control
     private bool _isPaused = false;
     private bool _isNotesMode = false;
     private bool _showAutoCandidates = false;
+
+    private enum HouseAutoFillMode
+    {
+        Row,
+        Column,
+        Block
+    }
+
+    private HouseAutoFillMode _houseAutoFillMode = HouseAutoFillMode.Row;
 
     // Multi-Select
     private HashSet<(int row, int col)> _selectedCells = new();
@@ -69,6 +79,7 @@ public partial class GameScene : Control
         CreateHintButton();
         CreateAutoCandidatesButton();
         CreateNotesButton();
+        CreateHouseAutoFillButton();
 
         // Events
         _backButton.Pressed += OnBackPressed;
@@ -377,10 +388,10 @@ public partial class GameScene : Control
 
         int maxNumber = _gameState.GridSize; // 4 für Kids, 9 für andere
 
-        // Alte Buttons entfernen (außer Notes-Button, der wird am Ende wieder hinzugefügt)
+        // Alte Buttons entfernen (außer Notes-/Assist-Buttons, die werden am Ende wieder hinzugefügt)
         foreach (var child in _numberPad.GetChildren().ToList())
         {
-            if (child != _notesButton)
+            if (child != _notesButton && child != _houseAutoFillButton)
             {
                 child.QueueFree();
             }
@@ -414,7 +425,11 @@ public partial class GameScene : Control
         _numberButtons[0] = eraserButton;
         _numberPad.AddChild(eraserButton);
 
-        // Notes-Button ans Ende verschieben
+        // Assist-Buttons ans Ende verschieben
+        if (_houseAutoFillButton != null)
+        {
+            _numberPad.MoveChild(_houseAutoFillButton, _numberPad.GetChildCount() - 1);
+        }
         if (_notesButton != null)
         {
             _numberPad.MoveChild(_notesButton, _numberPad.GetChildCount() - 1);
@@ -538,10 +553,33 @@ public partial class GameScene : Control
             _notesButton.Visible = !_gameState.ChallengeNoNotes;
         }
 
+        if (_houseAutoFillButton != null)
+        {
+            var saveService = GetNode<SaveService>("/root/SaveService");
+            _houseAutoFillButton.Visible = !_gameState.ChallengeNoNotes && saveService.Settings.HouseAutoFillEnabled;
+            _houseAutoFillButton.Disabled = _gameState.ChallengeNoNotes;
+        }
+
         if (_hintButton != null)
         {
-            bool hintAllowed = _gameState.GridSize == 9 && (_gameState.ChallengeHintLimit <= 0 || _gameState.HintsUsed < _gameState.ChallengeHintLimit);
-            _hintButton.Disabled = !hintAllowed;
+            bool is9x9 = _gameState.GridSize == 9;
+            int limit = _gameState.ChallengeHintLimit;
+            int used = _gameState.HintsUsed;
+            int remaining = limit > 0 ? Math.Max(0, limit - used) : -1;
+
+            _hintButton.Visible = is9x9;
+            _hintButton.Disabled = !is9x9;
+
+            _hintButton.TooltipText = !is9x9
+                ? "Hinweise nur im 9x9 verfügbar"
+                : (limit > 0
+                    ? $"Tipp anzeigen\nHinweise: {used}/{limit} (rest: {remaining})"
+                    : "Tipp anzeigen\nZeigt einen Hinweis für den nächsten Zug");
+
+            // Visueller Hint wenn Limit erreicht
+            var theme = GetNode<ThemeService>("/root/ThemeService");
+            var colors = theme.CurrentColors;
+            _hintButton.AddThemeColorOverride("font_color", (limit > 0 && remaining == 0) ? colors.TextSecondary : colors.TextPrimary);
         }
     }
 
@@ -584,10 +622,23 @@ public partial class GameScene : Control
     private void UpdateTimerDisplay()
     {
         var ts = TimeSpan.FromSeconds(_elapsedTime);
-        if (ts.Hours > 0)
-            _timerLabel.Text = $"{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        string elapsedText = ts.Hours > 0
+            ? $"{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}"
+            : $"{ts.Minutes:D2}:{ts.Seconds:D2}";
+
+        if (_gameState != null && _gameState.ChallengeTimeAttackSeconds > 0)
+        {
+            double remaining = Math.Max(0, _gameState.ChallengeTimeAttackSeconds - _elapsedTime);
+            var rt = TimeSpan.FromSeconds(remaining);
+            string remainingText = rt.Hours > 0
+                ? $"{rt.Hours:D2}:{rt.Minutes:D2}:{rt.Seconds:D2}"
+                : $"{rt.Minutes:D2}:{rt.Seconds:D2}";
+            _timerLabel.Text = $"{elapsedText} (Rest {remainingText})";
+        }
         else
-            _timerLabel.Text = $"{ts.Minutes:D2}:{ts.Seconds:D2}";
+        {
+            _timerLabel.Text = elapsedText;
+        }
     }
 
     private void UpdateMistakesLabel()
@@ -948,6 +999,8 @@ public partial class GameScene : Control
             cell.Value = number;
             _highlightedNumber = number;
 
+            MaybeSmartCleanupNotesAfterPlacement(_selectedRow, _selectedCol, number);
+
             // Technique tracking: applied?
             if (_lastHintTracking.HasValue)
             {
@@ -974,6 +1027,53 @@ public partial class GameScene : Control
         }
 
         SaveAndUpdate();
+    }
+
+    private void MaybeSmartCleanupNotesAfterPlacement(int row, int col, int placedNumber)
+    {
+        if (_gameState == null) return;
+        if (placedNumber <= 0) return;
+
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        if (!saveService.Settings.SmartNoteCleanupEnabled) return;
+
+        int size = _gameState.GridSize;
+        int blockSize = _gameState.BlockSize;
+
+        int idx = placedNumber - 1;
+        if (idx < 0 || idx >= 9) return;
+
+        // Row
+        for (int c = 0; c < size; c++)
+        {
+            if (c == col) continue;
+            var peer = _gameState.Grid[row, c];
+            if (peer.Value != 0) continue;
+            peer.Notes[idx] = false;
+        }
+
+        // Column
+        for (int r = 0; r < size; r++)
+        {
+            if (r == row) continue;
+            var peer = _gameState.Grid[r, col];
+            if (peer.Value != 0) continue;
+            peer.Notes[idx] = false;
+        }
+
+        // Block
+        int startRow = (row / blockSize) * blockSize;
+        int startCol = (col / blockSize) * blockSize;
+        for (int r = startRow; r < startRow + blockSize; r++)
+        {
+            for (int c = startCol; c < startCol + blockSize; c++)
+            {
+                if (r == row && c == col) continue;
+                var peer = _gameState.Grid[r, c];
+                if (peer.Value != 0) continue;
+                peer.Notes[idx] = false;
+            }
+        }
     }
 
     private void RecordMistakeForHeatmap(int row, int col)
@@ -1251,6 +1351,19 @@ public partial class GameScene : Control
             UpdateNotesButtonAppearance();
         }
 
+        // House Auto-Fill Button
+        if (_houseAutoFillButton != null)
+        {
+            _houseAutoFillButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+            _houseAutoFillButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
+            _houseAutoFillButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+            _houseAutoFillButton.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
+            _houseAutoFillButton.AddThemeColorOverride("font_color", colors.TextPrimary);
+            _houseAutoFillButton.AddThemeColorOverride("font_disabled_color", colors.TextSecondary);
+            _houseAutoFillButton.AddThemeFontSizeOverride("font_size", 18);
+            UpdateHouseAutoFillButtonTextAndTooltip();
+        }
+
         // Axis Labels
         foreach (var label in _colLabels)
         {
@@ -1331,6 +1444,125 @@ public partial class GameScene : Control
         _numberPad.AddChild(_notesButton);
     }
 
+    private void CreateHouseAutoFillButton()
+    {
+        // Auto-Notizen für eine House-Gruppe (Zeile/Spalte/Block)
+        var theme = GetNode<ThemeService>("/root/ThemeService");
+        var colors = theme.CurrentColors;
+
+        _houseAutoFillButton = new Button();
+        _houseAutoFillButton.CustomMinimumSize = new Vector2(50, 60);
+        _houseAutoFillButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+        _houseAutoFillButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
+        _houseAutoFillButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _houseAutoFillButton.AddThemeColorOverride("font_color", colors.TextPrimary);
+        _houseAutoFillButton.AddThemeFontSizeOverride("font_size", 18);
+        _houseAutoFillButton.Pressed += OnHouseAutoFillPressed;
+
+        UpdateHouseAutoFillButtonTextAndTooltip();
+        _numberPad.AddChild(_houseAutoFillButton);
+    }
+
+    private void UpdateHouseAutoFillButtonTextAndTooltip()
+    {
+        if (_houseAutoFillButton == null) return;
+
+        string modeText = _houseAutoFillMode switch
+        {
+            HouseAutoFillMode.Row => "Zeile",
+            HouseAutoFillMode.Column => "Spalte",
+            HouseAutoFillMode.Block => "Block",
+            _ => "Zeile"
+        };
+
+        _houseAutoFillButton.Text = _houseAutoFillMode switch
+        {
+            HouseAutoFillMode.Row => "R",
+            HouseAutoFillMode.Column => "C",
+            HouseAutoFillMode.Block => "B",
+            _ => "R"
+        };
+
+        _houseAutoFillButton.TooltipText = $"Auto-Notizen ({modeText})\nFüllt Kandidaten für die {modeText}-Gruppe der Auswahl\nJeder Klick wechselt: Zeile → Spalte → Block";
+    }
+
+    private void OnHouseAutoFillPressed()
+    {
+        if (_gameState == null || _isGameOver) return;
+        if (_selectedRow < 0 || _selectedCol < 0) return;
+        if (_gameState.ChallengeNoNotes) return;
+
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        if (!saveService.Settings.HouseAutoFillEnabled) return;
+
+        AutoFillNotesForSelectedHouse();
+
+        // Modus rotieren für den nächsten Klick
+        _houseAutoFillMode = _houseAutoFillMode switch
+        {
+            HouseAutoFillMode.Row => HouseAutoFillMode.Column,
+            HouseAutoFillMode.Column => HouseAutoFillMode.Block,
+            HouseAutoFillMode.Block => HouseAutoFillMode.Row,
+            _ => HouseAutoFillMode.Row
+        };
+        UpdateHouseAutoFillButtonTextAndTooltip();
+    }
+
+    private void AutoFillNotesForSelectedHouse()
+    {
+        if (_gameState == null) return;
+
+        int size = _gameState.GridSize;
+        int blockSize = _gameState.BlockSize;
+
+        IEnumerable<(int r, int c)> cells = _houseAutoFillMode switch
+        {
+            HouseAutoFillMode.Row => Enumerable.Range(0, size).Select(c => (_selectedRow, c)),
+            HouseAutoFillMode.Column => Enumerable.Range(0, size).Select(r => (r, _selectedCol)),
+            HouseAutoFillMode.Block => GetBlockCells(_selectedRow, _selectedCol, blockSize, size),
+            _ => Enumerable.Range(0, size).Select(c => (_selectedRow, c))
+        };
+
+        foreach (var (r, c) in cells)
+        {
+            var cell = _gameState.Grid[r, c];
+            if (cell.Value != 0) continue;
+            if (cell.IsGiven) continue;
+            if (HasAnyNotes(cell, size)) continue; // nicht überschreiben
+
+            bool[] candidates = CalculateCandidates(r, c);
+            for (int i = 0; i < 9; i++)
+            {
+                cell.Notes[i] = i < size && i < candidates.Length && candidates[i];
+            }
+        }
+
+        SaveAndUpdate();
+    }
+
+    private static IEnumerable<(int r, int c)> GetBlockCells(int row, int col, int blockSize, int size)
+    {
+        int startRow = (row / blockSize) * blockSize;
+        int startCol = (col / blockSize) * blockSize;
+        for (int r = startRow; r < startRow + blockSize && r < size; r++)
+        {
+            for (int c = startCol; c < startCol + blockSize && c < size; c++)
+            {
+                yield return (r, c);
+            }
+        }
+    }
+
+    private static bool HasAnyNotes(SudokuCell cell, int size)
+    {
+        int count = Math.Min(size, cell.Notes.Length);
+        for (int i = 0; i < count; i++)
+        {
+            if (cell.Notes[i]) return true;
+        }
+        return false;
+    }
+
     private void OnAutoCandidatesButtonPressed()
     {
         _showAutoCandidates = !_showAutoCandidates;
@@ -1396,19 +1628,20 @@ public partial class GameScene : Control
             return;
         }
 
+        // Challenge: hint limit
+        if (_gameState.ChallengeHintLimit > 0 && _gameState.HintsUsed >= _gameState.ChallengeHintLimit)
+        {
+            ApplyChallengeUi();
+            ShowHintLimitOverlay();
+            return;
+        }
+
         // Finde einen Hinweis
         _currentHint = HintService.FindHint(_gameState);
 
         if (_currentHint == null)
         {
-            // Kein Hinweis verfügbar (Spiel ist gelöst?)
-            return;
-        }
-
-        // Challenge: hint limit
-        if (_gameState.ChallengeHintLimit > 0 && _gameState.HintsUsed >= _gameState.ChallengeHintLimit)
-        {
-            ApplyChallengeUi();
+            ShowNoHintOverlay();
             return;
         }
 
@@ -1428,6 +1661,20 @@ public partial class GameScene : Control
         _hintHighlightedCells.Clear();
 
         ShowHintOverlay();
+    }
+
+    private void ShowHintLimitOverlay()
+    {
+        if (_gameState == null) return;
+        int limit = _gameState.ChallengeHintLimit;
+        var overlay = CreateOverlay("💡 Hint-Limit", $"Du hast das Hint-Limit erreicht ({limit}).", new Color("f44336"));
+        _overlayContainer.AddChild(overlay);
+    }
+
+    private void ShowNoHintOverlay()
+    {
+        var overlay = CreateOverlay("💡 Kein Tipp", "Aktuell ist kein sinnvoller Hinweis verfügbar.", new Color("64b5f6"));
+        _overlayContainer.AddChild(overlay);
     }
 
     private void ShowHintOverlay()

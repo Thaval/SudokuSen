@@ -93,6 +93,12 @@ public partial class MainMenu : Control
         _dailyInfo.Text = doneToday
             ? $"Daily erledigt ✅  |  {streak}"
             : $"Daily offen  |  {streak}";
+
+        // Button copy/tooltip
+        _dailyButton.Text = doneToday ? "📅 Daily Sudoku (erledigt)" : "📅 Daily Sudoku";
+        _dailyButton.TooltipText = doneToday
+            ? "Daily für heute ist bereits erledigt.\nDu kannst es trotzdem erneut spielen (ohne extra Streak)."
+            : "Tägliches Sudoku (deterministisch).";
     }
 
     private void OnThemeChanged(int themeIndex)
