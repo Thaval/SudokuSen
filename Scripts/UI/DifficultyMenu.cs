@@ -11,10 +11,12 @@ namespace MySudoku.UI;
 /// </summary>
 public partial class DifficultyMenu : Control
 {
+    private Button _kidsButton = null!;
     private Button _easyButton = null!;
     private Button _mediumButton = null!;
     private Button _hardButton = null!;
     private Button _backButton = null!;
+    private Label _kidsTechniques = null!;
     private Label _easyTechniques = null!;
     private Label _mediumTechniques = null!;
     private Label _hardTechniques = null!;
@@ -29,20 +31,24 @@ public partial class DifficultyMenu : Control
         _description = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Description");
 
         var buttonContainer = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer");
+        _kidsButton = buttonContainer.GetNode<Button>("KidsContainer/KidsButton");
         _easyButton = buttonContainer.GetNode<Button>("EasyContainer/EasyButton");
         _mediumButton = buttonContainer.GetNode<Button>("MediumContainer/MediumButton");
         _hardButton = buttonContainer.GetNode<Button>("HardContainer/HardButton");
+        _kidsTechniques = buttonContainer.GetNode<Label>("KidsContainer/KidsTechniques");
         _easyTechniques = buttonContainer.GetNode<Label>("EasyContainer/EasyTechniques");
         _mediumTechniques = buttonContainer.GetNode<Label>("MediumContainer/MediumTechniques");
         _hardTechniques = buttonContainer.GetNode<Label>("HardContainer/HardTechniques");
         _backButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/VBoxContainer/BackButton");
 
+        _kidsButton.Pressed += () => OnDifficultySelected(Difficulty.Kids);
         _easyButton.Pressed += () => OnDifficultySelected(Difficulty.Easy);
         _mediumButton.Pressed += () => OnDifficultySelected(Difficulty.Medium);
         _hardButton.Pressed += () => OnDifficultySelected(Difficulty.Hard);
         _backButton.Pressed += OnBackPressed;
 
         // Technik-Beschreibungen unter den Buttons
+        _kidsTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Kids);
         _easyTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Easy);
         _mediumTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Medium);
         _hardTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Hard);
@@ -86,10 +92,12 @@ public partial class DifficultyMenu : Control
         _description.AddThemeColorOverride("font_color", colors.TextSecondary);
 
         // Technik-Labels stylen
+        _kidsTechniques.AddThemeColorOverride("font_color", colors.TextSecondary);
         _easyTechniques.AddThemeColorOverride("font_color", colors.TextSecondary);
         _mediumTechniques.AddThemeColorOverride("font_color", colors.TextSecondary);
         _hardTechniques.AddThemeColorOverride("font_color", colors.TextSecondary);
 
+        ApplyButtonTheme(_kidsButton, theme, new Color("2196f3")); // Blau für Kids
         ApplyButtonTheme(_easyButton, theme, new Color("4caf50")); // Grün
         ApplyButtonTheme(_mediumButton, theme, new Color("ff9800")); // Orange
         ApplyButtonTheme(_hardButton, theme, new Color("f44336")); // Rot

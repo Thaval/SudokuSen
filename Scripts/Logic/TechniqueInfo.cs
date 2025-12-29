@@ -210,6 +210,7 @@ public static class TechniqueInfo
     {
         return difficulty switch
         {
+            Difficulty.Kids => "4x4 Raster, Zahlen 1-4",
             Difficulty.Easy => "Naked Single, Hidden Single",
             Difficulty.Medium => "Naked Pair, Pointing Pair, Box/Line",
             Difficulty.Hard => "X-Wing, Swordfish, XY-Wing",

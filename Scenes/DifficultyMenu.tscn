@@ -53,6 +53,21 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="KidsContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="KidsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/KidsContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+focus_mode = 2
+text = "👶 Kids"
+
+[node name="KidsTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/KidsContainer"]
+layout_mode = 2
+text = "4x4 Raster, Zahlen 1-4"
+horizontal_alignment = 1
+
 [node name="EasyContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 layout_mode = 2
 theme_override_constants/separation = 2

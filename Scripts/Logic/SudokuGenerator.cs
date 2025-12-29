@@ -23,13 +23,16 @@ public static class SudokuGenerator
             Status = GameStatus.InProgress
         };
 
+        int size = state.GridSize;
+        int blockSize = state.BlockSize;
+
         // Generiere vollständiges Grid
-        int[,] fullGrid = GenerateFullGrid();
+        int[,] fullGrid = GenerateFullGrid(size, blockSize);
 
         // Speichere Lösung
-        for (int row = 0; row < 9; row++)
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 state.Grid[row, col].Solution = fullGrid[row, col];
             }
@@ -37,12 +40,12 @@ public static class SudokuGenerator
 
         // Entferne Zahlen basierend auf Schwierigkeit
         int cellsToRemove = GetCellsToRemove(difficulty);
-        int[,] puzzleGrid = RemoveCells(fullGrid, cellsToRemove);
+        int[,] puzzleGrid = RemoveCells(fullGrid, cellsToRemove, size, blockSize);
 
         // Setze das Puzzle
-        for (int row = 0; row < 9; row++)
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 int value = puzzleGrid[row, col];
                 state.Grid[row, col].Value = value;
@@ -56,32 +59,34 @@ public static class SudokuGenerator
     /// <summary>
     /// Generiert ein vollständig gelöstes Sudoku-Grid
     /// </summary>
-    private static int[,] GenerateFullGrid()
+    private static int[,] GenerateFullGrid(int size = 9, int blockSize = 3)
     {
-        int[,] grid = new int[9, 9];
-        FillGrid(grid);
+        int[,] grid = new int[size, size];
+        FillGrid(grid, size, blockSize);
         return grid;
     }
 
-    private static bool FillGrid(int[,] grid)
+    private static bool FillGrid(int[,] grid, int size = 9, int blockSize = 3)
     {
-        for (int row = 0; row < 9; row++)
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 if (grid[row, col] == 0)
                 {
-                    // Erstelle eine zufällige Reihenfolge von 1-9
-                    List<int> numbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                    // Erstelle eine zufällige Reihenfolge von 1-size
+                    List<int> numbers = new List<int>();
+                    for (int i = 1; i <= size; i++)
+                        numbers.Add(i);
                     ShuffleList(numbers);
 
                     foreach (int num in numbers)
                     {
-                        if (SudokuSolver.IsValidMove(grid, row, col, num))
+                        if (SudokuSolver.IsValidMove(grid, row, col, num, size, blockSize))
                         {
                             grid[row, col] = num;
 
-                            if (FillGrid(grid))
+                            if (FillGrid(grid, size, blockSize))
                                 return true;
 
                             grid[row, col] = 0;
@@ -97,15 +102,15 @@ public static class SudokuGenerator
     /// <summary>
     /// Entfernt Zahlen aus dem Grid und stellt sicher, dass eine eindeutige Lösung existiert
     /// </summary>
-    private static int[,] RemoveCells(int[,] fullGrid, int cellsToRemove)
+    private static int[,] RemoveCells(int[,] fullGrid, int cellsToRemove, int size = 9, int blockSize = 3)
     {
-        int[,] puzzle = SudokuSolver.CopyGrid(fullGrid);
+        int[,] puzzle = SudokuSolver.CopyGrid(fullGrid, size);
 
         // Erstelle Liste aller Positionen
         List<(int row, int col)> positions = new List<(int, int)>();
-        for (int row = 0; row < 9; row++)
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 positions.Add((row, col));
             }
@@ -122,8 +127,8 @@ public static class SudokuGenerator
             puzzle[row, col] = 0;
 
             // Prüfe ob noch eindeutige Lösung existiert
-            int[,] testGrid = SudokuSolver.CopyGrid(puzzle);
-            int solutions = SudokuSolver.CountSolutions(testGrid, 2);
+            int[,] testGrid = SudokuSolver.CopyGrid(puzzle, size);
+            int solutions = SudokuSolver.CountSolutions(testGrid, 2, size, blockSize);
 
             if (solutions != 1)
             {
@@ -146,6 +151,7 @@ public static class SudokuGenerator
     {
         return difficulty switch
         {
+            Difficulty.Kids => 8,     // ~8 Givens in 4x4 (16 cells - 8 = 8 givens)
             Difficulty.Easy => 35,    // ~46 Givens
             Difficulty.Medium => 45,  // ~36 Givens
             Difficulty.Hard => 55,    // ~26 Givens

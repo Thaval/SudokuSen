@@ -110,6 +110,10 @@ text = "Beste Zeit: --:--"
 layout_mode = 2
 text = "Längste Zeit: --:--"
 
+[node name="AvgTimeKids" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/TimeSection"]
+layout_mode = 2
+text = "Ø Kids: --:--"
+
 [node name="AvgTimeEasy" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 text = "Ø Leicht: --:--"
@@ -133,6 +137,10 @@ theme_override_constants/separation = 12
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Fehler"
+
+[node name="AvgMistakesKids" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/MistakesSection"]
+layout_mode = 2
+text = "Ø Kids: -"
 
 [node name="AvgMistakesEasy" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2

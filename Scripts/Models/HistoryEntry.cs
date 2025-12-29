@@ -72,6 +72,7 @@ public class HistoryEntry
     {
         return Difficulty switch
         {
+            Difficulty.Kids => "👶 Kids",
             Difficulty.Easy => "🟢 Leicht",
             Difficulty.Medium => "🟡 Mittel",
             Difficulty.Hard => "🔴 Schwer",

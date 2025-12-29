@@ -24,11 +24,13 @@ public partial class StatsMenu : Control
     // Times
     private Label _bestTime = null!;
     private Label _worstTime = null!;
+    private Label _avgTimeKids = null!;
     private Label _avgTimeEasy = null!;
     private Label _avgTimeMedium = null!;
     private Label _avgTimeHard = null!;
 
     // Mistakes
+    private Label _avgMistakesKids = null!;
     private Label _avgMistakesEasy = null!;
     private Label _avgMistakesMedium = null!;
     private Label _avgMistakesHard = null!;
@@ -50,11 +52,13 @@ public partial class StatsMenu : Control
         var timeSection = statsContainer.GetNode<VBoxContainer>("TimeSection");
         _bestTime = timeSection.GetNode<Label>("BestTime");
         _worstTime = timeSection.GetNode<Label>("WorstTime");
+        _avgTimeKids = timeSection.GetNode<Label>("AvgTimeKids");
         _avgTimeEasy = timeSection.GetNode<Label>("AvgTimeEasy");
         _avgTimeMedium = timeSection.GetNode<Label>("AvgTimeMedium");
         _avgTimeHard = timeSection.GetNode<Label>("AvgTimeHard");
 
         var mistakesSection = statsContainer.GetNode<VBoxContainer>("MistakesSection");
+        _avgMistakesKids = mistakesSection.GetNode<Label>("AvgMistakesKids");
         _avgMistakesEasy = mistakesSection.GetNode<Label>("AvgMistakesEasy");
         _avgMistakesMedium = mistakesSection.GetNode<Label>("AvgMistakesMedium");
         _avgMistakesHard = mistakesSection.GetNode<Label>("AvgMistakesHard");
@@ -116,11 +120,13 @@ public partial class StatsMenu : Control
         }
 
         // Durchschnittliche Zeit pro Schwierigkeit
+        _avgTimeKids.Text = $"Ø Kids: {GetAvgTime(wins, Difficulty.Kids)}";
         _avgTimeEasy.Text = $"Ø Leicht: {GetAvgTime(wins, Difficulty.Easy)}";
         _avgTimeMedium.Text = $"Ø Mittel: {GetAvgTime(wins, Difficulty.Medium)}";
         _avgTimeHard.Text = $"Ø Schwer: {GetAvgTime(wins, Difficulty.Hard)}";
 
         // Durchschnittliche Fehler pro Schwierigkeit
+        _avgMistakesKids.Text = $"Ø Kids: {GetAvgMistakes(completed, Difficulty.Kids)}";
         _avgMistakesEasy.Text = $"Ø Leicht: {GetAvgMistakes(completed, Difficulty.Easy)}";
         _avgMistakesMedium.Text = $"Ø Mittel: {GetAvgMistakes(completed, Difficulty.Medium)}";
         _avgMistakesHard.Text = $"Ø Schwer: {GetAvgMistakes(completed, Difficulty.Hard)}";

@@ -9,6 +9,7 @@ namespace MySudoku.Models;
 /// </summary>
 public enum Difficulty
 {
+    Kids,   // 4x4 Grid (2x2 Blöcke)
     Easy,
     Medium,
     Hard
@@ -30,11 +31,17 @@ public enum GameStatus
 /// </summary>
 public class SudokuGameState
 {
-    /// <summary>9x9 Grid</summary>
+    /// <summary>9x9 Grid (oder 4x4 für Kids-Modus)</summary>
     public SudokuCell[,] Grid { get; set; } = new SudokuCell[9, 9];
 
     /// <summary>Schwierigkeitsgrad</summary>
     public Difficulty Difficulty { get; set; }
+
+    /// <summary>Grid-Größe (9 für normal, 4 für Kids)</summary>
+    public int GridSize => Difficulty == Difficulty.Kids ? 4 : 9;
+
+    /// <summary>Block-Größe (3 für normal, 2 für Kids)</summary>
+    public int BlockSize => Difficulty == Difficulty.Kids ? 2 : 3;
 
     /// <summary>Startzeitpunkt</summary>
     public DateTime StartTime { get; set; }
@@ -73,9 +80,10 @@ public class SudokuGameState
     public int CountNumber(int number)
     {
         int count = 0;
-        for (int row = 0; row < 9; row++)
+        int size = GridSize;
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 if (Grid[row, col].Value == number)
                     count++;
@@ -89,9 +97,10 @@ public class SudokuGameState
     /// </summary>
     public bool IsComplete()
     {
-        for (int row = 0; row < 9; row++)
+        int size = GridSize;
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 if (Grid[row, col].IsEmpty || !Grid[row, col].IsCorrect)
                     return false;
@@ -105,26 +114,29 @@ public class SudokuGameState
     /// </summary>
     public bool IsValidPlacement(int row, int col, int number)
     {
+        int size = GridSize;
+        int blockSize = BlockSize;
+
         // Prüfe Zeile
-        for (int c = 0; c < 9; c++)
+        for (int c = 0; c < size; c++)
         {
             if (c != col && Grid[row, c].Value == number)
                 return false;
         }
 
         // Prüfe Spalte
-        for (int r = 0; r < 9; r++)
+        for (int r = 0; r < size; r++)
         {
             if (r != row && Grid[r, col].Value == number)
                 return false;
         }
 
-        // Prüfe 3x3 Block
-        int blockRow = (row / 3) * 3;
-        int blockCol = (col / 3) * 3;
-        for (int r = blockRow; r < blockRow + 3; r++)
+        // Prüfe Block
+        int blockRow = (row / blockSize) * blockSize;
+        int blockCol = (col / blockSize) * blockSize;
+        for (int r = blockRow; r < blockRow + blockSize; r++)
         {
-            for (int c = blockCol; c < blockCol + 3; c++)
+            for (int c = blockCol; c < blockCol + blockSize; c++)
             {
                 if ((r != row || c != col) && Grid[r, c].Value == number)
                     return false;
@@ -146,9 +158,10 @@ public class SudokuGameState
             Status = Status
         };
 
-        for (int row = 0; row < 9; row++)
+        int size = GridSize;
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 clone.Grid[row, col] = Grid[row, col].Clone();
             }

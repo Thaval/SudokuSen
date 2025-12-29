@@ -13,28 +13,28 @@ public static class SudokuSolver
     /// Löst das Sudoku-Grid
     /// </summary>
     /// <returns>True wenn lösbar</returns>
-    public static bool Solve(int[,] grid)
+    public static bool Solve(int[,] grid, int size = 9, int blockSize = 3)
     {
-        return SolveRecursive(grid);
+        return SolveRecursive(grid, size, blockSize);
     }
 
-    private static bool SolveRecursive(int[,] grid)
+    private static bool SolveRecursive(int[,] grid, int size = 9, int blockSize = 3)
     {
         // Finde die nächste leere Zelle
-        for (int row = 0; row < 9; row++)
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 if (grid[row, col] == 0)
                 {
-                    // Versuche Zahlen 1-9
-                    for (int num = 1; num <= 9; num++)
+                    // Versuche Zahlen 1-size
+                    for (int num = 1; num <= size; num++)
                     {
-                        if (IsValidMove(grid, row, col, num))
+                        if (IsValidMove(grid, row, col, num, size, blockSize))
                         {
                             grid[row, col] = num;
 
-                            if (SolveRecursive(grid))
+                            if (SolveRecursive(grid, size, blockSize))
                                 return true;
 
                             grid[row, col] = 0; // Backtrack
@@ -50,29 +50,29 @@ public static class SudokuSolver
     /// <summary>
     /// Zählt die Anzahl der Lösungen (stoppt bei maxSolutions)
     /// </summary>
-    public static int CountSolutions(int[,] grid, int maxSolutions = 2)
+    public static int CountSolutions(int[,] grid, int maxSolutions = 2, int size = 9, int blockSize = 3)
     {
         int count = 0;
-        CountSolutionsRecursive(grid, ref count, maxSolutions);
+        CountSolutionsRecursive(grid, ref count, maxSolutions, size, blockSize);
         return count;
     }
 
-    private static bool CountSolutionsRecursive(int[,] grid, ref int count, int maxSolutions)
+    private static bool CountSolutionsRecursive(int[,] grid, ref int count, int maxSolutions, int size = 9, int blockSize = 3)
     {
         // Finde die nächste leere Zelle
-        for (int row = 0; row < 9; row++)
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 if (grid[row, col] == 0)
                 {
-                    for (int num = 1; num <= 9; num++)
+                    for (int num = 1; num <= size; num++)
                     {
-                        if (IsValidMove(grid, row, col, num))
+                        if (IsValidMove(grid, row, col, num, size, blockSize))
                         {
                             grid[row, col] = num;
 
-                            if (CountSolutionsRecursive(grid, ref count, maxSolutions))
+                            if (CountSolutionsRecursive(grid, ref count, maxSolutions, size, blockSize))
                             {
                                 grid[row, col] = 0;
                                 return true; // Frühzeitig abbrechen
@@ -93,28 +93,28 @@ public static class SudokuSolver
     /// <summary>
     /// Prüft ob eine Zahl an einer Position gültig ist
     /// </summary>
-    public static bool IsValidMove(int[,] grid, int row, int col, int num)
+    public static bool IsValidMove(int[,] grid, int row, int col, int num, int size = 9, int blockSize = 3)
     {
         // Prüfe Zeile
-        for (int c = 0; c < 9; c++)
+        for (int c = 0; c < size; c++)
         {
             if (grid[row, c] == num)
                 return false;
         }
 
         // Prüfe Spalte
-        for (int r = 0; r < 9; r++)
+        for (int r = 0; r < size; r++)
         {
             if (grid[r, col] == num)
                 return false;
         }
 
-        // Prüfe 3x3 Block
-        int blockRow = (row / 3) * 3;
-        int blockCol = (col / 3) * 3;
-        for (int r = blockRow; r < blockRow + 3; r++)
+        // Prüfe Block
+        int blockRow = (row / blockSize) * blockSize;
+        int blockCol = (col / blockSize) * blockSize;
+        for (int r = blockRow; r < blockRow + blockSize; r++)
         {
-            for (int c = blockCol; c < blockCol + 3; c++)
+            for (int c = blockCol; c < blockCol + blockSize; c++)
             {
                 if (grid[r, c] == num)
                     return false;
@@ -127,12 +127,12 @@ public static class SudokuSolver
     /// <summary>
     /// Kopiert ein Grid
     /// </summary>
-    public static int[,] CopyGrid(int[,] grid)
+    public static int[,] CopyGrid(int[,] grid, int size = 9)
     {
-        int[,] copy = new int[9, 9];
-        for (int row = 0; row < 9; row++)
+        int[,] copy = new int[size, size];
+        for (int row = 0; row < size; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < size; col++)
             {
                 copy[row, col] = grid[row, col];
             }

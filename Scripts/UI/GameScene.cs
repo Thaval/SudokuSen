@@ -27,12 +27,12 @@ public partial class GameScene : Control
     private Control _overlayContainer = null!;
 
     // Axis Labels
-    private Label[] _colLabels = new Label[9]; // A-I
-    private Label[] _rowLabels = new Label[9]; // 1-9
+    private Label[] _colLabels = new Label[9]; // A-I (or A-D for Kids)
+    private Label[] _rowLabels = new Label[9]; // 1-9 (or 1-4 for Kids)
 
-    // Zellen
-    private SudokuCellButton[,] _cellButtons = new SudokuCellButton[9, 9];
-    private Button[] _numberButtons = new Button[10]; // 1-9 + Eraser
+    // Zellen - dynamisch allokiert basierend auf GridSize
+    private SudokuCellButton[,]? _cellButtons;
+    private Button[] _numberButtons = new Button[10]; // 1-9 + Eraser (oder 1-4 für Kids)
 
     // Spielzustand
     private SudokuGameState? _gameState;
@@ -191,19 +191,28 @@ public partial class GameScene : Control
 
             if (number >= 1 && number <= 9 && HasSelection())
             {
-                TrySetNumberOnSelection(number);
-                GetViewport().SetInputAsHandled();
+                // Prüfe ob die Zahl für dieses Grid gültig ist
+                int maxNumber = _gameState?.GridSize ?? 9;
+                if (number <= maxNumber)
+                {
+                    TrySetNumberOnSelection(number);
+                    GetViewport().SetInputAsHandled();
+                }
             }
         }
     }
 
     private void HandleArrowNavigation(InputEventKey keyEvent)
     {
+        if (_gameState == null) return;
+
+        int gridSize = _gameState.GridSize;
+
         // Wenn keine Zelle ausgewählt, starte in der Mitte
         if (_selectedRow < 0 || _selectedCol < 0)
         {
-            _selectedRow = 4;
-            _selectedCol = 4;
+            _selectedRow = gridSize / 2;
+            _selectedCol = gridSize / 2;
         }
         else
         {
@@ -213,16 +222,16 @@ public partial class GameScene : Control
             switch (keyEvent.Keycode)
             {
                 case Key.Up:
-                    newRow = (_selectedRow - 1 + 9) % 9;
+                    newRow = (_selectedRow - 1 + gridSize) % gridSize;
                     break;
                 case Key.Down:
-                    newRow = (_selectedRow + 1) % 9;
+                    newRow = (_selectedRow + 1) % gridSize;
                     break;
                 case Key.Left:
-                    newCol = (_selectedCol - 1 + 9) % 9;
+                    newCol = (_selectedCol - 1 + gridSize) % gridSize;
                     break;
                 case Key.Right:
-                    newCol = (_selectedCol + 1) % 9;
+                    newCol = (_selectedCol + 1) % gridSize;
                     break;
             }
 
@@ -291,14 +300,36 @@ public partial class GameScene : Control
 
     private void CreateGrid()
     {
-        _gridContainer.Columns = 9;
+        // Grid wird erst erstellt wenn das Spiel geladen ist
+        // Siehe LoadGame() und RecreateGridForGameState()
+    }
 
-        for (int row = 0; row < 9; row++)
+    private void RecreateGridForGameState()
+    {
+        if (_gameState == null) return;
+
+        int gridSize = _gameState.GridSize;
+        int blockSize = _gameState.BlockSize;
+
+        // Alte Zellen entfernen
+        foreach (var child in _gridContainer.GetChildren())
         {
-            for (int col = 0; col < 9; col++)
+            child.QueueFree();
+        }
+
+        // Neue Zellen erstellen
+        _cellButtons = new SudokuCellButton[gridSize, gridSize];
+        _gridContainer.Columns = gridSize;
+
+        for (int row = 0; row < gridSize; row++)
+        {
+            for (int col = 0; col < gridSize; col++)
             {
                 var cellButton = new SudokuCellButton(row, col);
-                cellButton.CustomMinimumSize = new Vector2(48, 48);
+                cellButton.SetGridConfig(gridSize, blockSize);
+                // Größere Zellen für kleineres Grid (4x4 = 110px, 9x9 = 48px)
+                int cellSize = gridSize == 4 ? 110 : 48;
+                cellButton.CustomMinimumSize = new Vector2(cellSize, cellSize);
                 cellButton.CellClicked += OnCellClicked;
                 cellButton.CellHovered += OnCellHovered;
 
@@ -306,11 +337,50 @@ public partial class GameScene : Control
                 _gridContainer.AddChild(cellButton);
             }
         }
+
+        // Theme auf neue Zellen anwenden
+        var theme = GetNode<ThemeService>("/root/ThemeService");
+        for (int row = 0; row < gridSize; row++)
+        {
+            for (int col = 0; col < gridSize; col++)
+            {
+                _cellButtons[row, col].ApplyTheme(theme);
+            }
+        }
+
+        // Hint-Button nur für 9x9 anzeigen
+        if (_hintButton != null)
+        {
+            _hintButton.Visible = gridSize == 9;
+        }
+
+        // Achsen-Labels aktualisieren
+        UpdateAxisLabelsForGridSize();
     }
 
     private void CreateNumberPad()
     {
-        for (int i = 1; i <= 9; i++)
+        // NumberPad wird erst erstellt wenn das Spiel geladen ist
+        // Siehe LoadGame() und RecreateNumberPadForGameState()
+    }
+
+    private void RecreateNumberPadForGameState()
+    {
+        if (_gameState == null) return;
+
+        int maxNumber = _gameState.GridSize; // 4 für Kids, 9 für andere
+
+        // Alte Buttons entfernen (außer Notes-Button, der wird am Ende wieder hinzugefügt)
+        foreach (var child in _numberPad.GetChildren().ToList())
+        {
+            if (child != _notesButton)
+            {
+                child.QueueFree();
+            }
+        }
+
+        // Neue Number-Buttons erstellen
+        for (int i = 1; i <= maxNumber; i++)
         {
             var button = new Button();
             button.Text = i.ToString();
@@ -322,6 +392,12 @@ public partial class GameScene : Control
             _numberPad.AddChild(button);
         }
 
+        // Buttons für nicht verwendete Zahlen nullen
+        for (int i = maxNumber + 1; i <= 9; i++)
+        {
+            _numberButtons[i] = null!;
+        }
+
         // Radiergummi
         var eraserButton = new Button();
         eraserButton.Text = "⌫";
@@ -330,6 +406,27 @@ public partial class GameScene : Control
         eraserButton.Pressed += () => OnNumberPadPressed(0);
         _numberButtons[0] = eraserButton;
         _numberPad.AddChild(eraserButton);
+
+        // Notes-Button ans Ende verschieben
+        if (_notesButton != null)
+        {
+            _numberPad.MoveChild(_notesButton, _numberPad.GetChildCount() - 1);
+        }
+
+        // Theme anwenden
+        var theme = GetNode<ThemeService>("/root/ThemeService");
+        var colors = theme.CurrentColors;
+        foreach (var button in _numberButtons)
+        {
+            if (button == null) continue;
+            button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+            button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
+            button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+            button.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
+            button.AddThemeColorOverride("font_color", colors.TextPrimary);
+            button.AddThemeColorOverride("font_disabled_color", colors.TextSecondary);
+            button.AddThemeFontSizeOverride("font_size", 24);
+        }
     }
 
     private void CreateAxisLabels()
@@ -337,7 +434,7 @@ public partial class GameScene : Control
         var theme = GetNode<ThemeService>("/root/ThemeService");
         var colors = theme.CurrentColors;
 
-        // Spalten-Labels (A-I) oben
+        // Spalten-Labels (A-I) oben - erstelle alle 9, verstecke je nach GridSize
         var colLabelsContainer = GetNode<HBoxContainer>("VBoxContainer/GridCenterContainer/GridWrapper/ColLabelsContainer/ColLabels");
         string[] colNames = { "A", "B", "C", "D", "E", "F", "G", "H", "I" };
 
@@ -354,7 +451,7 @@ public partial class GameScene : Control
             colLabelsContainer.AddChild(label);
         }
 
-        // Zeilen-Labels (1-9) links
+        // Zeilen-Labels (1-9) links - erstelle alle 9, verstecke je nach GridSize
         var rowLabelsContainer = GetNode<VBoxContainer>("VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer/RowLabels");
 
         for (int i = 0; i < 9; i++)
@@ -368,6 +465,34 @@ public partial class GameScene : Control
             label.AddThemeColorOverride("font_color", colors.TextSecondary);
             _rowLabels[i] = label;
             rowLabelsContainer.AddChild(label);
+        }
+    }
+
+    private void UpdateAxisLabelsForGridSize()
+    {
+        if (_gameState == null) return;
+
+        int gridSize = _gameState.GridSize;
+        int cellSize = gridSize == 4 ? 110 : 50; // Größere Zellen für Kids (passend zu Grid)
+
+        // Spalten-Labels anpassen
+        for (int i = 0; i < 9; i++)
+        {
+            if (_colLabels[i] != null)
+            {
+                _colLabels[i].Visible = i < gridSize;
+                _colLabels[i].CustomMinimumSize = new Vector2(cellSize, 20);
+            }
+        }
+
+        // Zeilen-Labels anpassen
+        for (int i = 0; i < 9; i++)
+        {
+            if (_rowLabels[i] != null)
+            {
+                _rowLabels[i].Visible = i < gridSize;
+                _rowLabels[i].CustomMinimumSize = new Vector2(24, cellSize);
+            }
         }
     }
 
@@ -385,6 +510,10 @@ public partial class GameScene : Control
 
         _elapsedTime = _gameState.ElapsedSeconds;
 
+        // Grid und NumberPad für aktuelle GridSize erstellen
+        RecreateGridForGameState();
+        RecreateNumberPadForGameState();
+
         // UI aktualisieren
         UpdateDifficultyLabel();
         UpdateMistakesLabel();
@@ -398,6 +527,7 @@ public partial class GameScene : Control
 
         string diffText = _gameState.Difficulty switch
         {
+            Difficulty.Kids => "Kids",
             Difficulty.Easy => "Leicht",
             Difficulty.Medium => "Mittel",
             Difficulty.Hard => "Schwer",
@@ -435,11 +565,13 @@ public partial class GameScene : Control
 
     private void UpdateGrid()
     {
-        if (_gameState == null) return;
+        if (_gameState == null || _cellButtons == null) return;
 
-        for (int row = 0; row < 9; row++)
+        int gridSize = _gameState.GridSize;
+
+        for (int row = 0; row < gridSize; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int col = 0; col < gridSize; col++)
             {
                 var cell = _gameState.Grid[row, col];
                 var button = _cellButtons[row, col];
@@ -480,7 +612,8 @@ public partial class GameScene : Control
                 }
                 else
                 {
-                    button.SetCandidates(new bool[9], false);
+                    bool[] emptyCandidates = new bool[gridSize == 4 ? 4 : 9];
+                    button.SetCandidates(emptyCandidates, false);
                 }
             }
         }
@@ -490,30 +623,32 @@ public partial class GameScene : Control
     {
         if (_gameState == null) return new bool[9];
 
-        bool[] candidates = new bool[9];
-        for (int i = 0; i < 9; i++)
+        int gridSize = _gameState.GridSize;
+        int blockSize = _gameState.BlockSize;
+        bool[] candidates = new bool[gridSize];
+        for (int i = 0; i < gridSize; i++)
             candidates[i] = true;
 
         // Zeile prüfen
-        for (int c = 0; c < 9; c++)
+        for (int c = 0; c < gridSize; c++)
         {
             int val = _gameState.Grid[row, c].Value;
             if (val > 0) candidates[val - 1] = false;
         }
 
         // Spalte prüfen
-        for (int r = 0; r < 9; r++)
+        for (int r = 0; r < gridSize; r++)
         {
             int val = _gameState.Grid[r, col].Value;
             if (val > 0) candidates[val - 1] = false;
         }
 
-        // 3x3-Block prüfen
-        int blockRow = (row / 3) * 3;
-        int blockCol = (col / 3) * 3;
-        for (int r = blockRow; r < blockRow + 3; r++)
+        // Block prüfen (2x2 für Kids, 3x3 für Standard)
+        int blockRow = (row / blockSize) * blockSize;
+        int blockCol = (col / blockSize) * blockSize;
+        for (int r = blockRow; r < blockRow + blockSize; r++)
         {
-            for (int c = blockCol; c < blockCol + 3; c++)
+            for (int c = blockCol; c < blockCol + blockSize; c++)
             {
                 int val = _gameState.Grid[r, c].Value;
                 if (val > 0) candidates[val - 1] = false;
@@ -531,11 +666,14 @@ public partial class GameScene : Control
         var theme = GetNode<ThemeService>("/root/ThemeService");
         var colors = theme.CurrentColors;
         bool hideCompleted = saveService.Settings.HideCompletedNumbers;
+        int gridSize = _gameState.GridSize;
 
-        for (int i = 1; i <= 9; i++)
+        for (int i = 1; i <= gridSize; i++)
         {
+            if (_numberButtons[i] == null) continue;
+
             int count = _gameState.CountNumber(i);
-            bool isComplete = count >= 9;
+            bool isComplete = count >= gridSize;
             bool isHighlighted = i == _highlightedNumber;
 
             if (isComplete)
@@ -908,11 +1046,15 @@ public partial class GameScene : Control
         _gridPanel.AddThemeStyleboxOverride("panel", gridStyle);
 
         // Grid Zellen
-        for (int row = 0; row < 9; row++)
+        if (_cellButtons != null && _gameState != null)
         {
-            for (int col = 0; col < 9; col++)
+            int gridSize = _gameState.GridSize;
+            for (int row = 0; row < gridSize; row++)
             {
-                _cellButtons[row, col].ApplyTheme(theme);
+                for (int col = 0; col < gridSize; col++)
+                {
+                    _cellButtons[row, col].ApplyTheme(theme);
+                }
             }
         }
 
@@ -1088,6 +1230,12 @@ public partial class GameScene : Control
     private void OnHintButtonPressed()
     {
         if (_gameState == null || _isGameOver) return;
+
+        // Hints sind nur für 9x9 verfügbar
+        if (_gameState.GridSize != 9)
+        {
+            return;
+        }
 
         // Finde einen Hinweis
         _currentHint = HintService.FindHint(_gameState);
@@ -1441,6 +1589,10 @@ public partial class SudokuCellButton : Button
     private bool _isFlashingError;
     private double _flashTimer;
 
+    // Grid-Konfiguration (dynamisch für Kids vs. Standard)
+    private int _gridSize = 9;
+    private int _blockSize = 3;
+
     // Notes/Candidates Display
     private GridContainer? _notesGrid;
     private Label[] _noteLabels = new Label[9];
@@ -1455,6 +1607,12 @@ public partial class SudokuCellButton : Button
         Col = col;
         FocusMode = FocusModeEnum.None;
         ClipText = false;
+    }
+
+    public void SetGridConfig(int gridSize, int blockSize)
+    {
+        _gridSize = gridSize;
+        _blockSize = blockSize;
     }
 
     public override void _Ready()
@@ -1489,9 +1647,13 @@ public partial class SudokuCellButton : Button
 
     private void CreateNotesGrid()
     {
-        // Erstelle ein 3x3 Grid für die Notizen/Kandidaten
+        // Erstelle ein Grid für die Notizen/Kandidaten
+        // Größe basiert auf _gridSize: 2x2 für Kids (4), 3x3 für Standard (9)
+        int notesColumns = _gridSize == 4 ? 2 : 3;
+        int notesCount = _gridSize;
+
         _notesGrid = new GridContainer();
-        _notesGrid.Columns = 3;
+        _notesGrid.Columns = notesColumns;
         _notesGrid.SetAnchorsPreset(LayoutPreset.FullRect);
         _notesGrid.GrowHorizontal = GrowDirection.Both;
         _notesGrid.GrowVertical = GrowDirection.Both;
@@ -1501,7 +1663,7 @@ public partial class SudokuCellButton : Button
         _notesGrid.AddThemeConstantOverride("v_separation", 0);
         _notesGrid.Visible = false;
 
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < notesCount; i++)
         {
             var label = new Label();
             label.Text = "";
@@ -1509,7 +1671,8 @@ public partial class SudokuCellButton : Button
             label.VerticalAlignment = VerticalAlignment.Center;
             label.SizeFlagsHorizontal = SizeFlags.Expand | SizeFlags.Fill;
             label.SizeFlagsVertical = SizeFlags.Expand | SizeFlags.Fill;
-            label.AddThemeFontSizeOverride("font_size", 10);
+            // Größere Schrift für Kids (weniger Zahlen, mehr Platz)
+            label.AddThemeFontSizeOverride("font_size", _gridSize == 4 ? 14 : 10);
             _noteLabels[i] = label;
             _notesGrid.AddChild(label);
         }
@@ -1548,11 +1711,12 @@ public partial class SudokuCellButton : Button
         }
 
         bool hasAnyToShow = false;
+        int notesCount = _gridSize;
 
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < notesCount; i++)
         {
-            bool showNote = _showNotes && _notes[i];
-            bool showCandidate = _showCandidates && _candidates[i] && !_notes[i];
+            bool showNote = _showNotes && i < _notes.Length && _notes[i];
+            bool showCandidate = _showCandidates && i < _candidates.Length && _candidates[i] && !(i < _notes.Length && _notes[i]);
 
             if (showNote)
             {
@@ -1644,13 +1808,20 @@ public partial class SudokuCellButton : Button
             style.BgColor = multiSelectColor;
         }
 
+        // Related-Zellen bekommen subtilen blauen Hintergrund-Tint (statt Border)
+        if (_isRelated && !_isSelected && !_isMultiSelected)
+        {
+            var relatedBgColor = colors.Accent.Lerp(colors.CellBackground, 0.85f);
+            style.BgColor = relatedBgColor;
+        }
+
         // Margins für Grid-Linien
         // Normale Zellen-Grenzen: 1px
-        // 3x3-Block-Grenzen: 3px mit spezieller Farbe
-        bool isRightBlockBorder = (Col + 1) % 3 == 0 && Col < 8;
-        bool isBottomBlockBorder = (Row + 1) % 3 == 0 && Row < 8;
-        bool isLeftBlockBorder = Col % 3 == 0 && Col > 0;
-        bool isTopBlockBorder = Row % 3 == 0 && Row > 0;
+        // Block-Grenzen: 3px mit spezieller Farbe (2x2 für Kids, 3x3 für Standard)
+        bool isRightBlockBorder = (Col + 1) % _blockSize == 0 && Col < _gridSize - 1;
+        bool isBottomBlockBorder = (Row + 1) % _blockSize == 0 && Row < _gridSize - 1;
+        bool isLeftBlockBorder = Col % _blockSize == 0 && Col > 0;
+        bool isTopBlockBorder = Row % _blockSize == 0 && Row > 0;
 
         style.ContentMarginRight = isRightBlockBorder ? 3 : 1;
         style.ContentMarginBottom = isBottomBlockBorder ? 3 : 1;
@@ -1660,39 +1831,26 @@ public partial class SudokuCellButton : Button
         // 3x3-Block-Grenzen mit eigener Farbe hervorheben
         var blockBorderColor = colors.GridLineThick;
 
-        // Related-Zellen (gleiche Zeile/Spalte) bekommen subtilen blauen Border
-        if (_isRelated && !_isSelected)
+        // Block-Grenzen setzen (für alle Zellen)
+        if (isRightBlockBorder)
         {
-            var relatedBorderColor = colors.Accent.Lerp(colors.CellBackground, 0.3f);
-            style.BorderColor = relatedBorderColor;
-            style.BorderWidthLeft = 1;
-            style.BorderWidthRight = 1;
-            style.BorderWidthTop = 1;
-            style.BorderWidthBottom = 1;
+            style.BorderWidthRight = 3;
+            style.BorderColor = blockBorderColor;
         }
-        else
+        if (isBottomBlockBorder)
         {
-            // Nur für nicht-related Zellen: 3x3-Block-Grenzen setzen
-            if (isRightBlockBorder)
-            {
-                style.BorderWidthRight = 3;
-                style.BorderColor = blockBorderColor;
-            }
-            if (isBottomBlockBorder)
-            {
-                style.BorderWidthBottom = 3;
-                style.BorderColor = blockBorderColor;
-            }
-            if (isLeftBlockBorder)
-            {
-                style.BorderWidthLeft = 3;
-                style.BorderColor = blockBorderColor;
-            }
-            if (isTopBlockBorder)
-            {
-                style.BorderWidthTop = 3;
-                style.BorderColor = blockBorderColor;
-            }
+            style.BorderWidthBottom = 3;
+            style.BorderColor = blockBorderColor;
+        }
+        if (isLeftBlockBorder)
+        {
+            style.BorderWidthLeft = 3;
+            style.BorderColor = blockBorderColor;
+        }
+        if (isTopBlockBorder)
+        {
+            style.BorderWidthTop = 3;
+            style.BorderColor = blockBorderColor;
         }
 
         AddThemeStyleboxOverride("normal", style);
@@ -1713,6 +1871,8 @@ public partial class SudokuCellButton : Button
         AddThemeColorOverride("font_hover_color", textColor);
         AddThemeColorOverride("font_pressed_color", textColor);
 
-        AddThemeFontSizeOverride("font_size", 24);
+        // Größere Schrift für Kids-Modus (größere Zellen)
+        int fontSize = _gridSize == 4 ? 36 : 24;
+        AddThemeFontSizeOverride("font_size", fontSize);
     }
 }
