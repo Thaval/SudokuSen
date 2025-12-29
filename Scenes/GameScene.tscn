@@ -20,37 +20,44 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="Header" type="HBoxContainer" parent="VBoxContainer"]
+[node name="HeaderMargin" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 0
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer/HeaderMargin"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="BackButton" type="Button" parent="VBoxContainer/Header"]
+[node name="BackButton" type="Button" parent="VBoxContainer/HeaderMargin/Header"]
 custom_minimum_size = Vector2(100, 40)
 layout_mode = 2
 text = "← Menü"
 
-[node name="Spacer" type="Control" parent="VBoxContainer/Header"]
+[node name="Spacer" type="Control" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="DifficultyLabel" type="Label" parent="VBoxContainer/Header"]
+[node name="DifficultyLabel" type="Label" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
 text = "Schwierigkeit: Mittel"
 
-[node name="Spacer2" type="Control" parent="VBoxContainer/Header"]
+[node name="Spacer2" type="Control" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TimerLabel" type="Label" parent="VBoxContainer/Header"]
+[node name="TimerLabel" type="Label" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "00:00"
 
-[node name="Spacer3" type="Control" parent="VBoxContainer/Header"]
+[node name="Spacer3" type="Control" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MistakesLabel" type="Label" parent="VBoxContainer/Header"]
+[node name="MistakesLabel" type="Label" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
 text = "Fehler: 0"
 
@@ -91,10 +98,17 @@ layout_mode = 2
 layout_mode = 2
 columns = 9
 
-[node name="NumberPadContainer" type="CenterContainer" parent="VBoxContainer"]
+[node name="NumberPadMargin" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="NumberPadContainer" type="CenterContainer" parent="VBoxContainer/NumberPadMargin"]
 layout_mode = 2
 
-[node name="NumberPad" type="HBoxContainer" parent="VBoxContainer/NumberPadContainer"]
+[node name="NumberPad" type="HBoxContainer" parent="VBoxContainer/NumberPadMargin/NumberPadContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 

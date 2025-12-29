@@ -63,13 +63,13 @@ public partial class GameScene : Control
     public override void _Ready()
     {
         // UI-Referenzen holen
-        _backButton = GetNode<Button>("VBoxContainer/Header/BackButton");
-        _difficultyLabel = GetNode<Label>("VBoxContainer/Header/DifficultyLabel");
-        _timerLabel = GetNode<Label>("VBoxContainer/Header/TimerLabel");
-        _mistakesLabel = GetNode<Label>("VBoxContainer/Header/MistakesLabel");
+        _backButton = GetNode<Button>("VBoxContainer/HeaderMargin/Header/BackButton");
+        _difficultyLabel = GetNode<Label>("VBoxContainer/HeaderMargin/Header/DifficultyLabel");
+        _timerLabel = GetNode<Label>("VBoxContainer/HeaderMargin/Header/TimerLabel");
+        _mistakesLabel = GetNode<Label>("VBoxContainer/HeaderMargin/Header/MistakesLabel");
         _gridPanel = GetNode<PanelContainer>("VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer/GridPanel");
         _gridContainer = GetNode<GridContainer>("VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer/GridPanel/GridContainer");
-        _numberPad = GetNode<HBoxContainer>("VBoxContainer/NumberPadContainer/NumberPad");
+        _numberPad = GetNode<HBoxContainer>("VBoxContainer/NumberPadMargin/NumberPadContainer/NumberPad");
         _overlayContainer = GetNode<Control>("OverlayContainer");
 
         // Achsen-Labels erstellen
@@ -1431,7 +1431,7 @@ public partial class GameScene : Control
 
     private void CreateHintButton()
     {
-        var header = GetNode<HBoxContainer>("VBoxContainer/Header");
+        var header = GetNode<HBoxContainer>("VBoxContainer/HeaderMargin/Header");
         var theme = GetNode<ThemeService>("/root/ThemeService");
         var colors = theme.CurrentColors;
 
@@ -1453,7 +1453,7 @@ public partial class GameScene : Control
 
     private void CreateAutoCandidatesButton()
     {
-        var header = GetNode<HBoxContainer>("VBoxContainer/Header");
+        var header = GetNode<HBoxContainer>("VBoxContainer/HeaderMargin/Header");
         var theme = GetNode<ThemeService>("/root/ThemeService");
         var colors = theme.CurrentColors;
 

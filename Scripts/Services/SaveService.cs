@@ -9,7 +9,7 @@ public partial class SaveService : Node
 {
     // Settings are always stored in user:// (to bootstrap custom path)
     private const string SETTINGS_PATH = "user://settings.json";
-    
+
     // These paths can be overridden via CustomStoragePath
     private const string DEFAULT_SAVEGAME_FILE = "savegame.json";
     private const string DEFAULT_HISTORY_FILE = "history.json";
@@ -30,7 +30,7 @@ public partial class SaveService : Node
     {
         if (string.IsNullOrWhiteSpace(Settings.CustomStoragePath))
             return "user://";
-        
+
         // Ensure path ends with separator
         string path = Settings.CustomStoragePath.Replace('\\', '/');
         if (!path.EndsWith('/'))

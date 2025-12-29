@@ -7,13 +7,13 @@ public partial class SettingsMenu : Control
 {
     private PanelContainer _panel = null!;
     private Label _title = null!;
-    
+
     // Storage path
     private LineEdit _storagePathEdit = null!;
     private Button _storagePathBrowse = null!;
     private Label _storagePathInfo = null!;
     private FileDialog? _fileDialog;
-    
+
     private OptionButton _themeOption = null!;
     private CheckButton _deadlyCheck = null!;
     private CheckButton _hideCheck = null!;
@@ -45,12 +45,12 @@ public partial class SettingsMenu : Control
         _title = GetNode<Label>("Title");
 
         var settingsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer");
-        
+
         // Storage path controls
         _storagePathEdit = settingsContainer.GetNode<LineEdit>("StoragePathRow/StoragePathEdit");
         _storagePathBrowse = settingsContainer.GetNode<Button>("StoragePathRow/StoragePathBrowse");
         _storagePathInfo = settingsContainer.GetNode<Label>("StoragePathInfo");
-        
+
         _themeOption = settingsContainer.GetNode<OptionButton>("ThemeRow/ThemeOption");
         _deadlyCheck = settingsContainer.GetNode<CheckButton>("DeadlyRow/DeadlyCheck");
         _hideCheck = settingsContainer.GetNode<CheckButton>("HideRow/HideCheck");
@@ -98,7 +98,7 @@ public partial class SettingsMenu : Control
         _storagePathEdit.TextSubmitted += OnStoragePathSubmitted;
         _storagePathEdit.FocusExited += OnStoragePathFocusExited;
         _storagePathBrowse.Pressed += OnStoragePathBrowsePressed;
-        
+
         // Events - Theme & Display
         _themeOption.ItemSelected += OnThemeSelected;
         _deadlyCheck.Toggled += OnDeadlyToggled;
@@ -378,13 +378,13 @@ public partial class SettingsMenu : Control
     {
         var saveService = GetNode<SaveService>("/root/SaveService");
         string cleanPath = path.Trim();
-        
+
         // Validate path if not empty
         if (!string.IsNullOrEmpty(cleanPath))
         {
             // Normalize path separators
             cleanPath = cleanPath.Replace('\\', '/');
-            
+
             // Check if path is valid and accessible
             if (!DirAccess.DirExistsAbsolute(cleanPath))
             {
@@ -401,7 +401,7 @@ public partial class SettingsMenu : Control
 
         saveService.Settings.CustomStoragePath = cleanPath;
         SaveSettings();
-        
+
         // Reload data from new location
         saveService.LoadAll();
         UpdateStoragePathInfo();
