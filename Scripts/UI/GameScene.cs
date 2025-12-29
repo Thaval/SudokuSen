@@ -866,7 +866,10 @@ public partial class GameScene : Control
             UpdateMistakesLabel();
 
             // Visuelles Feedback
-            _cellButtons[_selectedRow, _selectedCol].FlashError();
+            if (_cellButtons != null)
+            {
+                _cellButtons[_selectedRow, _selectedCol].FlashError();
+            }
 
             if (gameOver)
             {
@@ -1300,27 +1303,8 @@ public partial class GameScene : Control
         var gridCenter = new CenterContainer();
         vbox.AddChild(gridCenter);
 
-        var miniGridPanel = new PanelContainer();
-        miniGridPanel.CustomMinimumSize = new Vector2(270, 270);
-        var miniGridStyle = new StyleBoxFlat();
-        miniGridStyle.BgColor = colors.GridLineThick;
-        miniGridStyle.ContentMarginLeft = 2;
-        miniGridStyle.ContentMarginRight = 2;
-        miniGridStyle.ContentMarginTop = 2;
-        miniGridStyle.ContentMarginBottom = 2;
-        miniGridStyle.CornerRadiusTopLeft = 4;
-        miniGridStyle.CornerRadiusTopRight = 4;
-        miniGridStyle.CornerRadiusBottomLeft = 4;
-        miniGridStyle.CornerRadiusBottomRight = 4;
-        miniGridPanel.AddThemeStyleboxOverride("panel", miniGridStyle);
-        gridCenter.AddChild(miniGridPanel);
-
-        var miniGrid = new GridContainer();
-        miniGrid.Columns = 9;
-        miniGridPanel.AddChild(miniGrid);
-
-        // Erstelle Mini-Grid Zellen
-        CreateMiniGridCells(miniGrid, theme, colors);
+        var miniGrid = CreateHintMiniGrid(theme, colors);
+        gridCenter.AddChild(miniGrid);
 
         // Seiten-Inhalt (Text)
         var contentLabel = new RichTextLabel();
@@ -1370,112 +1354,53 @@ public partial class GameScene : Control
         navBox.AddChild(nextButton);
     }
 
-    private void CreateMiniGridCells(GridContainer miniGrid, ThemeService theme, ThemeService.ThemeColors colors)
+    private Control CreateHintMiniGrid(ThemeService theme, ThemeService.ThemeColors colors)
     {
-        if (_gameState == null || _currentHint == null) return;
+        if (_gameState == null || _currentHint == null) return new Control();
 
-        // Bestimme welche Zellen hervorgehoben werden sollen
-        var highlightedCells = new HashSet<(int row, int col)>();
-        bool showSolution = _hintPage >= 2;
-
-        switch (_hintPage)
-        {
-            case 0: // Nur Zielzelle
-                highlightedCells.Add((_currentHint.Row, _currentHint.Col));
-                break;
-            case 1: // Zielzelle + Related Cells
-                highlightedCells.Add((_currentHint.Row, _currentHint.Col));
-                foreach (var cell in _currentHint.RelatedCells)
-                {
-                    highlightedCells.Add(cell);
-                }
-                break;
-            case 2: // Nur Zielzelle mit Lösung
-            case 3:
-                highlightedCells.Add((_currentHint.Row, _currentHint.Col));
-                break;
-        }
+        int[,] values = new int[9, 9];
+        bool[,] isGiven = new bool[9, 9];
 
         for (int row = 0; row < 9; row++)
         {
             for (int col = 0; col < 9; col++)
             {
                 var cell = _gameState.Grid[row, col];
-                bool isTarget = row == _currentHint.Row && col == _currentHint.Col;
-                bool isRelated = highlightedCells.Contains((row, col)) && !isTarget;
-
-                var cellPanel = new PanelContainer();
-                cellPanel.CustomMinimumSize = new Vector2(28, 28);
-
-                // Bestimme Hintergrundfarbe
-                Color bgColor;
-                if (isTarget)
-                    bgColor = colors.CellBackgroundSelected;
-                else if (isRelated && _hintPage == 1)
-                    bgColor = new Color("ffb74d").Lerp(colors.CellBackground, 0.4f);
-                else if (cell.IsGiven)
-                    bgColor = colors.CellBackgroundGiven;
-                else
-                    bgColor = colors.CellBackground;
-
-                var cellStyle = new StyleBoxFlat();
-                cellStyle.BgColor = bgColor;
-
-                // Margins für 3x3-Block-Grenzen
-                bool isRightBlockBorder = (col + 1) % 3 == 0 && col < 8;
-                bool isBottomBlockBorder = (row + 1) % 3 == 0 && row < 8;
-
-                cellStyle.ContentMarginRight = isRightBlockBorder ? 2 : 1;
-                cellStyle.ContentMarginBottom = isBottomBlockBorder ? 2 : 1;
-                cellStyle.ContentMarginLeft = 1;
-                cellStyle.ContentMarginTop = 1;
-
-                // Border für Zielzelle
-                if (isTarget)
-                {
-                    cellStyle.BorderColor = colors.Accent;
-                    cellStyle.BorderWidthLeft = 2;
-                    cellStyle.BorderWidthRight = 2;
-                    cellStyle.BorderWidthTop = 2;
-                    cellStyle.BorderWidthBottom = 2;
-                }
-
-                cellPanel.AddThemeStyleboxOverride("panel", cellStyle);
-
-                // Label für Zahl
-                var label = new Label();
-                label.HorizontalAlignment = HorizontalAlignment.Center;
-                label.VerticalAlignment = VerticalAlignment.Center;
-                label.AddThemeFontSizeOverride("font_size", 14);
-
-                // Bestimme anzuzeigenden Wert
-                int displayValue = cell.Value;
-                if (isTarget && showSolution && cell.Value == 0)
-                {
-                    displayValue = _currentHint.Value;
-                }
-
-                if (displayValue > 0)
-                {
-                    label.Text = displayValue.ToString();
-
-                    // Textfarbe
-                    if (isTarget && showSolution && cell.Value == 0)
-                        label.AddThemeColorOverride("font_color", new Color("4caf50")); // Grün für Lösung
-                    else if (cell.IsGiven)
-                        label.AddThemeColorOverride("font_color", colors.TextGiven);
-                    else
-                        label.AddThemeColorOverride("font_color", colors.TextUser);
-                }
-                else
-                {
-                    label.Text = "";
-                }
-
-                cellPanel.AddChild(label);
-                miniGrid.AddChild(cellPanel);
+                values[row, col] = cell.Value;
+                isGiven[row, col] = cell.IsGiven;
             }
         }
+
+        var highlightedCells = new HashSet<(int row, int col)> { (_currentHint.Row, _currentHint.Col) };
+        var relatedCells = new HashSet<(int row, int col)>();
+
+        if (_hintPage == 1)
+        {
+            foreach (var cell in _currentHint.RelatedCells)
+            {
+                if (cell.row == _currentHint.Row && cell.col == _currentHint.Col) continue;
+                relatedCells.Add(cell);
+            }
+        }
+
+        (int row, int col, int value)? solutionCell = null;
+        bool showSolution = _hintPage >= 2;
+        if (showSolution && values[_currentHint.Row, _currentHint.Col] == 0)
+        {
+            solutionCell = (_currentHint.Row, _currentHint.Col, _currentHint.Value);
+        }
+
+        return MiniGridRenderer.CreateMiniGridWithLegends(
+            values,
+            isGiven,
+            highlightedCells,
+            relatedCells,
+            theme,
+            colors,
+            solutionCell,
+            candidates: null,
+            cellSize: 28
+        );
     }
 
     private string GetHintPageTitle()
@@ -1494,14 +1419,16 @@ public partial class GameScene : Control
     {
         if (_currentHint == null) return "";
 
+           string cellRef = ToCellRef(_currentHint.Row, _currentHint.Col);
+
         return _hintPage switch
         {
             0 => $"[b]Technik:[/b] {_currentHint.TechniqueName}\n\n" +
                  $"{_currentHint.TechniqueDescription}\n\n" +
                  $"Schaue dir die [color=#64b5f6]blau markierte Zelle[/color] im Spielfeld an.\n" +
-                 $"[i](Zeile {_currentHint.Row + 1}, Spalte {_currentHint.Col + 1})[/i]",
+                  $"[i](Zelle {cellRef})[/i]",
 
-            1 => $"Die [color=#ffb74d]orange markierten Zellen[/color] sind relevant für diesen Hinweis.\n\n" +
+              1 => $"Die markierten Zellen sind relevant für diesen Hinweis.\n\n" +
                  $"Diese Zellen befinden sich in der gleichen Zeile, Spalte oder im gleichen 3x3-Block " +
                  $"wie die Zielzelle und beeinflussen, welche Zahlen dort möglich sind.\n\n" +
                  $"[i]Anzahl relevanter Zellen: {_currentHint.RelatedCells.Count}[/i]",
@@ -1514,6 +1441,12 @@ public partial class GameScene : Control
 
             _ => ""
         };
+    }
+
+    private static string ToCellRef(int row, int col)
+    {
+        char colChar = (char)('A' + Math.Clamp(col, 0, 25));
+        return $"{colChar}{row + 1}";
     }
 
     private void OnHintPrevPressed()

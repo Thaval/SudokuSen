@@ -13,10 +13,10 @@ public partial class HistoryMenu : Control
 
     public override void _Ready()
     {
-        _backButton = GetNode<Button>("VBoxContainer/Header/BackButton");
-        _title = GetNode<Label>("VBoxContainer/Header/Title");
-        _panel = GetNode<PanelContainer>("VBoxContainer/MarginContainer/Panel");
-        _historyList = GetNode<VBoxContainer>("VBoxContainer/MarginContainer/Panel/ScrollContainer/HistoryList");
+        _backButton = GetNode<Button>("BackButton");
+        _title = GetNode<Label>("Title");
+        _panel = GetNode<PanelContainer>("CenterContainer/Panel");
+        _historyList = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/HistoryList");
         _emptyLabel = _historyList.GetNode<Label>("EmptyLabel");
 
         _backButton.Pressed += OnBackPressed;

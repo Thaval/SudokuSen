@@ -11,145 +11,149 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_stats")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 16
+offset_top = 16
+offset_right = 116
+offset_bottom = 56
+text = "← Zurück"
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200
+offset_top = 16
+offset_right = 200
+offset_bottom = 56
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 28
+text = "Statistik"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 72
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 16
 
-[node name="Header" type="HBoxContainer" parent="VBoxContainer"]
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(700, 500)
 layout_mode = 2
 
-[node name="BackButton" type="Button" parent="VBoxContainer/Header"]
-custom_minimum_size = Vector2(100, 40)
-layout_mode = 2
-text = "← Zurück"
-
-[node name="Spacer" type="Control" parent="VBoxContainer/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Title" type="Label" parent="VBoxContainer/Header"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "Statistik"
-
-[node name="Spacer2" type="Control" parent="VBoxContainer/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CenterContainer" type="CenterContainer" parent="VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="Panel" type="PanelContainer" parent="VBoxContainer/CenterContainer"]
-custom_minimum_size = Vector2(600, 0)
-layout_mode = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/CenterContainer/Panel"]
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel/ScrollContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 32
 theme_override_constants/margin_top = 32
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/CenterContainer/Panel/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="OverviewSection" type="VBoxContainer" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="OverviewSection" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="OverviewTitle" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/OverviewSection"]
+[node name="OverviewTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Übersicht"
 
-[node name="TotalGames" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/OverviewSection"]
+[node name="TotalGames" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
 text = "Spiele gesamt: 0"
 
-[node name="WinsLosses" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/OverviewSection"]
+[node name="WinsLosses" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
 text = "Gewonnen: 0 | Verloren: 0"
 
-[node name="WinRateContainer" type="HBoxContainer" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/OverviewSection"]
+[node name="WinRateContainer" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
 
-[node name="WinRateLabel" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/OverviewSection/WinRateContainer"]
+[node name="WinRateLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection/WinRateContainer"]
 layout_mode = 2
 text = "Gewinnrate: 0%"
 
-[node name="WinRateBar" type="ProgressBar" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/OverviewSection/WinRateContainer"]
+[node name="WinRateBar" type="ProgressBar" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection/WinRateContainer"]
 custom_minimum_size = Vector2(200, 20)
 layout_mode = 2
 value = 50.0
 show_percentage = false
 
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="TimeSection" type="VBoxContainer" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="TimeSection" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TimeTitle" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/TimeSection"]
+[node name="TimeTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Zeiten"
 
-[node name="BestTime" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/TimeSection"]
+[node name="BestTime" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 text = "Beste Zeit: --:--"
 
-[node name="WorstTime" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/TimeSection"]
+[node name="WorstTime" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 text = "Längste Zeit: --:--"
 
-[node name="AvgTimeKids" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/TimeSection"]
+[node name="AvgTimeKids" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 text = "Ø Kids: --:--"
 
-[node name="AvgTimeEasy" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/TimeSection"]
+[node name="AvgTimeEasy" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 text = "Ø Leicht: --:--"
 
-[node name="AvgTimeMedium" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/TimeSection"]
+[node name="AvgTimeMedium" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 text = "Ø Mittel: --:--"
 
-[node name="AvgTimeHard" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/TimeSection"]
+[node name="AvgTimeHard" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 text = "Ø Schwer: --:--"
 
-[node name="HSeparator2" type="HSeparator" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="HSeparator2" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="MistakesSection" type="VBoxContainer" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="MistakesSection" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="MistakesTitle" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/MistakesSection"]
+[node name="MistakesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Fehler"
 
-[node name="AvgMistakesKids" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/MistakesSection"]
+[node name="AvgMistakesKids" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
 text = "Ø Kids: -"
 
-[node name="AvgMistakesEasy" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/MistakesSection"]
+[node name="AvgMistakesEasy" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
 text = "Ø Leicht: -"
 
-[node name="AvgMistakesMedium" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/MistakesSection"]
+[node name="AvgMistakesMedium" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
 text = "Ø Mittel: -"
 
-[node name="AvgMistakesHard" type="Label" parent="VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer/MistakesSection"]
+[node name="AvgMistakesHard" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
 text = "Ø Schwer: -"

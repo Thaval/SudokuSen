@@ -11,11 +11,36 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_settings")
 
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 16
+offset_top = 16
+offset_right = 116
+offset_bottom = 56
+text = "← Zurück"
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200
+offset_top = 16
+offset_right = 200
+offset_bottom = 56
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 28
+text = "Einstellungen"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 72
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -33,15 +58,6 @@ theme_override_constants/margin_bottom = 32
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
-
-[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "Einstellungen"
-horizontal_alignment = 1
-
-[node name="HSeparator" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
 
 [node name="SettingsContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -91,11 +107,3 @@ text = "Zeile/Spalte/Block highlighten"
 
 [node name="HighlightCheck" type="CheckButton" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer/HighlightRow"]
 layout_mode = 2
-
-[node name="HSeparator2" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="BackButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-text = "Zurück"

@@ -448,11 +448,11 @@ public partial class TipsMenu : Control
 
     public override void _Ready()
     {
-        _backButton = GetNode<Button>("VBoxContainer/Header/BackButton");
-        _title = GetNode<Label>("VBoxContainer/Header/Title");
-        _panel = GetNode<PanelContainer>("VBoxContainer/CenterContainer/Panel");
+        _backButton = GetNode<Button>("BackButton");
+        _title = GetNode<Label>("Title");
+        _panel = GetNode<PanelContainer>("CenterContainer/Panel");
 
-        var contentContainer = GetNode<VBoxContainer>("VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer");
+        var contentContainer = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/VBoxContainer");
         _tipTitle = contentContainer.GetNode<Label>("TipTitle");
         _scrollContainer = contentContainer.GetNode<ScrollContainer>("ScrollContainer");
         _scrollContent = _scrollContainer.GetNode<VBoxContainer>("ScrollContent");
@@ -535,10 +535,18 @@ public partial class TipsMenu : Control
         if (tip.Grid != null)
         {
             var gridCenter = new CenterContainer();
-            gridCenter.CustomMinimumSize = new Vector2(0, GetGridHeight(tip.Grid));
             _scrollContent.AddChild(gridCenter);
 
-            var miniGrid = CreateMiniGrid(tip.Grid, theme, colors);
+            var miniGrid = MiniGridRenderer.CreateMiniGridWithLegends(
+                tip.Grid.Values,
+                tip.Grid.IsGiven,
+                tip.Grid.HighlightedCells,
+                tip.Grid.RelatedCells,
+                theme,
+                colors,
+                tip.Grid.SolutionCell,
+                tip.Grid.Candidates
+            );
             gridCenter.AddChild(miniGrid);
         }
 
@@ -557,162 +565,6 @@ public partial class TipsMenu : Control
 
         // Scroll to top
         _scrollContainer.ScrollVertical = 0;
-    }
-
-    private float GetGridHeight(MiniGridData grid)
-    {
-        int rows = grid.Values.GetLength(0);
-        return rows * 36 + 20;
-    }
-
-    private Control CreateMiniGrid(MiniGridData gridData, ThemeService theme, ThemeService.ThemeColors colors)
-    {
-        int rows = gridData.Values.GetLength(0);
-        int cols = gridData.Values.GetLength(1);
-
-        var panel = new PanelContainer();
-        var panelStyle = new StyleBoxFlat();
-        panelStyle.BgColor = colors.GridLineThick;
-        panelStyle.ContentMarginLeft = 2;
-        panelStyle.ContentMarginRight = 2;
-        panelStyle.ContentMarginTop = 2;
-        panelStyle.ContentMarginBottom = 2;
-        panelStyle.CornerRadiusTopLeft = 4;
-        panelStyle.CornerRadiusTopRight = 4;
-        panelStyle.CornerRadiusBottomLeft = 4;
-        panelStyle.CornerRadiusBottomRight = 4;
-        panel.AddThemeStyleboxOverride("panel", panelStyle);
-
-        var grid = new GridContainer();
-        grid.Columns = cols;
-        panel.AddChild(grid);
-
-        for (int row = 0; row < rows; row++)
-        {
-            for (int col = 0; col < cols; col++)
-            {
-                var cell = CreateMiniGridCell(row, col, gridData, theme, colors, rows, cols);
-                grid.AddChild(cell);
-            }
-        }
-
-        return panel;
-    }
-
-    private Control CreateMiniGridCell(int row, int col, MiniGridData gridData, ThemeService theme, ThemeService.ThemeColors colors, int totalRows, int totalCols)
-    {
-        int value = gridData.Values[row, col];
-        bool isGiven = gridData.IsGiven[row, col];
-        bool isHighlighted = gridData.HighlightedCells.Contains((row, col));
-        bool isRelated = gridData.RelatedCells.Contains((row, col));
-        bool isSolution = gridData.SolutionCell.HasValue &&
-                          gridData.SolutionCell.Value.row == row &&
-                          gridData.SolutionCell.Value.col == col;
-
-        var cellPanel = new PanelContainer();
-        cellPanel.CustomMinimumSize = new Vector2(34, 34);
-
-        // Background color
-        Color bgColor;
-        if (isHighlighted)
-            bgColor = colors.CellBackgroundSelected;
-        else if (isRelated)
-            bgColor = new Color("ffb74d").Lerp(colors.CellBackground, 0.5f);
-        else if (isGiven)
-            bgColor = colors.CellBackgroundGiven;
-        else
-            bgColor = colors.CellBackground;
-
-        var cellStyle = new StyleBoxFlat();
-        cellStyle.BgColor = bgColor;
-
-        // Margins for grid lines and 3x3 block borders
-        bool isRightBlockBorder = totalCols == 9 && (col + 1) % 3 == 0 && col < totalCols - 1;
-        bool isBottomBlockBorder = totalRows == 9 && (row + 1) % 3 == 0 && row < totalRows - 1;
-
-        cellStyle.ContentMarginRight = isRightBlockBorder ? 2 : 1;
-        cellStyle.ContentMarginBottom = isBottomBlockBorder ? 2 : 1;
-        cellStyle.ContentMarginLeft = 1;
-        cellStyle.ContentMarginTop = 1;
-
-        // Border for highlighted cells
-        if (isHighlighted)
-        {
-            cellStyle.BorderColor = colors.Accent;
-            cellStyle.BorderWidthLeft = 2;
-            cellStyle.BorderWidthRight = 2;
-            cellStyle.BorderWidthTop = 2;
-            cellStyle.BorderWidthBottom = 2;
-        }
-
-        cellPanel.AddThemeStyleboxOverride("panel", cellStyle);
-
-        // Check if this cell has candidates to display
-        bool hasCandidates = gridData.Candidates != null &&
-                             gridData.Candidates.ContainsKey((row, col)) &&
-                             value == 0;
-
-        if (hasCandidates)
-        {
-            // Show candidates in 3x3 mini-grid
-            var candidateGrid = new GridContainer();
-            candidateGrid.Columns = 3;
-            candidateGrid.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-
-            var candidates = gridData.Candidates![(row, col)];
-            var candidateSet = new HashSet<int>(candidates);
-
-            for (int i = 1; i <= 9; i++)
-            {
-                var candLabel = new Label();
-                candLabel.Text = candidateSet.Contains(i) ? i.ToString() : "";
-                candLabel.HorizontalAlignment = HorizontalAlignment.Center;
-                candLabel.VerticalAlignment = VerticalAlignment.Center;
-                candLabel.AddThemeFontSizeOverride("font_size", 8);
-                candLabel.AddThemeColorOverride("font_color", new Color("2196f3")); // Blue for candidates
-                candLabel.SizeFlagsHorizontal = Control.SizeFlags.Expand | Control.SizeFlags.Fill;
-                candLabel.SizeFlagsVertical = Control.SizeFlags.Expand | Control.SizeFlags.Fill;
-                candidateGrid.AddChild(candLabel);
-            }
-            cellPanel.AddChild(candidateGrid);
-        }
-        else
-        {
-            // Show value
-            var label = new Label();
-            label.HorizontalAlignment = HorizontalAlignment.Center;
-            label.VerticalAlignment = VerticalAlignment.Center;
-            label.AddThemeFontSizeOverride("font_size", 16);
-
-            int displayValue = value;
-            if (isSolution && value == 0)
-            {
-                displayValue = gridData.SolutionCell!.Value.value;
-            }
-
-            if (displayValue > 0)
-            {
-                label.Text = displayValue.ToString();
-
-                Color textColor;
-                if (isSolution && value == 0)
-                    textColor = new Color("4caf50"); // Green for solution
-                else if (isGiven)
-                    textColor = colors.TextGiven;
-                else
-                    textColor = colors.TextUser;
-
-                label.AddThemeColorOverride("font_color", textColor);
-            }
-            else
-            {
-                label.Text = "";
-            }
-
-            cellPanel.AddChild(label);
-        }
-
-        return cellPanel;
     }
 
     private void OnPrevPressed()

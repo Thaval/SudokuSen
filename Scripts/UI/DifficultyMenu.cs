@@ -21,7 +21,7 @@ public partial class DifficultyMenu : Control
     public override void _Ready()
     {
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
-        _title = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Title");
+        _title = GetNode<Label>("Title");
         _description = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Description");
 
         var buttonContainer = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer");
@@ -33,7 +33,7 @@ public partial class DifficultyMenu : Control
         _easyTechniques = buttonContainer.GetNode<Label>("EasyContainer/EasyTechniques");
         _mediumTechniques = buttonContainer.GetNode<Label>("MediumContainer/MediumTechniques");
         _hardTechniques = buttonContainer.GetNode<Label>("HardContainer/HardTechniques");
-        _backButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/VBoxContainer/BackButton");
+        _backButton = GetNode<Button>("BackButton");
 
         _kidsButton.Pressed += () => OnDifficultySelected(Difficulty.Kids);
         _easyButton.Pressed += () => OnDifficultySelected(Difficulty.Easy);

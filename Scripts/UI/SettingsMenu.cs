@@ -16,14 +16,14 @@ public partial class SettingsMenu : Control
     public override void _Ready()
     {
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
-        _title = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Title");
+        _title = GetNode<Label>("Title");
 
         var settingsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/VBoxContainer/SettingsContainer");
         _themeOption = settingsContainer.GetNode<OptionButton>("ThemeRow/ThemeOption");
         _deadlyCheck = settingsContainer.GetNode<CheckButton>("DeadlyRow/DeadlyCheck");
         _hideCheck = settingsContainer.GetNode<CheckButton>("HideRow/HideCheck");
         _highlightCheck = settingsContainer.GetNode<CheckButton>("HighlightRow/HighlightCheck");
-        _backButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/VBoxContainer/BackButton");
+        _backButton = GetNode<Button>("BackButton");
 
         // Theme-Optionen
         _themeOption.AddItem("Hell", 0);

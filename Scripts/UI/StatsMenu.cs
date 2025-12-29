@@ -31,11 +31,11 @@ public partial class StatsMenu : Control
 
     public override void _Ready()
     {
-        _backButton = GetNode<Button>("VBoxContainer/Header/BackButton");
-        _title = GetNode<Label>("VBoxContainer/Header/Title");
-        _panel = GetNode<PanelContainer>("VBoxContainer/CenterContainer/Panel");
+        _backButton = GetNode<Button>("BackButton");
+        _title = GetNode<Label>("Title");
+        _panel = GetNode<PanelContainer>("CenterContainer/Panel");
 
-        var statsContainer = GetNode<VBoxContainer>("VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer");
+        var statsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer");
 
         var overviewSection = statsContainer.GetNode<VBoxContainer>("OverviewSection");
         _totalGames = overviewSection.GetNode<Label>("TotalGames");
@@ -184,7 +184,7 @@ public partial class StatsMenu : Control
 
     private void ApplyLabelTheme(ThemeService.ThemeColors colors)
     {
-        var statsContainer = GetNode<VBoxContainer>("VBoxContainer/CenterContainer/Panel/MarginContainer/VBoxContainer");
+        var statsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer");
 
         foreach (var section in statsContainer.GetChildren())
         {
