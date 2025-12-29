@@ -57,7 +57,7 @@ public static class SudokuGenerator
     public static SudokuGameState GenerateForTechnique(string techniqueId, Difficulty difficulty, int? seed = null)
     {
         var rng = seed.HasValue ? new Random(seed.Value) : new Random();
-        
+
         // Generiere mehrere Puzzles und wähle das beste für die Technik
         SudokuGameState? bestPuzzle = null;
         int bestScore = -1;
@@ -67,13 +67,13 @@ public static class SudokuGenerator
         {
             var puzzle = Generate(difficulty, seed.HasValue ? seed.Value + attempt : null);
             int score = EvaluateTechniqueScore(puzzle, techniqueId);
-            
+
             if (score > bestScore)
             {
                 bestScore = score;
                 bestPuzzle = puzzle;
             }
-            
+
             // Früh abbrechen wenn ein gutes Puzzle gefunden wurde
             if (score >= 3) break;
         }
@@ -91,7 +91,7 @@ public static class SudokuGenerator
         int score = 0;
         int size = puzzle.GridSize;
         int emptyCells = 0;
-        
+
         // Zähle leere Zellen
         for (int row = 0; row < size; row++)
         {
@@ -106,17 +106,17 @@ public static class SudokuGenerator
         score = techniqueId switch
         {
             // Leichte Techniken - weniger leere Zellen sind besser
-            "NakedSingle" or "HiddenSingleRow" or "HiddenSingleCol" or "HiddenSingleBlock" 
+            "NakedSingle" or "HiddenSingleRow" or "HiddenSingleCol" or "HiddenSingleBlock"
                 => Math.Max(0, 50 - emptyCells),
-            
+
             // Mittlere Techniken - mittlere Anzahl leerer Zellen
             "NakedPair" or "NakedTriple" or "HiddenPair" or "PointingPair" or "BoxLineReduction"
                 => Math.Min(emptyCells, 55 - emptyCells) / 5,
-            
+
             // Schwere Techniken - mehr leere Zellen sind besser
             "XWing" or "Swordfish" or "XYWing" or "Skyscraper" or "SimpleColoring"
                 => emptyCells / 10,
-            
+
             _ => emptyCells / 15
         };
 

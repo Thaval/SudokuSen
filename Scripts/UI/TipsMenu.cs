@@ -129,9 +129,9 @@ public partial class TipsMenu : Control
             "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
             "Die 7 muss irgendwo in diesem Block platziert werden.\n\n" +
             "Pruefe jede leere Zelle:\n" +
-            "[color=#f44336]-[/color] (0,0): Hat andere Einschraenkungen\n" +
-            "[color=#f44336]-[/color] (1,1), (1,2): 7 in Spalte blockiert\n" +
-            "[color=#4caf50]-[/color] (2,1): Einzige Moeglichkeit fuer 7!\n\n" +
+            "[color=#f44336]-[/color] A1: Hat andere Einschraenkungen\n" +
+            "[color=#f44336]-[/color] B2, C2: 7 in Spalte blockiert\n" +
+            "[color=#4caf50]✓[/color] B3: Einzige Moeglichkeit fuer 7!\n\n" +
             "[b]Unterschied zum Naked Single:[/b]\n" +
             "Naked: Zelle hat nur 1 Kandidat\n" +
             "Hidden: Zahl hat nur 1 Position"
@@ -145,7 +145,7 @@ public partial class TipsMenu : Control
             { 0, 0, 0, 5, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 5 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 5, 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 5, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 5, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -157,23 +157,29 @@ public partial class TipsMenu : Control
                 isGiven[r, c] = values[r, c] != 0;
 
         var highlighted = new HashSet<(int, int)>();
-        var related = new HashSet<(int, int)> { (0, 0), (1, 3), (2, 8), (4, 1), (5, 5) };
+        var related = new HashSet<(int, int)> { (0, 0), (1, 3), (2, 8), (4, 2), (5, 5) };
 
         return new TipData(
             "Scanning-Technik",
             "[b][color=#4fc3f7]Die Scanning-Technik[/color][/b]\n\n" +
-            "Gehe systematisch jede Zahl durch und scanne das gesamte Spielfeld.\n\n" +
+            "Gehe systematisch jede Zahl durch und scanne das gesamte Spielfeld nach Positionen wo diese Zahl noch fehlt.\n\n" +
             "[b][color=#ffb74d]Beispiel: Scanning fuer die 5[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related),
-            "[b][color=#81c784]So scannst du:[/color][/b]\n\n" +
-            "1. Waehle eine Zahl (hier: 5)\n" +
-            "2. Markiere mental alle 5en (orange)\n" +
-            "3. Zeichne gedanklich Linien durch alle 5en\n" +
-            "4. Finde Bloecke wo nur 1 Platz bleibt\n\n" +
-            "[b]Vorteile:[/b]\n" +
-            "[color=#81c784]OK[/color] Schnell erlernbar\n" +
-            "[color=#81c784]OK[/color] Findet viele einfache Loesungen\n" +
-            "[color=#81c784]OK[/color] Keine Notizen noetig"
+            "[b][color=#81c784]Schritt-fuer-Schritt:[/color][/b]\n\n" +
+            "[b]1.[/b] Waehle eine Zahl (z.B. 5)\n" +
+            "[b]2.[/b] Markiere mental alle vorhandenen 5en im Grid\n" +
+            "[b]3.[/b] Schaue auf jeden 3x3-Block einzeln:\n" +
+            "   → Welche Bloecke haben noch keine 5?\n" +
+            "[b]4.[/b] Zeichne gedanklich Linien durch die 5en:\n" +
+            "   → Horizontale Linien durch Zeilen mit 5\n" +
+            "   → Vertikale Linien durch Spalten mit 5\n" +
+            "[b]5.[/b] Finde Bloecke wo nur noch 1 Platz frei ist\n" +
+            "[b]6.[/b] Trage die 5 dort ein!\n\n" +
+            "[b][color=#4caf50]Vorteile:[/color][/b]\n" +
+            "[color=#81c784]✓[/color] Schnell erlernbar fuer Anfaenger\n" +
+            "[color=#81c784]✓[/color] Findet viele einfache Loesungen\n" +
+            "[color=#81c784]✓[/color] Keine Notizen noetig\n" +
+            "[color=#81c784]✓[/color] Perfekt fuer Zahlen 7-9 (die oft vorkommen)"
         );
     }
 
@@ -203,17 +209,31 @@ public partial class TipsMenu : Control
         return new TipData(
             "Kandidaten notieren",
             "[b][color=#4fc3f7]Kandidaten notieren[/color][/b]\n\n" +
-            "Notiere in jeder leeren Zelle alle noch moeglichen Zahlen.\n\n" +
+            "Die Grundlage fuer fortgeschrittene Techniken: Notiere in jeder leeren Zelle alle noch moeglichen Zahlen.\n\n" +
             "[b][color=#ffb74d]Beispiel mit Kandidaten:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related, null, candidates),
-            "[b][color=#81c784]Anleitung:[/color][/b]\n\n" +
-            "1. Waehle eine leere Zelle\n" +
-            "2. Pruefe Zahlen 1-9\n" +
-            "3. Notiere alle uebrigen als Kandidaten\n\n" +
+            "[b][color=#81c784]Schritt-fuer-Schritt:[/color][/b]\n\n" +
+            "[b]1. Waehle eine leere Zelle:[/b]\n" +
+            "   Z.B. Zelle B2 - mittlere Zelle\n\n" +
+            "[b]2. Pruefe Zeile 2:[/b]\n" +
+            "   Welche Zahlen sind bereits da? → 3, 9\n" +
+            "   Koennte sein: 1,2,4,5,6,7,8\n\n" +
+            "[b]3. Pruefe Spalte B:[/b]\n" +
+            "   Welche Zahlen sind bereits da? → 5, 9\n" +
+            "   Koennte sein: 1,2,3,4,6,7,8\n\n" +
+            "[b]4. Pruefe den 3x3-Block:[/b]\n" +
+            "   Welche Zahlen sind bereits da? → 3,5,9\n" +
+            "   Koennte sein: 1,2,4,6,7,8\n\n" +
+            "[b]5. Kombiniere alles:[/b]\n" +
+            "   Schnittmenge: {1,2,4,6} ← Diese notieren!\n\n" +
             "[b][color=#4fc3f7]Im Spiel:[/color][/b]\n" +
-            "Druecke [b]N[/b] fuer den Notiz-Modus.\n" +
-            "Dann Zahlen eingeben zum Toggeln.\n\n" +
-            "[color=#f44336][b]Wichtig:[/b][/color] Halte Kandidaten aktuell!"
+            "[b]1.[/b] Druecke [b]N[/b] fuer den Notiz-Modus\n" +
+            "[b]2.[/b] Waehle Zelle(n) aus\n" +
+            "[b]3.[/b] Druecke Zahlen 1-9 zum Toggeln\n" +
+            "[b]4.[/b] Druecke [b]N[/b] erneut um in Normal-Modus zu wechseln\n\n" +
+            "[b][color=#f44336]WICHTIG:[/color][/b]\n" +
+            "Halte Kandidaten aktuell! Nach jeder gefundenen Zahl:\n" +
+            "→ Entferne die Zahl aus allen betroffenen Kandidaten!"
         );
     }
 
@@ -240,14 +260,21 @@ public partial class TipsMenu : Control
             "Zwei Zellen mit [b]exakt denselben zwei Kandidaten[/b] bilden ein Paar.\n\n" +
             "[b][color=#ffb74d]Beispiel (Zeile):[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related, null, candidates),
-            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "Zellen [A] und [B] haben beide nur {3,7}.\n" +
-            "Eine ist 3, die andere 7.\n\n" +
-            "[b]Konsequenz:[/b]\n" +
-            "3 und 7 koennen aus allen anderen Zellen der Zeile entfernt werden!\n\n" +
-            "[b]Ergebnis:[/b]\n" +
-            "[C]: 2,4 (3 entfernt)\n" +
-            "[D]: 2 (3,7 entfernt)"
+            "[b][color=#81c784]Schritt-fuer-Schritt:[/color][/b]\n\n" +
+            "[b]1. Finde das Paar:[/b]\n" +
+            "   Zelle A1: {3,7}\n" +
+            "   Zelle B1: {3,7}\n" +
+            "   → Beide haben EXAKT die gleichen Kandidaten!\n\n" +
+            "[b]2. Analysiere die Logik:[/b]\n" +
+            "   Eine Zelle wird 3, die andere 7.\n" +
+            "   Beide Zahlen sind in diesen 2 Zellen 'gefangen'.\n\n" +
+            "[b]3. Finde betroffene Zellen:[/b]\n" +
+            "   Suche alle anderen Zellen in der GLEICHEN Einheit\n" +
+            "   (hier: gleiche Zeile)\n\n" +
+            "[b]4. Eliminiere Kandidaten:[/b]\n" +
+            "   Zelle C1: {2,3,4} → {2,4} (3 entfernt!)\n" +
+            "   Zelle E1: {2,3,7} → {2} (3 und 7 entfernt!)\n\n" +
+            "[b][color=#4caf50]Merke:[/color][/b] Naked Pairs funktionieren in Zeilen, Spalten UND Bloecken!"
         );
     }
 
@@ -270,18 +297,30 @@ public partial class TipsMenu : Control
         return new TipData(
             "Hidden Pair (Verstecktes Paar)",
             "[b][color=#4fc3f7]Hidden Pair[/color][/b]\n\n" +
-            "Zwei Zahlen, die nur in [b]zwei bestimmten Zellen[/b] vorkommen koennen.\n\n" +
+            "Zwei Zahlen, die in einer Einheit nur in [b]zwei bestimmten Zellen[/b] vorkommen koennen - auch wenn diese Zellen mehr Kandidaten haben.\n\n" +
             "[b][color=#ffb74d]Beispiel:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related, null, candidates),
-            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "Wo koennen 1 und 4 in dieser Zeile stehen?\n" +
-            "1: nur in [A] oder [C]\n" +
-            "4: nur in [A] oder [C]\n\n" +
-            "[b]Hidden Pair {1,4}![/b]\n\n" +
-            "[b]Konsequenz:[/b]\n" +
-            "Alle anderen Kandidaten aus [A] und [C] entfernen!\n" +
-            "[A]: nur {1,4}\n" +
-            "[C]: nur {1,4}"
+            "[b][color=#81c784]Schritt-fuer-Schritt:[/color][/b]\n\n" +
+            "[b]1. Untersuche die Kandidaten:[/b]\n" +
+            "   Zelle A1: {1,2,4,5}\n" +
+            "   Zelle C1: {1,2,5,8}\n" +
+            "   Zelle F1: {2,5,7,8}\n\n" +
+            "[b]2. Pruefe jede Zahl einzeln:[/b]\n" +
+            "   Wo kann die 1 in dieser Zeile stehen?\n" +
+            "   → Nur in Zelle A1 oder C1!\n" +
+            "   Wo kann die 4 in dieser Zeile stehen?\n" +
+            "   → Nur in Zelle A1 oder C1!\n\n" +
+            "[b]3. Erkenne das Hidden Pair:[/b]\n" +
+            "   1 und 4 sind 'versteckt' in A1 und C1!\n" +
+            "   Diese beiden Zahlen MUESSEN in diesen 2 Zellen sein.\n\n" +
+            "[b]4. Analysiere die Logik:[/b]\n" +
+            "   Eine Zelle wird 1, die andere 4.\n" +
+            "   Alle ANDEREN Kandidaten in A1 und C1 sind unmöglich!\n\n" +
+            "[b]5. Reduziere die Kandidaten:[/b]\n" +
+            "   Zelle A1: {1,2,4,5} → {1,4} (2,5 entfernt!)\n" +
+            "   Zelle C1: {1,2,5,8} → {1,4} (2,5,8 entfernt!)\n\n" +
+            "[b][color=#f44336]Wichtig:[/color][/b] Hidden Pairs sind schwerer zu finden als Naked Pairs!\n" +
+            "[b]Tipp:[/b] Suche nach Zahlen die nur 2 Positionen haben."
         );
     }
 
@@ -412,13 +451,13 @@ public partial class TipsMenu : Control
             new MiniGridData(values, isGiven, highlighted, related),
             "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
             "Die 6 kann in 4 Zeilen nur in bestimmten Spalten stehen:\n" +
-            "Zeile 1: Spalten 1, 3, 6, 8\n" +
-            "Zeile 3: Spalten 1, 3\n" +
-            "Zeile 6: Spalten 6, 8\n" +
-            "Zeile 8: Spalten 1, 8\n\n" +
+            "Zeile 1: Spalten A, C, F, H\n" +
+            "Zeile 3: Spalten A, C\n" +
+            "Zeile 6: Spalten F, H\n" +
+            "Zeile 8: Spalten A, H\n\n" +
             "Alle 4 Spalten sind 'abgedeckt' von diesen 4 Zeilen.\n\n" +
             "[b]Konsequenz:[/b]\n" +
-            "Die 6 aus allen anderen Zellen in Spalten 1, 3, 6, 8 entfernen!\n\n" +
+            "Die 6 aus allen anderen Zellen in Spalten A, C, F, H entfernen!\n\n" +
             "[b]Hinweis:[/b] Jellyfish sind extrem selten - konzentriere dich erst auf X-Wing und Swordfish!"
         );
     }
@@ -451,9 +490,9 @@ public partial class TipsMenu : Control
             "[b][color=#ffb74d]Beispiel:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related, null, candidates),
             "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "[b]Pivot[/b] (0,0): Kandidaten {1,2,3} ← DREI!\n" +
-            "[b]Wing 1[/b] (0,2): Kandidaten {1,3}\n" +
-            "[b]Wing 2[/b] (2,0): Kandidaten {2,3}\n\n" +
+            "[b]Pivot[/b] A1: Kandidaten {1,2,3} ← DREI!\n" +
+            "[b]Wing 1[/b] C1: Kandidaten {1,3}\n" +
+            "[b]Wing 2[/b] A3: Kandidaten {2,3}\n\n" +
             "[b]Unterschied zu Y-Wing:[/b]\n" +
             "Der Pivot hat alle 3 Kandidaten.\n" +
             "Eliminierungen nur in Zellen die ALLE DREI sehen!\n\n" +
@@ -461,7 +500,7 @@ public partial class TipsMenu : Control
             "Egal welchen Wert der Pivot hat, eine der 3 Zellen wird 3.\n\n" +
             "[b]Konsequenz:[/b]\n" +
             "3 aus Zellen entfernen, die Pivot UND beide Wings sehen.\n" +
-            "Hier: Zelle (0,1) verliert die 3!"
+            "Hier: Zelle B1 verliert die 3!"
         );
     }
 
@@ -486,14 +525,14 @@ public partial class TipsMenu : Control
             "[b][color=#ffb74d]Beispiel:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related, null, candidates),
             "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "Zelle A (1,1): {3,7}\n" +
-            "Zelle B (5,7): {3,7} (gleiche Kandidaten!)\n\n" +
+            "Zelle B2: {3,7}\n" +
+            "Zelle H6: {3,7} (gleiche Kandidaten!)\n\n" +
             "Diese Zellen sehen sich NICHT direkt.\n" +
-            "Aber: Es gibt einen Strong Link auf 7 in Spalte 8.\n" +
-            "(7 kann in Spalte 8 nur an 2 Stellen sein)\n\n" +
+            "Aber: Es gibt einen Strong Link auf 7 in Spalte H.\n" +
+            "(7 kann in Spalte H nur an 2 Stellen sein)\n\n" +
             "[b]Logik:[/b]\n" +
-            "Wenn A = 3, dann B = 7\n" +
-            "Wenn A = 7, dann durch Strong Link: auch B verbunden\n" +
+            "Wenn B2 = 3, dann H6 = 7\n" +
+            "Wenn B2 = 7, dann durch Strong Link: auch H6 verbunden\n" +
             "→ Eine der beiden ist immer 3!\n\n" +
             "[b]Konsequenz:[/b]\n" +
             "3 aus Zellen entfernen, die beide Bi-Value Zellen sehen."
@@ -515,10 +554,10 @@ public partial class TipsMenu : Control
             "[b][color=#ffb74d]Beispiel mit der 4:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related),
             "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "Spalte 3: 4 nur in Zeile 2 und 6\n" +
-            "Spalte 7: 4 nur in Zeile 2 und 8\n\n" +
+            "Spalte C: 4 nur in Zeile 2 und 6\n" +
+            "Spalte G: 4 nur in Zeile 2 und 8\n\n" +
             "[b]Basis:[/b] Zeile 2 (gemeinsam)\n" +
-            "[b]Spitzen:[/b] (6,3) und (8,7)\n\n" +
+            "[b]Spitzen:[/b] C6 und G8\n\n" +
             "[b]Logik:[/b]\n" +
             "Eine der 4en in Zeile 2 ist korrekt.\n" +
             "Je nachdem welche, wandert die andere 4 zur entsprechenden Spitze.\n" +
@@ -543,12 +582,12 @@ public partial class TipsMenu : Control
             "[b][color=#ffb74d]Beispiel mit der 5:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related),
             "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "Zeile 1: 5 nur in Spalte 4 und 8 (Konjugat-Paar)\n" +
-            "Spalte 4: 5 nur in Zeile 1 und 6 (Konjugat-Paar)\n\n" +
-            "Die Paare treffen sich bei (1,4) im Block!\n" +
+            "Zeile 1: 5 nur in Spalte D und H (Konjugat-Paar)\n" +
+            "Spalte D: 5 nur in Zeile 1 und 6 (Konjugat-Paar)\n\n" +
+            "Die Paare treffen sich bei D1 im Block!\n" +
             "Das bildet einen 'Drachen' (Kite).\n\n" +
             "[b]Enden des Kites:[/b]\n" +
-            "(1,8) und (6,4)\n\n" +
+            "H1 und D6\n\n" +
             "[b]Logik:[/b]\n" +
             "Durch die Konjugat-Paare ist einer der Enden immer 5.\n\n" +
             "[b]Konsequenz:[/b]\n" +
@@ -573,10 +612,10 @@ public partial class TipsMenu : Control
             new MiniGridData(values, isGiven, highlighted, related),
             "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
             "Im Block links-Mitte bildet die 8 eine L-Form:\n" +
-            "- Zeilen 4-5 haben keine 8 in Spalte 1-2\n" +
+            "- Zeilen 4-5 haben keine 8 in Spalten A-B\n" +
             "- Das 'Empty Rectangle' zeigt wohin die 8 NICHT kann\n\n" +
             "Es gibt ein Konjugat-Paar fuer 8 in Zeile 1:\n" +
-            "(1,3) und (1,9)\n\n" +
+            "C1 und I1\n\n" +
             "[b]Logik:[/b]\n" +
             "Die L-Form und das Paar bilden eine Kette.\n" +
             "Am Ende der Kette kann 8 eliminiert werden.\n\n" +
@@ -635,16 +674,23 @@ public partial class TipsMenu : Control
         return new TipData(
             "Pointing Pair",
             "[b][color=#4fc3f7]Pointing Pair[/color][/b]\n\n" +
-            "Wenn eine Zahl im Block nur in einer Zeile/Spalte moeglich ist.\n\n" +
+            "Wenn eine Zahl in einem Block nur in einer Zeile oder Spalte moeglich ist, dann 'zeigt' sie darauf.\n\n" +
             "[b][color=#ffb74d]Beispiel:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related),
-            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "Die 5 in Block 1 (links) kann nur in Zeile 2 stehen.\n" +
-            "(Zeile 1 und 3 haben bereits 5 in anderen Bloecken)\n\n" +
-            "[b]Konsequenz:[/b]\n" +
-            "Die 5 fuer diesen Block MUSS in Zeile 2 sein.\n" +
-            "Also: 5 aus dem Rest von Zeile 2 entfernen!\n\n" +
-            "[b]Merke:[/b] Block-Logik beeinflusst Zeile/Spalte"
+            "[b][color=#81c784]Schritt-fuer-Schritt:[/color][/b]\n\n" +
+            "[b]1. Untersuche einen Block:[/b]\n" +
+            "   Block 1 (oben-links): Wo kann die 5 stehen?\n\n" +
+            "[b]2. Pruefe jede Zeile im Block:[/b]\n" +
+            "   Zeile 1: Hat bereits 5 in Spalte D → blockiert\n" +
+            "   Zeile 2: Zellen A2 und B2 sind moeglich! ✓\n" +
+            "   Zeile 3: Hat bereits 5 in Spalte I → blockiert\n\n" +
+            "[b]3. Erkenne das Muster:[/b]\n" +
+            "   Die 5 fuer diesen Block MUSS in Zeile 2 sein!\n" +
+            "   Die beiden Zellen 'zeigen' auf diese Zeile.\n\n" +
+            "[b]4. Eliminiere in der Zeile:[/b]\n" +
+            "   Entferne 5 aus ALLEN anderen Zellen von Zeile 2!\n" +
+            "   (Hier: Zellen D2, E2, F2)\n\n" +
+            "[b][color=#4caf50]Tipp:[/color][/b] Auch umgekehrt: Pointing Triple (3 Zellen) funktioniert genauso!"
         );
     }
 
@@ -662,16 +708,25 @@ public partial class TipsMenu : Control
         return new TipData(
             "Box/Line Reduction",
             "[b][color=#4fc3f7]Box/Line Reduction[/color][/b]\n\n" +
-            "Das Gegenteil von Pointing Pair.\n\n" +
+            "Das Gegenteil von Pointing Pair: Eine Zahl in einer Zeile/Spalte kann nur in einem Block stehen.\n\n" +
             "[b][color=#ffb74d]Beispiel (Zeile 1):[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related),
-            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "Die 3 in Zeile 1 kann nur in Block 2 (Mitte) stehen.\n" +
-            "(Block 1 und 3 haben X oder bereits 3)\n\n" +
-            "[b]Konsequenz:[/b]\n" +
-            "Die 3 fuer diese Zeile ist definitiv in Block 2.\n" +
-            "Also: 3 aus anderen Zellen von Block 2 entfernen!\n\n" +
-            "[b]Merke:[/b] Zeile/Spalte-Logik beeinflusst Block"
+            "[b][color=#81c784]Schritt-fuer-Schritt:[/color][/b]\n\n" +
+            "[b]1. Untersuche eine Zeile:[/b]\n" +
+            "   Zeile 1: Wo kann die 3 stehen?\n\n" +
+            "[b]2. Pruefe jeden Block:[/b]\n" +
+            "   Block 1 (Spalten A-C): Hat bereits 3 → blockiert\n" +
+            "   Block 2 (Spalten D-F): Zellen E1 und F1 moeglich! ✓\n" +
+            "   Block 3 (Spalten G-I): Hat bereits 3 → blockiert\n\n" +
+            "[b]3. Erkenne das Muster:[/b]\n" +
+            "   Die 3 fuer diese Zeile MUSS in Block 2 sein!\n" +
+            "   Alle moeglichen Positionen sind in einem Block.\n\n" +
+            "[b]4. Eliminiere im Block:[/b]\n" +
+            "   Entferne 3 aus ALLEN anderen Zellen von Block 2!\n" +
+            "   (Hier: Zellen A2, B2, C2)\n\n" +
+            "[b][color=#4caf50]Unterschied zu Pointing Pair:[/color][/b]\n" +
+            "Pointing: Block → Zeile/Spalte\n" +
+            "Box/Line: Zeile/Spalte → Block"
         );
     }
 
@@ -685,18 +740,27 @@ public partial class TipsMenu : Control
         return new TipData(
             "X-Wing Technik",
             "[b][color=#4fc3f7]X-Wing[/color][/b]\n\n" +
-            "Fortgeschritten: Eine Zahl in 2 Zeilen nur in denselben 2 Spalten.\n\n" +
+            "Fortgeschrittene Technik: Eine Zahl bildet ein Rechteck-Muster in genau 2 Zeilen und 2 Spalten.\n\n" +
             "[b][color=#ffb74d]Beispiel mit der 7:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related),
-            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "Zeile 2: 7 nur in Spalte 2 oder 7\n" +
-            "Zeile 6: 7 nur in Spalte 2 oder 7\n\n" +
-            "Das bildet ein Rechteck (X)!\n\n" +
-            "[b]Logik:[/b]\n" +
-            "Entweder diagonal A oder diagonal B.\n" +
-            "In beiden Faellen: je eine 7 pro Spalte.\n\n" +
-            "[b]Konsequenz:[/b]\n" +
-            "7 aus Spalten 2 und 7 entfernen (ausser X-Wing-Zellen)"
+            "[b][color=#81c784]Schritt-fuer-Schritt:[/color][/b]\n\n" +
+            "[b]1. Finde Zeilen mit nur 2 Kandidaten:[/b]\n" +
+            "   Zeile 2: 7 nur in Spalte B und Spalte G\n" +
+            "   Zeile 6: 7 nur in Spalte B und Spalte G\n\n" +
+            "[b]2. Pruefe die Spalten:[/b]\n" +
+            "   Beide Zeilen verwenden die GLEICHEN 2 Spalten!\n" +
+            "   Das bildet ein Rechteck → X-Wing! ✓\n\n" +
+            "[b]3. Analysiere die Moeglichkeiten:[/b]\n" +
+            "   Szenario A: B2=7 und G6=7 (Diagonale 1)\n" +
+            "   Szenario B: G2=7 und B6=7 (Diagonale 2)\n\n" +
+            "[b]4. Erkenne die Logik:[/b]\n" +
+            "   In BEIDEN Szenarien hat jede Spalte genau eine 7!\n" +
+            "   → Spalte B bekommt definitiv eine 7\n" +
+            "   → Spalte G bekommt definitiv eine 7\n\n" +
+            "[b]5. Eliminiere Kandidaten:[/b]\n" +
+            "   Entferne 7 aus ALLEN anderen Zellen in Spalte B und G!\n" +
+            "   (Ausser den 4 X-Wing Eckpunkten)\n\n" +
+            "[b][color=#4caf50]Hinweis:[/color][/b] X-Wing funktioniert auch umgekehrt: 2 Spalten mit je 2 Kandidaten in gleichen Zeilen!"
         );
     }
 
@@ -710,18 +774,28 @@ public partial class TipsMenu : Control
         return new TipData(
             "Swordfish Technik",
             "[b][color=#4fc3f7]Swordfish[/color][/b]\n\n" +
-            "X-Wing erweitert auf 3 Zeilen und 3 Spalten.\n\n" +
+            "X-Wing erweitert auf [b]3 Zeilen und 3 Spalten[/b]. Selten, aber sehr maechtig!\n\n" +
             "[b][color=#ffb74d]Beispiel mit der 4:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related),
-            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "Die 4 kann in 3 Zeilen nur in bestimmten Spalten stehen:\n" +
-            "Zeile 1: Spalten 2 und 5\n" +
-            "Zeile 4: Spalten 2 und 8\n" +
-            "Zeile 7: Spalten 5 und 8\n\n" +
-            "Alle 3 Spalten sind 'abgedeckt'.\n\n" +
-            "[b]Konsequenz:[/b]\n" +
-            "Die 4 aus allen anderen Zellen dieser 3 Spalten entfernen!\n\n" +
-            "[b]Tipp:[/b] Sehr selten, aber maechtig."
+            "[b][color=#81c784]Schritt-fuer-Schritt:[/color][/b]\n\n" +
+            "[b]1. Finde Zeilen mit 2-3 Kandidaten:[/b]\n" +
+            "   Zeile 1: 4 in Spalte B und E\n" +
+            "   Zeile 4: 4 in Spalte B und H\n" +
+            "   Zeile 7: 4 in Spalte E und H\n\n" +
+            "[b]2. Pruefe die Spalten:[/b]\n" +
+            "   Alle Kandidaten verteilen sich auf 3 Spalten: B, E, H\n" +
+            "   Jede Spalte wird von mindestens 2 Zeilen abgedeckt! ✓\n\n" +
+            "[b]3. Analysiere die Verteilung:[/b]\n" +
+            "   Spalte B: In Zeilen 1 und 4\n" +
+            "   Spalte E: In Zeilen 1 und 7\n" +
+            "   Spalte H: In Zeilen 4 und 7\n\n" +
+            "[b]4. Erkenne die Logik:[/b]\n" +
+            "   Diese 3 Zeilen MUESSEN die 4 in diesen 3 Spalten haben.\n" +
+            "   Egal wie verteilt: Jede Spalte bekommt genau eine 4!\n\n" +
+            "[b]5. Eliminiere Kandidaten:[/b]\n" +
+            "   Entferne 4 aus ALLEN anderen Zellen in Spalten B, E, H!\n" +
+            "   (Ausser den Swordfish-Positionen)\n\n" +
+            "[b][color=#f44336]Hinweis:[/color][/b] Swordfish zu finden ist schwierig! Pruefe zuerst immer einfachere Techniken."
         );
     }
 
@@ -749,19 +823,30 @@ public partial class TipsMenu : Control
         return new TipData(
             "Y-Wing (XY-Wing)",
             "[b][color=#4fc3f7]Y-Wing[/color][/b]\n\n" +
-            "3 Zellen mit je 2 Kandidaten bilden eine Kette.\n\n" +
+            "Eine Ketten-Technik: 3 Zellen mit je 2 Kandidaten bilden eine 'Y'-Form.\n\n" +
             "[b][color=#ffb74d]Beispiel:[/color][/b]",
             new MiniGridData(values, isGiven, highlighted, related, null, candidates),
-            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
-            "[b]Pivot[/b] (0,0): Kandidaten {1,2}\n" +
-            "[b]Wing 1[/b] (0,2): Kandidaten {1,3}\n" +
-            "[b]Wing 2[/b] (2,0): Kandidaten {2,3}\n\n" +
-            "Pivot teilt sich je einen Kandidaten mit jedem Wing.\n" +
-            "Wings teilen sich Kandidat 3.\n\n" +
-            "[b]Logik:[/b]\n" +
-            "Egal welchen Wert der Pivot hat, einer der Wings wird 3.\n\n" +
-            "[b]Konsequenz:[/b]\n" +
-            "3 aus Zellen entfernen, die beide Wings sehen koennen!"
+            "[b][color=#81c784]Schritt-fuer-Schritt:[/color][/b]\n\n" +
+            "[b]1. Finde den Pivot:[/b]\n" +
+            "   Zelle A1: {1,2} ← Der 'Stamm' des Y\n\n" +
+            "[b]2. Finde die Wings:[/b]\n" +
+            "   Wing 1 (C1): {1,3} ← Teilt '1' mit Pivot\n" +
+            "   Wing 2 (A3): {2,3} ← Teilt '2' mit Pivot\n\n" +
+            "[b]3. Pruefe die Struktur:[/b]\n" +
+            "   - Pivot und Wing 1 sehen sich (gleiche Zeile) ✓\n" +
+            "   - Pivot und Wing 2 sehen sich (gleiche Spalte) ✓\n" +
+            "   - Wings sehen sich NICHT direkt ✓\n" +
+            "   - Wings teilen einen Kandidaten: {3} ✓\n\n" +
+            "[b]4. Analysiere die Logik:[/b]\n" +
+            "   Wenn Pivot = 1 → Wing 2 muss 3 sein\n" +
+            "   Wenn Pivot = 2 → Wing 1 muss 3 sein\n" +
+            "   → In JEDEM Fall wird eine der Wings die 3!\n\n" +
+            "[b]5. Finde Ziel-Zellen:[/b]\n" +
+            "   Suche Zellen die BEIDE Wings sehen koennen\n" +
+            "   Hier: Zelle C3\n\n" +
+            "[b]6. Eliminiere:[/b]\n" +
+            "   Entferne 3 aus Zelle C3!\n\n" +
+            "[b][color=#4caf50]Merke:[/color][/b] Der Pivot ist immer die Zelle die beide anderen 'verbindet'."
         );
     }
 

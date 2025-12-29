@@ -45,11 +45,24 @@ public static class MiniGridRenderer
         colLabels.AddThemeConstantOverride("separation", 0);
         topRow.AddChild(colLabels);
 
+        // Calculate actual cell widths including borders for each column
         for (int c = 0; c < cols; c++)
         {
+            bool isRightBlockBorder = (c + 1) % blockSize == 0 && c < cols - 1;
+            bool isLeftBlockBorder = c % blockSize == 0 && c > 0;
+
+            float actualCellWidth = cellSize;
+            // Add right margin (content margin)
+            actualCellWidth += isRightBlockBorder ? 3 : 1;
+            // Add left margin (content margin)
+            actualCellWidth += isLeftBlockBorder ? 3 : 1;
+            // Add border widths if present
+            if (isRightBlockBorder) actualCellWidth += 3;
+            if (isLeftBlockBorder) actualCellWidth += 3;
+
             var label = new Label();
             label.Text = GetColumnName(c);
-            label.CustomMinimumSize = new Vector2(cellSize, 20);
+            label.CustomMinimumSize = new Vector2(actualCellWidth, 20);
             label.HorizontalAlignment = HorizontalAlignment.Center;
             label.VerticalAlignment = VerticalAlignment.Center;
             label.AddThemeFontSizeOverride("font_size", 12);
@@ -66,11 +79,24 @@ public static class MiniGridRenderer
         rowLabels.AddThemeConstantOverride("separation", 0);
         mainRow.AddChild(rowLabels);
 
+        // Calculate actual cell heights including borders for each row
         for (int r = 0; r < rows; r++)
         {
+            bool isBottomBlockBorder = (r + 1) % blockSize == 0 && r < rows - 1;
+            bool isTopBlockBorder = r % blockSize == 0 && r > 0;
+
+            float actualCellHeight = cellSize;
+            // Add bottom margin (content margin)
+            actualCellHeight += isBottomBlockBorder ? 3 : 1;
+            // Add top margin (content margin)
+            actualCellHeight += isTopBlockBorder ? 3 : 1;
+            // Add border widths if present
+            if (isBottomBlockBorder) actualCellHeight += 3;
+            if (isTopBlockBorder) actualCellHeight += 3;
+
             var label = new Label();
             label.Text = (r + 1).ToString();
-            label.CustomMinimumSize = new Vector2(24, cellSize);
+            label.CustomMinimumSize = new Vector2(24, actualCellHeight);
             label.HorizontalAlignment = HorizontalAlignment.Center;
             label.VerticalAlignment = VerticalAlignment.Center;
             label.AddThemeFontSizeOverride("font_size", 12);
