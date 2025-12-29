@@ -11,6 +11,7 @@ public partial class GameScene : Control
     private Button _notesButton = null!;
     private Button _autoCandidatesButton = null!;
     private Button _houseAutoFillButton = null!;
+    private Button _houseAutoFillApplyButton = null!;
     private Label _difficultyLabel = null!;
     private Label _timerLabel = null!;
     private Label _mistakesLabel = null!;
@@ -1357,14 +1358,16 @@ public partial class GameScene : Control
         // House Auto-Fill Button
         if (_houseAutoFillButton != null)
         {
-            _houseAutoFillButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-            _houseAutoFillButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-            _houseAutoFillButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-            _houseAutoFillButton.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
-            _houseAutoFillButton.AddThemeColorOverride("font_color", colors.TextPrimary);
-            _houseAutoFillButton.AddThemeColorOverride("font_disabled_color", colors.TextSecondary);
-            _houseAutoFillButton.AddThemeFontSizeOverride("font_size", 18);
-            UpdateHouseAutoFillButtonTextAndTooltip();
+            _houseAutoFillButton.AddThemeFontSizeOverride("font_size", 16);
+            UpdateHouseAutoFillButtonAppearance();
+        }
+        if (_houseAutoFillApplyButton != null)
+        {
+            _houseAutoFillApplyButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+            _houseAutoFillApplyButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
+            _houseAutoFillApplyButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+            _houseAutoFillApplyButton.AddThemeColorOverride("font_color", colors.Accent);
+            _houseAutoFillApplyButton.AddThemeFontSizeOverride("font_size", 16);
         }
 
         // Axis Labels
@@ -1450,25 +1453,41 @@ public partial class GameScene : Control
     private void CreateHouseAutoFillButton()
     {
         // Auto-Notizen für eine House-Gruppe (Zeile/Spalte/Block)
+        // Mode toggle button (R/C/B) - cycles through modes without applying
         var theme = GetNode<ThemeService>("/root/ThemeService");
         var colors = theme.CurrentColors;
 
         _houseAutoFillButton = new Button();
-        _houseAutoFillButton.CustomMinimumSize = new Vector2(50, 60);
+        _houseAutoFillButton.CustomMinimumSize = new Vector2(40, 60);
         _houseAutoFillButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
         _houseAutoFillButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
         _houseAutoFillButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
         _houseAutoFillButton.AddThemeColorOverride("font_color", colors.TextPrimary);
-        _houseAutoFillButton.AddThemeFontSizeOverride("font_size", 18);
-        _houseAutoFillButton.Pressed += OnHouseAutoFillPressed;
-
-        UpdateHouseAutoFillButtonTextAndTooltip();
+        _houseAutoFillButton.AddThemeFontSizeOverride("font_size", 16);
+        _houseAutoFillButton.Pressed += OnHouseAutoFillModeToggle;
         _numberPad.AddChild(_houseAutoFillButton);
+
+        // Apply button (✓) - applies auto-fill for selected mode
+        _houseAutoFillApplyButton = new Button();
+        _houseAutoFillApplyButton.Text = "✓";
+        _houseAutoFillApplyButton.CustomMinimumSize = new Vector2(35, 60);
+        _houseAutoFillApplyButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+        _houseAutoFillApplyButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
+        _houseAutoFillApplyButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _houseAutoFillApplyButton.AddThemeColorOverride("font_color", colors.Accent);
+        _houseAutoFillApplyButton.AddThemeFontSizeOverride("font_size", 16);
+        _houseAutoFillApplyButton.Pressed += OnHouseAutoFillApply;
+        _numberPad.AddChild(_houseAutoFillApplyButton);
+
+        UpdateHouseAutoFillButtonAppearance();
     }
 
-    private void UpdateHouseAutoFillButtonTextAndTooltip()
+    private void UpdateHouseAutoFillButtonAppearance()
     {
         if (_houseAutoFillButton == null) return;
+
+        var theme = GetNode<ThemeService>("/root/ThemeService");
+        var colors = theme.CurrentColors;
 
         string modeText = _houseAutoFillMode switch
         {
@@ -1478,7 +1497,7 @@ public partial class GameScene : Control
             _ => "Zeile"
         };
 
-        _houseAutoFillButton.Text = _houseAutoFillMode switch
+        string modeChar = _houseAutoFillMode switch
         {
             HouseAutoFillMode.Row => "R",
             HouseAutoFillMode.Column => "C",
@@ -1486,10 +1505,37 @@ public partial class GameScene : Control
             _ => "R"
         };
 
-        _houseAutoFillButton.TooltipText = $"Auto-Notizen ({modeText})\nFüllt Kandidaten für die {modeText}-Gruppe der Auswahl\nJeder Klick wechselt: Zeile → Spalte → Block";
+        // Show mode with visual highlight
+        _houseAutoFillButton.Text = modeChar;
+        _houseAutoFillButton.TooltipText = $"Modus: {modeText}\nKlicken um zu wechseln: Zeile → Spalte → Block";
+
+        // Style the mode button with accent background to show current selection
+        var modeStyle = theme.CreateButtonStyleBox();
+        modeStyle.BgColor = colors.Accent.Darkened(0.3f);
+        _houseAutoFillButton.AddThemeStyleboxOverride("normal", modeStyle);
+        _houseAutoFillButton.AddThemeColorOverride("font_color", colors.Background);
+
+        // Update apply button tooltip
+        if (_houseAutoFillApplyButton != null)
+        {
+            _houseAutoFillApplyButton.TooltipText = $"Auto-Notizen anwenden\nFüllt Kandidaten für die {modeText} der Auswahl";
+        }
     }
 
-    private void OnHouseAutoFillPressed()
+    private void OnHouseAutoFillModeToggle()
+    {
+        // Just cycle through modes, don't apply
+        _houseAutoFillMode = _houseAutoFillMode switch
+        {
+            HouseAutoFillMode.Row => HouseAutoFillMode.Column,
+            HouseAutoFillMode.Column => HouseAutoFillMode.Block,
+            HouseAutoFillMode.Block => HouseAutoFillMode.Row,
+            _ => HouseAutoFillMode.Row
+        };
+        UpdateHouseAutoFillButtonAppearance();
+    }
+
+    private void OnHouseAutoFillApply()
     {
         if (_gameState == null || _isGameOver) return;
         if (_selectedRow < 0 || _selectedCol < 0) return;
@@ -1499,16 +1545,6 @@ public partial class GameScene : Control
         if (!saveService.Settings.HouseAutoFillEnabled) return;
 
         AutoFillNotesForSelectedHouse();
-
-        // Modus rotieren für den nächsten Klick
-        _houseAutoFillMode = _houseAutoFillMode switch
-        {
-            HouseAutoFillMode.Row => HouseAutoFillMode.Column,
-            HouseAutoFillMode.Column => HouseAutoFillMode.Block,
-            HouseAutoFillMode.Block => HouseAutoFillMode.Row,
-            _ => HouseAutoFillMode.Row
-        };
-        UpdateHouseAutoFillButtonTextAndTooltip();
     }
 
     private void AutoFillNotesForSelectedHouse()
@@ -1607,16 +1643,34 @@ public partial class GameScene : Control
 
         if (_isNotesMode)
         {
-            // Aktiv - Accent-Farbe (Theme-aware)
+            // Aktiv - Accent-Farbe mit verstärktem Stil für Touch-Geräte
             var activeStyle = theme.CreateButtonStyleBox();
             activeStyle.BgColor = colors.Accent;
+            activeStyle.BorderColor = colors.Accent.Lightened(0.3f);
+            activeStyle.SetBorderWidthAll(3);
             _notesButton.AddThemeStyleboxOverride("normal", activeStyle);
+            
+            // Auch hover/pressed für konsistente Touch-Erfahrung
+            var hoverStyle = theme.CreateButtonStyleBox();
+            hoverStyle.BgColor = colors.Accent.Lightened(0.1f);
+            hoverStyle.BorderColor = colors.Accent.Lightened(0.4f);
+            hoverStyle.SetBorderWidthAll(3);
+            _notesButton.AddThemeStyleboxOverride("hover", hoverStyle);
+            
+            var pressedStyle = theme.CreateButtonStyleBox();
+            pressedStyle.BgColor = colors.Accent.Darkened(0.1f);
+            pressedStyle.BorderColor = colors.Accent;
+            pressedStyle.SetBorderWidthAll(3);
+            _notesButton.AddThemeStyleboxOverride("pressed", pressedStyle);
+            
             _notesButton.AddThemeColorOverride("font_color", colors.Background);
         }
         else
         {
             // Inaktiv - Normal
             _notesButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+            _notesButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
+            _notesButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
             _notesButton.AddThemeColorOverride("font_color", colors.TextPrimary);
         }
     }
