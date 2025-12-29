@@ -654,6 +654,13 @@ public partial class GameScene : Control
             _difficultyLabel.Text += " (Daily)";
         }
 
+        // Szenario-Technik anzeigen
+        if (!string.IsNullOrEmpty(_gameState.ScenarioTechnique) &&
+            TechniqueInfo.Techniques.TryGetValue(_gameState.ScenarioTechnique, out var technique))
+        {
+            _difficultyLabel.Text += $" 🎯 {technique.Name}";
+        }
+
         var tags = new List<string>();
         if (_gameState.ChallengeNoNotes) tags.Add("NoNotes");
         if (_gameState.ChallengePerfectRun) tags.Add("Perfect");

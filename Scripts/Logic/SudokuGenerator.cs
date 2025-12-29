@@ -52,6 +52,78 @@ public static class SudokuGenerator
     }
 
     /// <summary>
+    /// Generiert ein Puzzle, das gezielt eine bestimmte Technik erfordert
+    /// </summary>
+    public static SudokuGameState GenerateForTechnique(string techniqueId, Difficulty difficulty, int? seed = null)
+    {
+        var rng = seed.HasValue ? new Random(seed.Value) : new Random();
+        
+        // Generiere mehrere Puzzles und wähle das beste für die Technik
+        SudokuGameState? bestPuzzle = null;
+        int bestScore = -1;
+        int maxAttempts = 10;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            var puzzle = Generate(difficulty, seed.HasValue ? seed.Value + attempt : null);
+            int score = EvaluateTechniqueScore(puzzle, techniqueId);
+            
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestPuzzle = puzzle;
+            }
+            
+            // Früh abbrechen wenn ein gutes Puzzle gefunden wurde
+            if (score >= 3) break;
+        }
+
+        return bestPuzzle ?? Generate(difficulty, seed);
+    }
+
+    /// <summary>
+    /// Bewertet wie gut ein Puzzle für eine bestimmte Technik geeignet ist
+    /// </summary>
+    private static int EvaluateTechniqueScore(SudokuGameState puzzle, string techniqueId)
+    {
+        // Simplifizierte Bewertung basierend auf Puzzle-Eigenschaften
+        // Ein komplexeres System würde den Solver mit Technik-Tracking nutzen
+        int score = 0;
+        int size = puzzle.GridSize;
+        int emptyCells = 0;
+        
+        // Zähle leere Zellen
+        for (int row = 0; row < size; row++)
+        {
+            for (int col = 0; col < size; col++)
+            {
+                if (puzzle.Grid[row, col].Value == 0)
+                    emptyCells++;
+            }
+        }
+
+        // Basis-Score basierend auf Komplexität
+        score = techniqueId switch
+        {
+            // Leichte Techniken - weniger leere Zellen sind besser
+            "NakedSingle" or "HiddenSingleRow" or "HiddenSingleCol" or "HiddenSingleBlock" 
+                => Math.Max(0, 50 - emptyCells),
+            
+            // Mittlere Techniken - mittlere Anzahl leerer Zellen
+            "NakedPair" or "NakedTriple" or "HiddenPair" or "PointingPair" or "BoxLineReduction"
+                => Math.Min(emptyCells, 55 - emptyCells) / 5,
+            
+            // Schwere Techniken - mehr leere Zellen sind besser
+            "XWing" or "Swordfish" or "XYWing" or "Skyscraper" or "SimpleColoring"
+                => emptyCells / 10,
+            
+            _ => emptyCells / 15
+        };
+
+        return Math.Max(0, score);
+    }
+
+    /// <summary>
     /// Generiert ein vollständig gelöstes Sudoku-Grid
     /// </summary>
     private static int[,] GenerateFullGrid(Random rng, int size = 9, int blockSize = 3)

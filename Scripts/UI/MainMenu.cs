@@ -8,6 +8,7 @@ public partial class MainMenu : Control
     private Button _continueButton = null!;
     private Button _startButton = null!;
     private Button _dailyButton = null!;
+    private Button _scenariosButton = null!;
     private Button _settingsButton = null!;
     private Button _historyButton = null!;
     private Button _statsButton = null!;
@@ -30,6 +31,7 @@ public partial class MainMenu : Control
         _continueButton = buttonContainer.GetNode<Button>("ContinueButton");
         _startButton = buttonContainer.GetNode<Button>("StartButton");
         _dailyButton = buttonContainer.GetNode<Button>("DailyButton");
+        _scenariosButton = buttonContainer.GetNode<Button>("ScenariosButton");
         _settingsButton = buttonContainer.GetNode<Button>("SettingsButton");
         _historyButton = buttonContainer.GetNode<Button>("HistoryButton");
         _statsButton = buttonContainer.GetNode<Button>("StatsButton");
@@ -40,6 +42,7 @@ public partial class MainMenu : Control
         _continueButton.Pressed += OnContinuePressed;
         _startButton.Pressed += OnStartPressed;
         _dailyButton.Pressed += OnDailyPressed;
+        _scenariosButton.Pressed += OnScenariosPressed;
         _settingsButton.Pressed += OnSettingsPressed;
         _historyButton.Pressed += OnHistoryPressed;
         _statsButton.Pressed += OnStatsPressed;
@@ -124,6 +127,7 @@ public partial class MainMenu : Control
         ApplyButtonTheme(_continueButton, theme);
         ApplyButtonTheme(_startButton, theme);
         ApplyButtonTheme(_dailyButton, theme);
+        ApplyButtonTheme(_scenariosButton, theme);
         ApplyButtonTheme(_settingsButton, theme);
         ApplyButtonTheme(_historyButton, theme);
         ApplyButtonTheme(_statsButton, theme);
@@ -187,6 +191,12 @@ public partial class MainMenu : Control
     {
         var appState = GetNode<AppState>("/root/AppState");
         appState.NavigateTo(AppState.SCENE_TIPS);
+    }
+
+    private void OnScenariosPressed()
+    {
+        var appState = GetNode<AppState>("/root/AppState");
+        appState.NavigateTo(AppState.SCENE_SCENARIOS);
     }
 
     private void OnQuitPressed()

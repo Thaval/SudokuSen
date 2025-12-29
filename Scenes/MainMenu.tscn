@@ -79,6 +79,12 @@ layout_mode = 2
 focus_mode = 2
 text = "📅 Daily Sudoku"
 
+[node name="ScenariosButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+focus_mode = 2
+text = "🎯 Szenarien"
+
 [node name="SettingsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2

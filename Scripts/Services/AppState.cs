@@ -31,6 +31,7 @@ public partial class AppState : Node
     public const string SCENE_HISTORY = "res://Scenes/HistoryMenu.tscn";
     public const string SCENE_STATS = "res://Scenes/StatsMenu.tscn";
     public const string SCENE_TIPS = "res://Scenes/TipsMenu.tscn";
+    public const string SCENE_SCENARIOS = "res://Scenes/ScenariosMenu.tscn";
 
     public override void _Ready()
     {
@@ -88,6 +89,39 @@ public partial class AppState : Node
         // mark played date
         saveService.Settings.DailyLastPlayedDate = date;
         saveService.SaveSettings();
+
+        saveService.SaveCurrentGame(CurrentGame);
+
+        EmitSignal(SignalName.GameStarted);
+        NavigateTo(SCENE_GAME);
+    }
+
+    /// <summary>
+    /// Startet ein Szenario-Spiel für eine bestimmte Technik
+    /// </summary>
+    public void StartScenarioGame(string techniqueId)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+
+        // Bestimme passende Schwierigkeit basierend auf Technik (1=Easy, 2=Medium, 3=Hard)
+        Difficulty difficulty = Difficulty.Medium;
+        if (TechniqueInfo.Techniques.TryGetValue(techniqueId, out var technique))
+        {
+            difficulty = technique.DefaultDifficulty switch
+            {
+                1 => Difficulty.Easy,
+                2 => Difficulty.Medium,
+                3 => Difficulty.Hard,
+                _ => Difficulty.Medium
+            };
+        }
+
+        // Generiere Puzzle mit Fokus auf diese Technik
+        CurrentGame = Logic.SudokuGenerator.GenerateForTechnique(techniqueId, difficulty);
+        CurrentGame.IsDeadlyMode = saveService.Settings.DeadlyModeEnabled;
+        CurrentGame.ScenarioTechnique = techniqueId;
+        ApplyChallengeSettings(CurrentGame, saveService.Settings);
+        IsNewGame = true;
 
         saveService.SaveCurrentGame(CurrentGame);
 
