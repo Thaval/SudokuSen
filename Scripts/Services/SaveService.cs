@@ -194,6 +194,7 @@ public class SaveGameData
         public int Value { get; set; }
         public bool IsGiven { get; set; }
         public int Solution { get; set; }
+        public bool[] Notes { get; set; } = new bool[9];
     }
 
     public static SaveGameData FromGameState(SudokuGameState state)
@@ -226,7 +227,8 @@ public class SaveGameData
                     Col = col,
                     Value = cell.Value,
                     IsGiven = cell.IsGiven,
-                    Solution = cell.Solution
+                    Solution = cell.Solution,
+                    Notes = (bool[])cell.Notes.Clone()
                 });
             }
         }
@@ -255,12 +257,21 @@ public class SaveGameData
 
         foreach (var cellData in Cells)
         {
-            state.Grid[cellData.Row, cellData.Col] = new SudokuCell
+            var cell = new SudokuCell
             {
                 Value = cellData.Value,
                 IsGiven = cellData.IsGiven,
                 Solution = cellData.Solution
             };
+            // Restore notes (handle old saves without Notes)
+            if (cellData.Notes != null)
+            {
+                for (int i = 0; i < Math.Min(cellData.Notes.Length, cell.Notes.Length); i++)
+                {
+                    cell.Notes[i] = cellData.Notes[i];
+                }
+            }
+            state.Grid[cellData.Row, cellData.Col] = cell;
         }
 
         return state;

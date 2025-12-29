@@ -923,8 +923,8 @@ public partial class GameScene : Control
         // Wenn bereits ein Wert gesetzt ist, kann nur gelöscht werden (nicht Notizen)
         if (cell.Value != 0 && number != 0 && !_isNotesMode)
         {
-            // Im normalen Modus: Überschreibe den Wert wenn er falsch ist, ansonsten blockieren
-            // Aber da unsere Logik nur korrekte Werte zulässt, hier nichts tun
+            // Zelle ist bereits gefüllt – ignorieren (nur Löschen oder Notizen erlaubt)
+            return;
         }
 
         // Notizen-Modus
@@ -933,8 +933,10 @@ public partial class GameScene : Control
             // Nur wenn die Zelle leer ist
             if (cell.Value != 0) return;
 
-            // Toggle die Notiz
-            cell.Notes[number - 1] = !cell.Notes[number - 1];
+            // Toggle die Notiz (bounds check for Kids mode)
+            int idx = number - 1;
+            if (idx < 0 || idx >= cell.Notes.Length) return;
+            cell.Notes[idx] = !cell.Notes[idx];
             SaveAndUpdate();
             return;
         }
