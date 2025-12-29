@@ -1,8 +1,4 @@
-using Godot;
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
-using MySudoku.Models;
 
 namespace MySudoku.Services;
 
@@ -15,11 +11,11 @@ public partial class SaveService : Node
     private const string SAVEGAME_PATH = "user://savegame.json";
     private const string HISTORY_PATH = "user://history.json";
 
-    public SettingsData Settings { get; private set; } = new SettingsData();
+    public SettingsData Settings { get; private set; } = new();
     public SudokuGameState? CurrentGame { get; private set; }
-    public List<HistoryEntry> History { get; private set; } = new List<HistoryEntry>();
+    public List<HistoryEntry> History { get; private set; } = new();
 
-    private static JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true
     };
@@ -46,12 +42,12 @@ public partial class SaveService : Node
             {
                 using var file = FileAccess.Open(SETTINGS_PATH, FileAccess.ModeFlags.Read);
                 string json = file.GetAsText();
-                Settings = JsonSerializer.Deserialize<SettingsData>(json) ?? new SettingsData();
+                Settings = JsonSerializer.Deserialize<SettingsData>(json) ?? new();
             }
             catch (Exception e)
             {
                 GD.PrintErr($"Fehler beim Laden der Einstellungen: {e.Message}");
-                Settings = new SettingsData();
+                Settings = new();
             }
         }
     }
@@ -135,12 +131,12 @@ public partial class SaveService : Node
             {
                 using var file = FileAccess.Open(HISTORY_PATH, FileAccess.ModeFlags.Read);
                 string json = file.GetAsText();
-                History = JsonSerializer.Deserialize<List<HistoryEntry>>(json) ?? new List<HistoryEntry>();
+                History = JsonSerializer.Deserialize<List<HistoryEntry>>(json) ?? new();
             }
             catch (Exception e)
             {
                 GD.PrintErr($"Fehler beim Laden des Verlaufs: {e.Message}");
-                History = new List<HistoryEntry>();
+                History = new();
             }
         }
     }
@@ -173,7 +169,7 @@ public partial class SaveService : Node
 /// </summary>
 public class SaveGameData
 {
-    public List<CellData> Cells { get; set; } = new List<CellData>();
+    public List<CellData> Cells { get; set; } = new();
     public int Difficulty { get; set; }
     public DateTime StartTime { get; set; }
     public double ElapsedSeconds { get; set; }

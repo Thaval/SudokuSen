@@ -1,8 +1,3 @@
-using Godot;
-using System;
-using MySudoku.Models;
-using MySudoku.Services;
-
 namespace MySudoku.UI;
 
 /// <summary>

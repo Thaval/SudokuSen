@@ -1,5 +1,3 @@
-using Godot;
-using System;
 using System.Text.Json.Serialization;
 
 namespace MySudoku.Models;

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using MySudoku.Models;
-
 namespace MySudoku.Logic;
 
 /// <summary>
@@ -13,15 +8,15 @@ public static class HintService
     /// <summary>
     /// Repräsentiert einen Hinweis für eine Zelle
     /// </summary>
-    public class Hint
+    public record Hint
     {
-        public int Row { get; set; }
-        public int Col { get; set; }
-        public int Value { get; set; }
-        public string TechniqueName { get; set; } = "";
-        public string TechniqueDescription { get; set; } = "";
-        public List<(int row, int col)> RelatedCells { get; set; } = new();
-        public string Explanation { get; set; } = "";
+        public int Row { get; init; }
+        public int Col { get; init; }
+        public int Value { get; init; }
+        public string TechniqueName { get; init; } = "";
+        public string TechniqueDescription { get; init; } = "";
+        public List<(int row, int col)> RelatedCells { get; init; } = new();
+        public string Explanation { get; init; } = "";
     }
 
     /// <summary>

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using MySudoku.Models;
-
 namespace MySudoku.Logic;
 
 /// <summary>
@@ -9,7 +5,7 @@ namespace MySudoku.Logic;
 /// </summary>
 public static class SudokuGenerator
 {
-    private static Random _random = new Random();
+    private static readonly Random _random = new();
 
     /// <summary>
     /// Generiert ein neues Sudoku-Spiel
@@ -75,7 +71,7 @@ public static class SudokuGenerator
                 if (grid[row, col] == 0)
                 {
                     // Erstelle eine zufällige Reihenfolge von 1-size
-                    List<int> numbers = new List<int>();
+                    List<int> numbers = new();
                     for (int i = 1; i <= size; i++)
                         numbers.Add(i);
                     ShuffleList(numbers);
@@ -107,7 +103,7 @@ public static class SudokuGenerator
         int[,] puzzle = SudokuSolver.CopyGrid(fullGrid, size);
 
         // Erstelle Liste aller Positionen
-        List<(int row, int col)> positions = new List<(int, int)>();
+        List<(int row, int col)> positions = new();
         for (int row = 0; row < size; row++)
         {
             for (int col = 0; col < size; col++)

@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using MySudoku.Models;
-
 namespace MySudoku.Logic;
 
 /// <summary>
@@ -11,12 +8,12 @@ public static class TechniqueInfo
     /// <summary>
     /// Beschreibung einer Technik
     /// </summary>
-    public class Technique
+    public record Technique
     {
-        public string Name { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string ShortDescription { get; set; } = "";
-        public int DifficultyLevel { get; set; } // 1 = Easy, 2 = Medium, 3 = Hard
+        public string Name { get; init; } = "";
+        public string Description { get; init; } = "";
+        public string ShortDescription { get; init; } = "";
+        public int DifficultyLevel { get; init; } // 1 = Easy, 2 = Medium, 3 = Hard
     }
 
     /// <summary>
