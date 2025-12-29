@@ -294,6 +294,52 @@ public partial class GameScene : Control
 
     private void TrySetNumberOnSelection(int number)
     {
+        if (_gameState == null || _isGameOver) return;
+
+        // Notes mode: apply to all selected cells
+        if (_isNotesMode)
+        {
+            // Delete in notes mode clears notes (does not delete values)
+            if (number == 0)
+            {
+                var targets = _selectedCells.Count > 0 ? _selectedCells : new HashSet<(int row, int col)> { (_selectedRow, _selectedCol) };
+
+                foreach (var (row, col) in targets)
+                {
+                    if (row < 0 || col < 0) continue;
+                    var cell = _gameState.Grid[row, col];
+                    if (cell.IsGiven) continue;
+                    for (int i = 0; i < 9; i++) cell.Notes[i] = false;
+                }
+
+                SaveAndUpdate();
+                return;
+            }
+
+            // Add notes for the pressed number across multi-selection
+            if (number > 0)
+            {
+                int idx = number - 1;
+                // Grid safety (Kids mode etc.)
+                if (idx < 0 || idx >= 9) return;
+
+                // Multi-select: set note to true (idempotent). Single-select keeps toggle behavior.
+                if (_selectedCells.Count > 1)
+                {
+                    foreach (var (row, col) in _selectedCells)
+                    {
+                        var cell = _gameState.Grid[row, col];
+                        if (cell.IsGiven) continue;
+                        if (cell.Value != 0) continue;
+                        if (idx >= cell.Notes.Length) continue;
+                        cell.Notes[idx] = true;
+                    }
+                    SaveAndUpdate();
+                    return;
+                }
+            }
+        }
+
         // Wenn Mehrfachauswahl, auf alle anwenden
         if (_selectedCells.Count > 1)
         {
@@ -911,7 +957,7 @@ public partial class GameScene : Control
     {
         if (_selectedRow >= 0 && _selectedCol >= 0)
         {
-            TrySetNumber(number);
+            TrySetNumberOnSelection(number);
         }
     }
 
