@@ -392,7 +392,7 @@ public partial class GameScene : Control
         // Alte Buttons entfernen (außer Notes-/Assist-Buttons, die werden am Ende wieder hinzugefügt)
         foreach (var child in _numberPad.GetChildren().ToList())
         {
-            if (child != _notesButton && child != _houseAutoFillButton)
+            if (child != _notesButton && child != _houseAutoFillButton && child != _houseAutoFillApplyButton)
             {
                 child.QueueFree();
             }
@@ -430,6 +430,10 @@ public partial class GameScene : Control
         if (_houseAutoFillButton != null)
         {
             _numberPad.MoveChild(_houseAutoFillButton, _numberPad.GetChildCount() - 1);
+        }
+        if (_houseAutoFillApplyButton != null)
+        {
+            _numberPad.MoveChild(_houseAutoFillApplyButton, _numberPad.GetChildCount() - 1);
         }
         if (_notesButton != null)
         {
@@ -1363,11 +1367,8 @@ public partial class GameScene : Control
         }
         if (_houseAutoFillApplyButton != null)
         {
-            _houseAutoFillApplyButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-            _houseAutoFillApplyButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-            _houseAutoFillApplyButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-            _houseAutoFillApplyButton.AddThemeColorOverride("font_color", colors.Accent);
             _houseAutoFillApplyButton.AddThemeFontSizeOverride("font_size", 16);
+            UpdateHouseAutoFillButtonAppearance();
         }
 
         // Axis Labels
@@ -1467,10 +1468,11 @@ public partial class GameScene : Control
         _houseAutoFillButton.Pressed += OnHouseAutoFillModeToggle;
         _numberPad.AddChild(_houseAutoFillButton);
 
-        // Apply button (✓) - applies auto-fill for selected mode
+        // Apply button - applies auto-fill for selected mode
         _houseAutoFillApplyButton = new Button();
-        _houseAutoFillApplyButton.Text = "✓";
-        _houseAutoFillApplyButton.CustomMinimumSize = new Vector2(35, 60);
+        // ASCII-friendly label to avoid missing glyphs on some fonts/platforms
+        _houseAutoFillApplyButton.Text = "OK";
+        _houseAutoFillApplyButton.CustomMinimumSize = new Vector2(40, 60);
         _houseAutoFillApplyButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
         _houseAutoFillApplyButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
         _houseAutoFillApplyButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
@@ -1484,7 +1486,7 @@ public partial class GameScene : Control
 
     private void UpdateHouseAutoFillButtonAppearance()
     {
-        if (_houseAutoFillButton == null) return;
+        if (_houseAutoFillButton == null && _houseAutoFillApplyButton == null) return;
 
         var theme = GetNode<ThemeService>("/root/ThemeService");
         var colors = theme.CurrentColors;
@@ -1505,20 +1507,37 @@ public partial class GameScene : Control
             _ => "R"
         };
 
-        // Show mode with visual highlight
-        _houseAutoFillButton.Text = modeChar;
-        _houseAutoFillButton.TooltipText = $"Modus: {modeText}\nKlicken um zu wechseln: Zeile → Spalte → Block";
+        if (_houseAutoFillButton != null)
+        {
+            // Show mode with visual highlight
+            _houseAutoFillButton.Text = modeChar;
+            _houseAutoFillButton.TooltipText = $"Modus: {modeText}\nKlicken um zu wechseln: Zeile → Spalte → Block";
 
-        // Style the mode button with accent background to show current selection
-        var modeStyle = theme.CreateButtonStyleBox();
-        modeStyle.BgColor = colors.Accent.Darkened(0.3f);
-        _houseAutoFillButton.AddThemeStyleboxOverride("normal", modeStyle);
-        _houseAutoFillButton.AddThemeColorOverride("font_color", colors.Background);
+            // Style the mode button with accent background to show current selection
+            var modeStyle = theme.CreateButtonStyleBox();
+            modeStyle.BgColor = colors.Accent.Darkened(0.3f);
+            _houseAutoFillButton.AddThemeStyleboxOverride("normal", modeStyle);
+            _houseAutoFillButton.AddThemeColorOverride("font_color", colors.Background);
+        }
 
-        // Update apply button tooltip
+        // Update apply button tooltip + make it clearly visible
         if (_houseAutoFillApplyButton != null)
         {
             _houseAutoFillApplyButton.TooltipText = $"Auto-Notizen anwenden\nFüllt Kandidaten für die {modeText} der Auswahl";
+
+            var applyStyle = theme.CreateButtonStyleBox();
+            applyStyle.BgColor = colors.Accent;
+            _houseAutoFillApplyButton.AddThemeStyleboxOverride("normal", applyStyle);
+
+            var applyHoverStyle = theme.CreateButtonStyleBox(hover: true);
+            applyHoverStyle.BgColor = colors.Accent.Lightened(0.1f);
+            _houseAutoFillApplyButton.AddThemeStyleboxOverride("hover", applyHoverStyle);
+
+            var applyPressedStyle = theme.CreateButtonStyleBox(pressed: true);
+            applyPressedStyle.BgColor = colors.Accent.Darkened(0.1f);
+            _houseAutoFillApplyButton.AddThemeStyleboxOverride("pressed", applyPressedStyle);
+
+            _houseAutoFillApplyButton.AddThemeColorOverride("font_color", colors.Background);
         }
     }
 
@@ -1649,20 +1668,20 @@ public partial class GameScene : Control
             activeStyle.BorderColor = colors.Accent.Lightened(0.3f);
             activeStyle.SetBorderWidthAll(3);
             _notesButton.AddThemeStyleboxOverride("normal", activeStyle);
-            
+
             // Auch hover/pressed für konsistente Touch-Erfahrung
             var hoverStyle = theme.CreateButtonStyleBox();
             hoverStyle.BgColor = colors.Accent.Lightened(0.1f);
             hoverStyle.BorderColor = colors.Accent.Lightened(0.4f);
             hoverStyle.SetBorderWidthAll(3);
             _notesButton.AddThemeStyleboxOverride("hover", hoverStyle);
-            
+
             var pressedStyle = theme.CreateButtonStyleBox();
             pressedStyle.BgColor = colors.Accent.Darkened(0.1f);
             pressedStyle.BorderColor = colors.Accent;
             pressedStyle.SetBorderWidthAll(3);
             _notesButton.AddThemeStyleboxOverride("pressed", pressedStyle);
-            
+
             _notesButton.AddThemeColorOverride("font_color", colors.Background);
         }
         else
