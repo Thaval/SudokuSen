@@ -23,6 +23,121 @@ public class SettingsData
     /// <summary>Lautstärke (0-100)</summary>
     public int Volume { get; set; } = 80;
 
+    /// <summary>Lernmodus: zeigt bei Fehlern eine kurze Erklärung</summary>
+    public bool LearnModeEnabled { get; set; } = true;
+
+    /// <summary>Farbblind-freundliche Palette (bessere Kontraste)</summary>
+    public bool ColorblindPaletteEnabled { get; set; } = false;
+
+    /// <summary>UI-Skalierung in Prozent (z.B. 100 = normal)</summary>
+    public int UiScalePercent { get; set; } = 100;
+
+    // Daily Sudoku
+    public List<string> DailyCompletedDates { get; set; } = new(); // yyyy-MM-dd
+    public string? DailyLastCompletedDate { get; set; }
+    public string? DailyLastPlayedDate { get; set; }
+    public int DailyStreakCurrent { get; set; } = 0;
+    public int DailyStreakBest { get; set; } = 0;
+
+    // Challenge Modes (apply to new games)
+    public bool ChallengeNoNotes { get; set; } = false;
+    public bool ChallengePerfectRun { get; set; } = false;
+    public int ChallengeHintLimit { get; set; } = 0; // 0 = off
+    public int ChallengeTimeAttackMinutes { get; set; } = 0; // 0 = off
+
+    // Technique progression (tracked via hints)
+    public Dictionary<string, int> TechniqueHintShownCounts { get; set; } = new();
+    public Dictionary<string, int> TechniqueHintAppliedCounts { get; set; } = new();
+
+    // Mistake heatmap (aggregated over games)
+    public List<int> MistakeHeatmap9 { get; set; } = new(); // 81 entries
+    public List<int> MistakeHeatmap4 { get; set; } = new(); // 16 entries
+
+    public void EnsureHeatmapSizes()
+    {
+        EnsureListSize(MistakeHeatmap9, 81);
+        EnsureListSize(MistakeHeatmap4, 16);
+    }
+
+    public void RecordMistake(int gridSize, int row, int col)
+    {
+        EnsureHeatmapSizes();
+        if (gridSize == 4)
+        {
+            int idx = row * 4 + col;
+            if (idx >= 0 && idx < MistakeHeatmap4.Count) MistakeHeatmap4[idx]++;
+            return;
+        }
+
+        int idx9 = row * 9 + col;
+        if (idx9 >= 0 && idx9 < MistakeHeatmap9.Count) MistakeHeatmap9[idx9]++;
+    }
+
+    public bool HasCompletedDaily(string date)
+    {
+        return DailyCompletedDates.Contains(date);
+    }
+
+    public void MarkDailyCompleted(string date)
+    {
+        if (string.IsNullOrWhiteSpace(date)) return;
+        if (HasCompletedDaily(date))
+        {
+            DailyLastPlayedDate = date;
+            return;
+        }
+
+        DailyCompletedDates.Add(date);
+        DailyLastPlayedDate = date;
+
+        string yesterday = DateTime.Parse(date).AddDays(-1).ToString("yyyy-MM-dd");
+        if (!string.IsNullOrWhiteSpace(DailyLastCompletedDate) && DailyLastCompletedDate == yesterday)
+        {
+            DailyStreakCurrent++;
+        }
+        else
+        {
+            DailyStreakCurrent = 1;
+        }
+
+        DailyLastCompletedDate = date;
+        if (DailyStreakCurrent > DailyStreakBest) DailyStreakBest = DailyStreakCurrent;
+
+        // Keep list bounded (last ~400 days)
+        if (DailyCompletedDates.Count > 400)
+        {
+            DailyCompletedDates = DailyCompletedDates
+                .OrderByDescending(d => d)
+                .Take(400)
+                .ToList();
+        }
+    }
+
+    public void IncrementTechniqueShown(string technique)
+    {
+        if (string.IsNullOrWhiteSpace(technique)) return;
+        TechniqueHintShownCounts.TryGetValue(technique, out int cur);
+        TechniqueHintShownCounts[technique] = cur + 1;
+    }
+
+    public void IncrementTechniqueApplied(string technique)
+    {
+        if (string.IsNullOrWhiteSpace(technique)) return;
+        TechniqueHintAppliedCounts.TryGetValue(technique, out int cur);
+        TechniqueHintAppliedCounts[technique] = cur + 1;
+    }
+
+    private static void EnsureListSize(List<int> list, int size)
+    {
+        if (list.Count == size) return;
+        if (list.Count > size)
+        {
+            list.RemoveRange(size, list.Count - size);
+            return;
+        }
+        while (list.Count < size) list.Add(0);
+    }
+
     public SettingsData Clone()
     {
         return new SettingsData
@@ -32,7 +147,23 @@ public class SettingsData
             HideCompletedNumbers = HideCompletedNumbers,
             HighlightRelatedCells = HighlightRelatedCells,
             SoundEnabled = SoundEnabled,
-            Volume = Volume
+            Volume = Volume,
+            LearnModeEnabled = LearnModeEnabled,
+            ColorblindPaletteEnabled = ColorblindPaletteEnabled,
+            UiScalePercent = UiScalePercent,
+            DailyCompletedDates = new List<string>(DailyCompletedDates),
+            DailyLastCompletedDate = DailyLastCompletedDate,
+            DailyLastPlayedDate = DailyLastPlayedDate,
+            DailyStreakCurrent = DailyStreakCurrent,
+            DailyStreakBest = DailyStreakBest,
+            ChallengeNoNotes = ChallengeNoNotes,
+            ChallengePerfectRun = ChallengePerfectRun,
+            ChallengeHintLimit = ChallengeHintLimit,
+            ChallengeTimeAttackMinutes = ChallengeTimeAttackMinutes,
+            TechniqueHintShownCounts = new Dictionary<string, int>(TechniqueHintShownCounts),
+            TechniqueHintAppliedCounts = new Dictionary<string, int>(TechniqueHintAppliedCounts),
+            MistakeHeatmap9 = new List<int>(MistakeHeatmap9),
+            MistakeHeatmap4 = new List<int>(MistakeHeatmap4)
         };
     }
 }

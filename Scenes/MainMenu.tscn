@@ -47,6 +47,13 @@ text = "Ein klassisches Zahlenrätsel"
 horizontal_alignment = 1
 modulate = Color(0.5, 0.5, 0.5, 1)
 
+[node name="DailyInfo" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Daily offen"
+horizontal_alignment = 1
+modulate = Color(0.5, 0.5, 0.5, 1)
+
 [node name="HSeparator" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
@@ -65,6 +72,12 @@ custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
 text = "🆕 Neues Spiel"
+
+[node name="DailyButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+focus_mode = 2
+text = "📅 Daily Sudoku"
 
 [node name="SettingsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)

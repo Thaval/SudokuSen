@@ -62,7 +62,32 @@ public partial class AppState : Node
 
         CurrentGame = Logic.SudokuGenerator.Generate(difficulty);
         CurrentGame.IsDeadlyMode = saveService.Settings.DeadlyModeEnabled;
+        ApplyChallengeSettings(CurrentGame, saveService.Settings);
         IsNewGame = true;
+
+        saveService.SaveCurrentGame(CurrentGame);
+
+        EmitSignal(SignalName.GameStarted);
+        NavigateTo(SCENE_GAME);
+    }
+
+    public void StartDailyGame()
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+
+        string date = DateTime.Today.ToString("yyyy-MM-dd");
+        int seed = int.Parse(DateTime.Today.ToString("yyyyMMdd"));
+
+        CurrentGame = Logic.SudokuGenerator.Generate(Difficulty.Medium, seed);
+        CurrentGame.IsDaily = true;
+        CurrentGame.DailyDate = date;
+        CurrentGame.IsDeadlyMode = saveService.Settings.DeadlyModeEnabled;
+        ApplyChallengeSettings(CurrentGame, saveService.Settings);
+        IsNewGame = true;
+
+        // mark played date
+        saveService.Settings.DailyLastPlayedDate = date;
+        saveService.SaveSettings();
 
         saveService.SaveCurrentGame(CurrentGame);
 
@@ -102,6 +127,13 @@ public partial class AppState : Node
         var entry = HistoryEntry.FromGameState(CurrentGame, status);
         saveService.AddHistoryEntry(entry);
 
+        // Daily streaks
+        if (status == GameStatus.Won && CurrentGame.IsDaily && !string.IsNullOrWhiteSpace(CurrentGame.DailyDate))
+        {
+            saveService.Settings.MarkDailyCompleted(CurrentGame.DailyDate!);
+            saveService.SaveSettings();
+        }
+
         // Lösche SaveGame wenn beendet (nicht InProgress)
         if (status != GameStatus.InProgress)
         {
@@ -109,6 +141,14 @@ public partial class AppState : Node
         }
 
         EmitSignal(SignalName.GameEnded, (int)status);
+    }
+
+    private static void ApplyChallengeSettings(SudokuGameState game, SettingsData settings)
+    {
+        game.ChallengeNoNotes = settings.ChallengeNoNotes;
+        game.ChallengePerfectRun = settings.ChallengePerfectRun;
+        game.ChallengeHintLimit = Math.Max(0, settings.ChallengeHintLimit);
+        game.ChallengeTimeAttackSeconds = Math.Max(0, settings.ChallengeTimeAttackMinutes) * 60;
     }
 
     /// <summary>

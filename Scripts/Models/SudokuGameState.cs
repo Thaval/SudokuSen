@@ -56,6 +56,17 @@ public class SudokuGameState
     /// <summary>Aktueller Status</summary>
     public GameStatus Status { get; set; }
 
+    // Meta
+    public bool IsDaily { get; set; } = false;
+    public string? DailyDate { get; set; } // yyyy-MM-dd
+
+    // Challenge Modes (snapshot at game start)
+    public bool ChallengeNoNotes { get; set; } = false;
+    public bool ChallengePerfectRun { get; set; } = false;
+    public int ChallengeHintLimit { get; set; } = 0;
+    public int ChallengeTimeAttackSeconds { get; set; } = 0;
+    public int HintsUsed { get; set; } = 0;
+
     public SudokuGameState()
     {
         InitializeEmptyGrid();
@@ -153,7 +164,14 @@ public class SudokuGameState
             ElapsedSeconds = ElapsedSeconds,
             Mistakes = Mistakes,
             IsDeadlyMode = IsDeadlyMode,
-            Status = Status
+            Status = Status,
+            IsDaily = IsDaily,
+            DailyDate = DailyDate,
+            ChallengeNoNotes = ChallengeNoNotes,
+            ChallengePerfectRun = ChallengePerfectRun,
+            ChallengeHintLimit = ChallengeHintLimit,
+            ChallengeTimeAttackSeconds = ChallengeTimeAttackSeconds,
+            HintsUsed = HintsUsed
         };
 
         int size = GridSize;

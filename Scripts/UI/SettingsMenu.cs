@@ -11,6 +11,16 @@ public partial class SettingsMenu : Control
     private CheckButton _deadlyCheck = null!;
     private CheckButton _hideCheck = null!;
     private CheckButton _highlightCheck = null!;
+
+    private CheckButton _learnCheck = null!;
+    private CheckButton _colorblindCheck = null!;
+    private HSlider _uiScaleSlider = null!;
+    private Label _uiScaleValue = null!;
+
+    private CheckButton _challengeNoNotesCheck = null!;
+    private CheckButton _challengePerfectCheck = null!;
+    private OptionButton _challengeHintsOption = null!;
+    private OptionButton _challengeTimeOption = null!;
     private Button _backButton = null!;
 
     public override void _Ready()
@@ -23,11 +33,31 @@ public partial class SettingsMenu : Control
         _deadlyCheck = settingsContainer.GetNode<CheckButton>("DeadlyRow/DeadlyCheck");
         _hideCheck = settingsContainer.GetNode<CheckButton>("HideRow/HideCheck");
         _highlightCheck = settingsContainer.GetNode<CheckButton>("HighlightRow/HighlightCheck");
+
+        _learnCheck = settingsContainer.GetNode<CheckButton>("LearnRow/LearnCheck");
+        _colorblindCheck = settingsContainer.GetNode<CheckButton>("ColorblindRow/ColorblindCheck");
+        _uiScaleSlider = settingsContainer.GetNode<HSlider>("UiScaleRow/UiScaleSlider");
+        _uiScaleValue = settingsContainer.GetNode<Label>("UiScaleRow/UiScaleValue");
+
+        _challengeNoNotesCheck = settingsContainer.GetNode<CheckButton>("ChallengeNoNotesRow/ChallengeNoNotesCheck");
+        _challengePerfectCheck = settingsContainer.GetNode<CheckButton>("ChallengePerfectRow/ChallengePerfectCheck");
+        _challengeHintsOption = settingsContainer.GetNode<OptionButton>("ChallengeHintsRow/ChallengeHintsOption");
+        _challengeTimeOption = settingsContainer.GetNode<OptionButton>("ChallengeTimeRow/ChallengeTimeOption");
         _backButton = GetNode<Button>("BackButton");
 
         // Theme-Optionen
         _themeOption.AddItem("Hell", 0);
         _themeOption.AddItem("Dunkel", 1);
+
+        _challengeHintsOption.AddItem("Aus", 0);
+        _challengeHintsOption.AddItem("3", 3);
+        _challengeHintsOption.AddItem("5", 5);
+        _challengeHintsOption.AddItem("10", 10);
+
+        _challengeTimeOption.AddItem("Aus", 0);
+        _challengeTimeOption.AddItem("10 min", 10);
+        _challengeTimeOption.AddItem("15 min", 15);
+        _challengeTimeOption.AddItem("20 min", 20);
 
         // Werte laden
         LoadSettings();
@@ -37,6 +67,15 @@ public partial class SettingsMenu : Control
         _deadlyCheck.Toggled += OnDeadlyToggled;
         _hideCheck.Toggled += OnHideToggled;
         _highlightCheck.Toggled += OnHighlightToggled;
+
+        _learnCheck.Toggled += OnLearnToggled;
+        _colorblindCheck.Toggled += OnColorblindToggled;
+        _uiScaleSlider.ValueChanged += OnUiScaleChanged;
+
+        _challengeNoNotesCheck.Toggled += OnChallengeNoNotesToggled;
+        _challengePerfectCheck.Toggled += OnChallengePerfectToggled;
+        _challengeHintsOption.ItemSelected += OnChallengeHintsSelected;
+        _challengeTimeOption.ItemSelected += OnChallengeTimeSelected;
         _backButton.Pressed += OnBackPressed;
 
         ApplyTheme();
@@ -68,6 +107,18 @@ public partial class SettingsMenu : Control
         _deadlyCheck.ButtonPressed = settings.DeadlyModeEnabled;
         _hideCheck.ButtonPressed = settings.HideCompletedNumbers;
         _highlightCheck.ButtonPressed = settings.HighlightRelatedCells;
+
+        _learnCheck.ButtonPressed = settings.LearnModeEnabled;
+        _colorblindCheck.ButtonPressed = settings.ColorblindPaletteEnabled;
+
+        _uiScaleSlider.Value = settings.UiScalePercent;
+        _uiScaleValue.Text = $"{settings.UiScalePercent}%";
+
+        _challengeNoNotesCheck.ButtonPressed = settings.ChallengeNoNotes;
+        _challengePerfectCheck.ButtonPressed = settings.ChallengePerfectRun;
+
+        SelectOptionById(_challengeHintsOption, settings.ChallengeHintLimit);
+        SelectOptionById(_challengeTimeOption, settings.ChallengeTimeAttackMinutes);
     }
 
     private void SaveSettings()
@@ -84,6 +135,36 @@ public partial class SettingsMenu : Control
 
         var themeService = GetNode<ThemeService>("/root/ThemeService");
         themeService.SetTheme((int)index);
+    }
+
+    private void OnLearnToggled(bool pressed)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.LearnModeEnabled = pressed;
+        SaveSettings();
+    }
+
+    private void OnColorblindToggled(bool pressed)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.ColorblindPaletteEnabled = pressed;
+        SaveSettings();
+
+        var themeService = GetNode<ThemeService>("/root/ThemeService");
+        themeService.SetColorblindPalette(pressed);
+    }
+
+    private void OnUiScaleChanged(double value)
+    {
+        int pct = (int)Math.Round(value);
+        _uiScaleValue.Text = $"{pct}%";
+
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.UiScalePercent = pct;
+        SaveSettings();
+
+        var themeService = GetNode<ThemeService>("/root/ThemeService");
+        themeService.ApplyUiScale(pct);
     }
 
     private void OnDeadlyToggled(bool pressed)
@@ -105,6 +186,49 @@ public partial class SettingsMenu : Control
         var saveService = GetNode<SaveService>("/root/SaveService");
         saveService.Settings.HighlightRelatedCells = pressed;
         SaveSettings();
+    }
+
+    private void OnChallengeNoNotesToggled(bool pressed)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.ChallengeNoNotes = pressed;
+        SaveSettings();
+    }
+
+    private void OnChallengePerfectToggled(bool pressed)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.ChallengePerfectRun = pressed;
+        SaveSettings();
+    }
+
+    private void OnChallengeHintsSelected(long index)
+    {
+        int id = _challengeHintsOption.GetItemId((int)index);
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.ChallengeHintLimit = id;
+        SaveSettings();
+    }
+
+    private void OnChallengeTimeSelected(long index)
+    {
+        int id = _challengeTimeOption.GetItemId((int)index);
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.ChallengeTimeAttackMinutes = id;
+        SaveSettings();
+    }
+
+    private static void SelectOptionById(OptionButton option, int id)
+    {
+        for (int i = 0; i < option.ItemCount; i++)
+        {
+            if (option.GetItemId(i) == id)
+            {
+                option.Selected = i;
+                return;
+            }
+        }
+        option.Selected = 0;
     }
 
     private void OnBackPressed()

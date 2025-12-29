@@ -48,6 +48,8 @@ public partial class GameScene : Control
     private Control? _hintOverlay = null;
     private HashSet<(int row, int col)> _hintHighlightedCells = new();
 
+    private (int row, int col, int value, string technique)? _lastHintTracking = null;
+
     public override void _Ready()
     {
         // UI-Referenzen holen
@@ -105,6 +107,16 @@ public partial class GameScene : Control
 
         _elapsedTime += delta;
         UpdateTimerDisplay();
+
+        // Time Attack
+        if (_gameState.ChallengeTimeAttackSeconds > 0 && _elapsedTime >= _gameState.ChallengeTimeAttackSeconds)
+        {
+            _isGameOver = true;
+            _gameState.ElapsedSeconds = _elapsedTime;
+            var appState = GetNode<AppState>("/root/AppState");
+            appState.EndGame(GameStatus.Lost);
+            ShowTimeAttackOverlay();
+        }
     }
 
     public override void _Input(InputEvent @event)
@@ -161,7 +173,10 @@ public partial class GameScene : Control
             // N = Notizen-Modus umschalten
             else if (keyEvent.Keycode == Key.N)
             {
-                OnNotesButtonPressed();
+                if (!(_gameState?.ChallengeNoNotes ?? false))
+                {
+                    OnNotesButtonPressed();
+                }
                 GetViewport().SetInputAsHandled();
                 return;
             }
@@ -511,6 +526,23 @@ public partial class GameScene : Control
         UpdateMistakesLabel();
         UpdateGrid();
         UpdateNumberCounts();
+
+        ApplyChallengeUi();
+    }
+
+    private void ApplyChallengeUi()
+    {
+        if (_gameState == null) return;
+        if (_notesButton != null)
+        {
+            _notesButton.Visible = !_gameState.ChallengeNoNotes;
+        }
+
+        if (_hintButton != null)
+        {
+            bool hintAllowed = _gameState.GridSize == 9 && (_gameState.ChallengeHintLimit <= 0 || _gameState.HintsUsed < _gameState.ChallengeHintLimit);
+            _hintButton.Disabled = !hintAllowed;
+        }
     }
 
     private void UpdateDifficultyLabel()
@@ -531,6 +563,21 @@ public partial class GameScene : Control
         if (_gameState.IsDeadlyMode)
         {
             _difficultyLabel.Text += " (Deadly)";
+        }
+
+        if (_gameState.IsDaily)
+        {
+            _difficultyLabel.Text += " (Daily)";
+        }
+
+        var tags = new List<string>();
+        if (_gameState.ChallengeNoNotes) tags.Add("NoNotes");
+        if (_gameState.ChallengePerfectRun) tags.Add("Perfect");
+        if (_gameState.ChallengeHintLimit > 0) tags.Add($"Hints≤{_gameState.ChallengeHintLimit}");
+        if (_gameState.ChallengeTimeAttackSeconds > 0) tags.Add($"Time≤{_gameState.ChallengeTimeAttackSeconds / 60}m");
+        if (tags.Count > 0)
+        {
+            _difficultyLabel.Text += " [" + string.Join(", ", tags) + "]";
         }
     }
 
@@ -860,7 +907,19 @@ public partial class GameScene : Control
         if (number != cell.Solution)
         {
             // Fehler!
+            RecordMistakeForHeatmap(_selectedRow, _selectedCol);
+
             var appState = GetNode<AppState>("/root/AppState");
+
+            // Perfect Run => sofort verloren
+            if (_gameState.ChallengePerfectRun)
+            {
+                _isGameOver = true;
+                _gameState.ElapsedSeconds = _elapsedTime;
+                appState.EndGame(GameStatus.Lost);
+                ShowPerfectRunFailedOverlay();
+                return;
+            }
             bool gameOver = appState.RegisterMistake();
 
             UpdateMistakesLabel();
@@ -880,12 +939,27 @@ public partial class GameScene : Control
                 ShowGameOverOverlay();
                 return;
             }
+
+            MaybeShowTutorOverlay(number);
         }
         else
         {
             // Korrekte Zahl
             cell.Value = number;
             _highlightedNumber = number;
+
+            // Technique tracking: applied?
+            if (_lastHintTracking.HasValue)
+            {
+                var h = _lastHintTracking.Value;
+                if (h.row == _selectedRow && h.col == _selectedCol && h.value == number)
+                {
+                    var saveService = GetNode<SaveService>("/root/SaveService");
+                    saveService.Settings.IncrementTechniqueApplied(h.technique);
+                    saveService.SaveSettings();
+                    _lastHintTracking = null;
+                }
+            }
 
             // Prüfen ob gewonnen
             if (_gameState.IsComplete())
@@ -900,6 +974,96 @@ public partial class GameScene : Control
         }
 
         SaveAndUpdate();
+    }
+
+    private void RecordMistakeForHeatmap(int row, int col)
+    {
+        if (_gameState == null) return;
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.RecordMistake(_gameState.GridSize, row, col);
+        saveService.SaveSettings();
+    }
+
+    private void MaybeShowTutorOverlay(int attemptedNumber)
+    {
+        if (_gameState == null) return;
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        if (!saveService.Settings.LearnModeEnabled) return;
+
+        var cell = _gameState.Grid[_selectedRow, _selectedCol];
+        string cellRef = ToCellRef(_selectedRow, _selectedCol);
+        bool violatesRules = !_gameState.IsValidPlacement(_selectedRow, _selectedCol, attemptedNumber);
+
+        string body;
+        if (violatesRules)
+        {
+            var conflicts = FindRuleConflicts(_selectedRow, _selectedCol, attemptedNumber);
+            body = $"Zelle {cellRef}: {attemptedNumber} passt nicht, weil sie mit {string.Join(", ", conflicts)} kollidiert.";
+        }
+        else
+        {
+            body = $"Zelle {cellRef}: {attemptedNumber} ist regelkonform, aber nicht die Lösung dieses Rätsels.";
+        }
+
+        body += $"\n\nTipp: In {cellRef} gehört {cell.Solution}.";
+
+        ShowSimpleOverlay("📘 Tutor", body);
+    }
+
+    private List<string> FindRuleConflicts(int row, int col, int number)
+    {
+        var conflicts = new List<string>();
+        if (_gameState == null) return conflicts;
+
+        int size = _gameState.GridSize;
+        int blockSize = _gameState.BlockSize;
+
+        for (int c = 0; c < size; c++)
+        {
+            if (c == col) continue;
+            if (_gameState.Grid[row, c].Value == number)
+                conflicts.Add(ToCellRef(row, c));
+        }
+
+        for (int r = 0; r < size; r++)
+        {
+            if (r == row) continue;
+            if (_gameState.Grid[r, col].Value == number)
+                conflicts.Add(ToCellRef(r, col));
+        }
+
+        int br = (row / blockSize) * blockSize;
+        int bc = (col / blockSize) * blockSize;
+        for (int r = br; r < br + blockSize; r++)
+        {
+            for (int c = bc; c < bc + blockSize; c++)
+            {
+                if (r == row && c == col) continue;
+                if (_gameState.Grid[r, c].Value == number)
+                    conflicts.Add(ToCellRef(r, c));
+            }
+        }
+
+        if (conflicts.Count == 0) conflicts.Add("den Sudoku-Regeln");
+        return conflicts.Distinct().ToList();
+    }
+
+    private void ShowPerfectRunFailedOverlay()
+    {
+        var overlay = CreateOverlay("🎯 Perfect Run", "Ein Fehler beendet diesen Modus.\nDu hast verloren.", new Color("f44336"));
+        _overlayContainer.AddChild(overlay);
+    }
+
+    private void ShowTimeAttackOverlay()
+    {
+        var overlay = CreateOverlay("⏱️ Time Attack", "Zeit abgelaufen.\nDu hast verloren.", new Color("f44336"));
+        _overlayContainer.AddChild(overlay);
+    }
+
+    private void ShowSimpleOverlay(string title, string message)
+    {
+        var overlay = CreateOverlay(title, message, new Color("64b5f6"));
+        _overlayContainer.AddChild(overlay);
     }
 
     private void SaveAndUpdate()
@@ -1240,6 +1404,24 @@ public partial class GameScene : Control
             // Kein Hinweis verfügbar (Spiel ist gelöst?)
             return;
         }
+
+        // Challenge: hint limit
+        if (_gameState.ChallengeHintLimit > 0 && _gameState.HintsUsed >= _gameState.ChallengeHintLimit)
+        {
+            ApplyChallengeUi();
+            return;
+        }
+
+        _gameState.HintsUsed++;
+        var appState = GetNode<AppState>("/root/AppState");
+        appState.SaveGame();
+        ApplyChallengeUi();
+
+        // Technique progression
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.IncrementTechniqueShown(_currentHint.TechniqueName);
+        saveService.SaveSettings();
+        _lastHintTracking = (_currentHint.Row, _currentHint.Col, _currentHint.Value, _currentHint.TechniqueName);
 
         _isPaused = true;
         _hintPage = 0;

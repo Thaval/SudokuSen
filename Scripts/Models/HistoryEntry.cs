@@ -29,6 +29,12 @@ public class HistoryEntry
     /// <summary>War Deadly Mode aktiv</summary>
     public bool WasDeadlyMode { get; set; }
 
+    /// <summary>War es ein Daily-Sudoku?</summary>
+    public bool IsDaily { get; set; }
+
+    /// <summary>Daily-Datum (yyyy-MM-dd) wenn IsDaily</summary>
+    public string? DailyDate { get; set; }
+
     /// <summary>
     /// Erstellt einen HistoryEntry aus einem GameState
     /// </summary>
@@ -42,7 +48,9 @@ public class HistoryEntry
             DurationSeconds = state.ElapsedSeconds,
             Mistakes = state.Mistakes,
             Status = finalStatus,
-            WasDeadlyMode = state.IsDeadlyMode
+            WasDeadlyMode = state.IsDeadlyMode,
+            IsDaily = state.IsDaily,
+            DailyDate = state.DailyDate
         };
     }
 

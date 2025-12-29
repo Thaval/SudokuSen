@@ -7,6 +7,7 @@ public partial class MainMenu : Control
 {
     private Button _continueButton = null!;
     private Button _startButton = null!;
+    private Button _dailyButton = null!;
     private Button _settingsButton = null!;
     private Button _historyButton = null!;
     private Button _statsButton = null!;
@@ -15,6 +16,7 @@ public partial class MainMenu : Control
     private PanelContainer _panel = null!;
     private Label _title = null!;
     private Label _subtitle = null!;
+    private Label _dailyInfo = null!;
 
     public override void _Ready()
     {
@@ -22,10 +24,12 @@ public partial class MainMenu : Control
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Title");
         _subtitle = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Subtitle");
+        _dailyInfo = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/DailyInfo");
 
         var buttonContainer = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer");
         _continueButton = buttonContainer.GetNode<Button>("ContinueButton");
         _startButton = buttonContainer.GetNode<Button>("StartButton");
+        _dailyButton = buttonContainer.GetNode<Button>("DailyButton");
         _settingsButton = buttonContainer.GetNode<Button>("SettingsButton");
         _historyButton = buttonContainer.GetNode<Button>("HistoryButton");
         _statsButton = buttonContainer.GetNode<Button>("StatsButton");
@@ -35,6 +39,7 @@ public partial class MainMenu : Control
         // Events verbinden
         _continueButton.Pressed += OnContinuePressed;
         _startButton.Pressed += OnStartPressed;
+        _dailyButton.Pressed += OnDailyPressed;
         _settingsButton.Pressed += OnSettingsPressed;
         _historyButton.Pressed += OnHistoryPressed;
         _statsButton.Pressed += OnStatsPressed;
@@ -48,6 +53,7 @@ public partial class MainMenu : Control
 
         // Continue-Button nur anzeigen wenn SaveGame existiert
         UpdateContinueButton();
+        UpdateDailyInfo();
 
         // Focus auf ersten verfügbaren Button
         CallDeferred(nameof(SetInitialFocus));
@@ -73,6 +79,22 @@ public partial class MainMenu : Control
         _continueButton.Visible = saveService.HasSaveGame;
     }
 
+    private void UpdateDailyInfo()
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        var settings = saveService.Settings;
+        string today = DateTime.Today.ToString("yyyy-MM-dd");
+        bool doneToday = settings.HasCompletedDaily(today);
+
+        string streak = settings.DailyStreakCurrent > 0
+            ? $"Streak: {settings.DailyStreakCurrent} (Best: {settings.DailyStreakBest})"
+            : "Streak: 0";
+
+        _dailyInfo.Text = doneToday
+            ? $"Daily erledigt ✅  |  {streak}"
+            : $"Daily offen  |  {streak}";
+    }
+
     private void OnThemeChanged(int themeIndex)
     {
         ApplyTheme();
@@ -90,10 +112,12 @@ public partial class MainMenu : Control
         // Title-Farbe
         _title.AddThemeColorOverride("font_color", colors.TextPrimary);
         _subtitle.AddThemeColorOverride("font_color", colors.TextSecondary);
+        _dailyInfo.AddThemeColorOverride("font_color", colors.TextSecondary);
 
         // Button-Styles
         ApplyButtonTheme(_continueButton, theme);
         ApplyButtonTheme(_startButton, theme);
+        ApplyButtonTheme(_dailyButton, theme);
         ApplyButtonTheme(_settingsButton, theme);
         ApplyButtonTheme(_historyButton, theme);
         ApplyButtonTheme(_statsButton, theme);
@@ -127,6 +151,12 @@ public partial class MainMenu : Control
     {
         var appState = GetNode<AppState>("/root/AppState");
         appState.NavigateTo(AppState.SCENE_DIFFICULTY);
+    }
+
+    private void OnDailyPressed()
+    {
+        var appState = GetNode<AppState>("/root/AppState");
+        appState.StartDailyGame();
     }
 
     private void OnSettingsPressed()

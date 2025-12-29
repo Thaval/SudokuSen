@@ -43,6 +43,7 @@ public partial class SaveService : Node
                 using var file = FileAccess.Open(SETTINGS_PATH, FileAccess.ModeFlags.Read);
                 string json = file.GetAsText();
                 Settings = JsonSerializer.Deserialize<SettingsData>(json) ?? new();
+                Settings.EnsureHeatmapSizes();
             }
             catch (Exception e)
             {
@@ -177,6 +178,15 @@ public class SaveGameData
     public bool IsDeadlyMode { get; set; }
     public int Status { get; set; }
 
+    public bool IsDaily { get; set; }
+    public string? DailyDate { get; set; }
+
+    public bool ChallengeNoNotes { get; set; }
+    public bool ChallengePerfectRun { get; set; }
+    public int ChallengeHintLimit { get; set; }
+    public int ChallengeTimeAttackSeconds { get; set; }
+    public int HintsUsed { get; set; }
+
     public class CellData
     {
         public int Row { get; set; }
@@ -195,7 +205,14 @@ public class SaveGameData
             ElapsedSeconds = state.ElapsedSeconds,
             Mistakes = state.Mistakes,
             IsDeadlyMode = state.IsDeadlyMode,
-            Status = (int)state.Status
+            Status = (int)state.Status,
+            IsDaily = state.IsDaily,
+            DailyDate = state.DailyDate,
+            ChallengeNoNotes = state.ChallengeNoNotes,
+            ChallengePerfectRun = state.ChallengePerfectRun,
+            ChallengeHintLimit = state.ChallengeHintLimit,
+            ChallengeTimeAttackSeconds = state.ChallengeTimeAttackSeconds,
+            HintsUsed = state.HintsUsed
         };
 
         for (int row = 0; row < 9; row++)
@@ -226,7 +243,14 @@ public class SaveGameData
             ElapsedSeconds = ElapsedSeconds,
             Mistakes = Mistakes,
             IsDeadlyMode = IsDeadlyMode,
-            Status = (GameStatus)Status
+            Status = (GameStatus)Status,
+            IsDaily = IsDaily,
+            DailyDate = DailyDate,
+            ChallengeNoNotes = ChallengeNoNotes,
+            ChallengePerfectRun = ChallengePerfectRun,
+            ChallengeHintLimit = ChallengeHintLimit,
+            ChallengeTimeAttackSeconds = ChallengeTimeAttackSeconds,
+            HintsUsed = HintsUsed
         };
 
         foreach (var cellData in Cells)

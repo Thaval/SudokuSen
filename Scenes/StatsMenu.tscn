@@ -157,3 +157,62 @@ text = "Ø Mittel: -"
 [node name="AvgMistakesHard" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
 text = "Ø Schwer: -"
+
+[node name="HSeparator3" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="DailySection" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DailyTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Daily"
+
+[node name="DailyStreak" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
+layout_mode = 2
+text = "Streak: 0"
+
+[node name="DailyToday" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
+layout_mode = 2
+text = "Heute: offen"
+
+[node name="DailyRecent" type="RichTextLabel" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
+layout_mode = 2
+fit_content = true
+bbcode_enabled = true
+text = ""
+
+[node name="HSeparator4" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TechniquesSection" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TechniquesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TechniquesSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Techniken"
+
+[node name="TechniquesSummary" type="RichTextLabel" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TechniquesSection"]
+layout_mode = 2
+fit_content = true
+bbcode_enabled = true
+text = ""
+
+[node name="HSeparator5" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HeatmapSection" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeatmapTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HeatmapSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Mistake Heatmap"
+
+[node name="HeatmapContainer" type="CenterContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HeatmapSection"]
+layout_mode = 2

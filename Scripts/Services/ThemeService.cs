@@ -37,6 +37,9 @@ public partial class ThemeService : Node
 
     public ThemeColors CurrentColors { get; private set; }
 
+    private int _themeIndex = 0;
+    private bool _colorblindEnabled = false;
+
     // Light Theme
     private readonly ThemeColors _lightTheme = new ThemeColors
     {
@@ -92,13 +95,43 @@ public partial class ThemeService : Node
         Instance = this;
         // Theme aus Settings laden
         var saveService = GetNode<SaveService>("/root/SaveService");
-        CurrentColors = saveService.Settings.ThemeIndex == 0 ? _lightTheme : _darkTheme;
+        _themeIndex = saveService.Settings.ThemeIndex;
+        _colorblindEnabled = saveService.Settings.ColorblindPaletteEnabled;
+        CurrentColors = BuildColors(_themeIndex, _colorblindEnabled);
+        ApplyUiScale(saveService.Settings.UiScalePercent);
     }
 
     public void SetTheme(int index)
     {
-        CurrentColors = index == 0 ? _lightTheme : _darkTheme;
-        EmitSignal(SignalName.ThemeChanged, index);
+        _themeIndex = index;
+        CurrentColors = BuildColors(_themeIndex, _colorblindEnabled);
+        EmitSignal(SignalName.ThemeChanged, _themeIndex);
+    }
+
+    public void SetColorblindPalette(bool enabled)
+    {
+        _colorblindEnabled = enabled;
+        CurrentColors = BuildColors(_themeIndex, _colorblindEnabled);
+        EmitSignal(SignalName.ThemeChanged, _themeIndex);
+    }
+
+    public void ApplyUiScale(int uiScalePercent)
+    {
+        float scale = Math.Clamp(uiScalePercent / 100f, 0.75f, 1.5f);
+        var root = GetTree().Root;
+        root.ContentScaleFactor = scale;
+    }
+
+    private ThemeColors BuildColors(int themeIndex, bool colorblind)
+    {
+        var baseColors = themeIndex == 0 ? _lightTheme : _darkTheme;
+        if (!colorblind) return baseColors;
+
+        // Slightly adjust accent/highlight away from red/green confusion.
+        // Keep everything else identical to the current theme.
+        baseColors.Accent = themeIndex == 0 ? new Color("0d47a1") : new Color("90caf9");
+        baseColors.CellBackgroundHighlighted = themeIndex == 0 ? new Color("ffe082") : new Color("ffb300");
+        return baseColors;
     }
 
     public void ApplyToControl(Control control)
