@@ -33,6 +33,7 @@ public partial class StatsMenu : Control
     private Label _dailyStreak = null!;
     private Label _dailyToday = null!;
     private RichTextLabel _dailyRecent = null!;
+    private CenterContainer _dailyCalendarContainer = null!;
 
     // Techniques
     private RichTextLabel _techniquesSummary = null!;
@@ -72,6 +73,7 @@ public partial class StatsMenu : Control
         _dailyStreak = dailySection.GetNode<Label>("DailyStreak");
         _dailyToday = dailySection.GetNode<Label>("DailyToday");
         _dailyRecent = dailySection.GetNode<RichTextLabel>("DailyRecent");
+        _dailyCalendarContainer = dailySection.GetNode<CenterContainer>("DailyCalendarContainer");
 
         var techniquesSection = statsContainer.GetNode<VBoxContainer>("TechniquesSection");
         _techniquesSummary = techniquesSection.GetNode<RichTextLabel>("TechniquesSummary");
@@ -114,46 +116,47 @@ public partial class StatsMenu : Control
         var wins = completed.Where(h => h.Status == GameStatus.Won).ToList();
         var losses = completed.Where(h => h.Status == GameStatus.Lost).ToList();
 
-        // Übersicht
-        _totalGames.Text = $"Spiele gesamt: {completed.Count}";
-        _winsLosses.Text = $"Gewonnen: {wins.Count} | Verloren: {losses.Count}";
+        // Übersicht mit Icons
+        _totalGames.Text = $"🎮  Spiele gesamt: {completed.Count}";
+        _winsLosses.Text = $"✅ Gewonnen: {wins.Count}   ❌ Verloren: {losses.Count}";
 
         double winRate = completed.Count > 0 ? (double)wins.Count / completed.Count * 100 : 0;
-        _winRateLabel.Text = $"Gewinnrate: {winRate:F1}%";
+        _winRateLabel.Text = $"📊 Gewinnrate: {winRate:F1}%";
         _winRateBar.Value = winRate;
 
-        // Zeiten (nur gewonnene Spiele)
+        // Zeiten (nur gewonnene Spiele) mit Icons
         if (wins.Count > 0)
         {
             var bestTime = wins.Min(w => w.DurationSeconds);
             var worstTime = wins.Max(w => w.DurationSeconds);
-            _bestTime.Text = $"Beste Zeit: {FormatTime(bestTime)}";
-            _worstTime.Text = $"Längste Zeit: {FormatTime(worstTime)}";
+            _bestTime.Text = $"🏆 Beste Zeit: {FormatTime(bestTime)}";
+            _worstTime.Text = $"🐢 Längste Zeit: {FormatTime(worstTime)}";
         }
         else
         {
-            _bestTime.Text = "Beste Zeit: --:--";
-            _worstTime.Text = "Längste Zeit: --:--";
+            _bestTime.Text = "🏆 Beste Zeit: --:--";
+            _worstTime.Text = "🐢 Längste Zeit: --:--";
         }
 
         // Durchschnittliche Zeit pro Schwierigkeit
-        _avgTimeKids.Text = $"Ø Kids: {GetAvgTime(wins, Difficulty.Kids)}";
-        _avgTimeEasy.Text = $"Ø Leicht: {GetAvgTime(wins, Difficulty.Easy)}";
-        _avgTimeMedium.Text = $"Ø Mittel: {GetAvgTime(wins, Difficulty.Medium)}";
-        _avgTimeHard.Text = $"Ø Schwer: {GetAvgTime(wins, Difficulty.Hard)}";
+        _avgTimeKids.Text = $"    👶 Kids:     {GetAvgTime(wins, Difficulty.Kids)}";
+        _avgTimeEasy.Text = $"    🟢 Leicht:   {GetAvgTime(wins, Difficulty.Easy)}";
+        _avgTimeMedium.Text = $"    🟡 Mittel:   {GetAvgTime(wins, Difficulty.Medium)}";
+        _avgTimeHard.Text = $"    🔴 Schwer:   {GetAvgTime(wins, Difficulty.Hard)}";
 
         // Durchschnittliche Fehler pro Schwierigkeit
-        _avgMistakesKids.Text = $"Ø Kids: {GetAvgMistakes(completed, Difficulty.Kids)}";
-        _avgMistakesEasy.Text = $"Ø Leicht: {GetAvgMistakes(completed, Difficulty.Easy)}";
-        _avgMistakesMedium.Text = $"Ø Mittel: {GetAvgMistakes(completed, Difficulty.Medium)}";
-        _avgMistakesHard.Text = $"Ø Schwer: {GetAvgMistakes(completed, Difficulty.Hard)}";
+        _avgMistakesKids.Text = $"    👶 Kids:     {GetAvgMistakes(completed, Difficulty.Kids)} Fehler";
+        _avgMistakesEasy.Text = $"    🟢 Leicht:   {GetAvgMistakes(completed, Difficulty.Easy)} Fehler";
+        _avgMistakesMedium.Text = $"    🟡 Mittel:   {GetAvgMistakes(completed, Difficulty.Medium)} Fehler";
+        _avgMistakesHard.Text = $"    🔴 Schwer:   {GetAvgMistakes(completed, Difficulty.Hard)} Fehler";
 
-        // Daily
+        // Daily mit Icons
         string today = DateTime.Today.ToString("yyyy-MM-dd");
         bool doneToday = settings.HasCompletedDaily(today);
-        _dailyStreak.Text = $"Streak: {settings.DailyStreakCurrent}  (Best: {settings.DailyStreakBest})";
-        _dailyToday.Text = doneToday ? "Heute: erledigt ✅" : "Heute: offen";
-        _dailyRecent.Text = BuildDailyRecentText(settings, days: 14);
+        _dailyStreak.Text = $"🔥 Streak: {settings.DailyStreakCurrent}   ⭐ Best: {settings.DailyStreakBest}";
+        _dailyToday.Text = doneToday ? "📅 Heute: ✅ erledigt" : "📅 Heute: ⏳ offen";
+        _dailyRecent.Visible = false; // Hide the old text-based calendar
+        RenderDailyCalendar(settings);
 
         // Techniques
         _techniquesSummary.Text = BuildTechniqueSummary(settings);
@@ -162,19 +165,133 @@ public partial class StatsMenu : Control
         RenderHeatmap(settings);
     }
 
+    private void RenderDailyCalendar(SettingsData settings)
+    {
+        // Clear old
+        foreach (var child in _dailyCalendarContainer.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        var theme = GetNode<ThemeService>("/root/ThemeService");
+        var colors = theme.CurrentColors;
+
+        var today = DateTime.Today;
+        int daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
+        var weekStart = today.AddDays(-daysFromMonday - 7); // Start from last week's Monday
+
+        // 8 columns: week label + 7 days
+        var grid = new GridContainer();
+        grid.Columns = 8;
+        grid.AddThemeConstantOverride("h_separation", 4);
+        grid.AddThemeConstantOverride("v_separation", 4);
+        _dailyCalendarContainer.AddChild(grid);
+
+        // Header row: empty + Mo Di Mi Do Fr Sa So
+        string[] dayNames = { "", "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So" };
+        foreach (var dayName in dayNames)
+        {
+            var label = new Label();
+            label.Text = dayName;
+            label.CustomMinimumSize = new Vector2(32, 24);
+            label.HorizontalAlignment = HorizontalAlignment.Center;
+            label.VerticalAlignment = VerticalAlignment.Center;
+            label.AddThemeColorOverride("font_color", colors.TextSecondary);
+            label.AddThemeFontSizeOverride("font_size", 12);
+            grid.AddChild(label);
+        }
+
+        // Week rows
+        for (int week = 0; week < 2; week++)
+        {
+            // Week label
+            var weekLabel = new Label();
+            weekLabel.Text = $"W{week + 1}";
+            weekLabel.CustomMinimumSize = new Vector2(32, 32);
+            weekLabel.HorizontalAlignment = HorizontalAlignment.Center;
+            weekLabel.VerticalAlignment = VerticalAlignment.Center;
+            weekLabel.AddThemeColorOverride("font_color", colors.TextSecondary);
+            weekLabel.AddThemeFontSizeOverride("font_size", 11);
+            grid.AddChild(weekLabel);
+
+            // Days
+            for (int day = 0; day < 7; day++)
+            {
+                var date = weekStart.AddDays(week * 7 + day);
+                string s = date.ToString("yyyy-MM-dd");
+                bool done = settings.HasCompletedDaily(s);
+                bool isFuture = date > today;
+                bool isToday = date == today;
+
+                var cell = new PanelContainer();
+                cell.CustomMinimumSize = new Vector2(32, 32);
+
+                var style = theme.CreatePanelStyleBox(6, 0);
+                if (isToday)
+                {
+                    style.BorderColor = colors.Accent;
+                    style.SetBorderWidthAll(2);
+                    style.BgColor = done ? colors.Accent.Darkened(0.3f) : colors.CellBackground;
+                }
+                else if (done)
+                {
+                    style.BgColor = colors.Accent.Darkened(0.2f);
+                }
+                else if (isFuture)
+                {
+                    style.BgColor = colors.CellBackground.Darkened(0.3f);
+                }
+                else
+                {
+                    style.BgColor = colors.CellBackground;
+                }
+                cell.AddThemeStyleboxOverride("panel", style);
+
+                var dayLabel = new Label();
+                dayLabel.Text = done ? "✓" : (isFuture ? "" : date.Day.ToString());
+                dayLabel.HorizontalAlignment = HorizontalAlignment.Center;
+                dayLabel.VerticalAlignment = VerticalAlignment.Center;
+                dayLabel.AddThemeColorOverride("font_color", done ? colors.Background : colors.TextPrimary);
+                dayLabel.AddThemeFontSizeOverride("font_size", done ? 14 : 11);
+                cell.AddChild(dayLabel);
+
+                cell.TooltipText = date.ToString("dd.MM.yyyy") + (done ? " ✓" : (isFuture ? "" : " ✗"));
+                grid.AddChild(cell);
+            }
+        }
+    }
+
     private static string BuildDailyRecentText(SettingsData settings, int days)
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append("[b]Letzte Tage:[/b]\n");
-        for (int i = 0; i < days; i++)
+        sb.Append("[b]Letzte 2 Wochen:[/b]\n\n");
+
+        // Week labels
+        sb.Append("    Mo  Di  Mi  Do  Fr  Sa  So\n");
+
+        // Find the Monday of the current week
+        var today = DateTime.Today;
+        int daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
+        var weekStart = today.AddDays(-daysFromMonday - 7); // Start from last week's Monday
+
+        for (int week = 0; week < 2; week++)
         {
-            var date = DateTime.Today.AddDays(-i);
-            string s = date.ToString("yyyy-MM-dd");
-            bool done = settings.HasCompletedDaily(s);
-            sb.Append(done ? "✅ " : "⬜ ");
-            sb.Append(date.ToString("dd.MM"));
-            if (i % 7 == 6) sb.Append("\n");
-            else sb.Append("   ");
+            sb.Append(week == 0 ? "W1  " : "W2  ");
+            for (int day = 0; day < 7; day++)
+            {
+                var date = weekStart.AddDays(week * 7 + day);
+                string s = date.ToString("yyyy-MM-dd");
+                bool done = settings.HasCompletedDaily(s);
+                bool isFuture = date > today;
+
+                if (isFuture)
+                    sb.Append("·   ");
+                else if (done)
+                    sb.Append("✅  ");
+                else
+                    sb.Append("⬜  ");
+            }
+            sb.Append("\n");
         }
         return sb.ToString();
     }
@@ -186,7 +303,7 @@ public partial class StatsMenu : Control
 
         if (shown.Count == 0)
         {
-            return "Noch keine Technik-Daten (nutze 💡 Hinweise im Spiel).";
+            return "[i]Noch keine Technik-Daten.[/i]\n\nNutze 💡 Hinweise im Spiel, um Techniken zu lernen!";
         }
 
         var top = shown
@@ -195,13 +312,24 @@ public partial class StatsMenu : Control
             .ToList();
 
         var sb = new System.Text.StringBuilder();
-        sb.Append("[b]Meist gesehene Hinweise:[/b]\n");
+        sb.Append("[b]🎓 Meist gesehene Hinweise:[/b]\n\n");
         foreach (var kv in top)
         {
             applied.TryGetValue(kv.Key, out int ok);
-            sb.Append($"• {kv.Key}: {kv.Value}x (angewendet: {ok}x)\n");
+            double rate = kv.Value > 0 ? (double)ok / kv.Value * 100 : 0;
+            string bar = GetProgressBar(rate);
+            sb.Append($"• [b]{kv.Key}[/b]\n");
+            sb.Append($"   Gesehen: {kv.Value}x  Angewendet: {ok}x  ({rate:F0}%)\n");
+            sb.Append($"   {bar}\n\n");
         }
         return sb.ToString();
+    }
+
+    private static string GetProgressBar(double percent)
+    {
+        int filled = (int)(percent / 10);
+        int empty = 10 - filled;
+        return "█".PadRight(filled, '█').PadRight(10, '░');
     }
 
     private void RenderHeatmap(SettingsData settings)

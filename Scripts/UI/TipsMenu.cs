@@ -29,7 +29,11 @@ public partial class TipsMenu : Control
         CreatePointingPairTip(),
         CreateBoxLineTip(),
         CreateXWingTip(),
+        CreateSwordfishTip(),
+        CreateYWingTip(),
         CreateGeneralStrategiesTip(),
+        CreateKeyboardShortcutsTip(),
+        CreateMultiSelectTip(),
         CreatePracticeTip(),
         CreateAvoidMistakesTip()
     };
@@ -350,6 +354,71 @@ public partial class TipsMenu : Control
         );
     }
 
+    private static TipData CreateSwordfishTip()
+    {
+        var values = new int[9, 9];
+        var isGiven = new bool[9, 9];
+        var highlighted = new HashSet<(int, int)> { (0, 1), (0, 4), (3, 1), (3, 7), (6, 4), (6, 7) };
+        var related = new HashSet<(int, int)> { (2, 1), (5, 4), (8, 7) };
+
+        return new TipData(
+            "Swordfish Technik",
+            "[b][color=#4fc3f7]Swordfish[/color][/b]\n\n" +
+            "X-Wing erweitert auf 3 Zeilen und 3 Spalten.\n\n" +
+            "[b][color=#ffb74d]Beispiel mit der 4:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "Die 4 kann in 3 Zeilen nur in bestimmten Spalten stehen:\n" +
+            "Zeile 1: Spalten 2 und 5\n" +
+            "Zeile 4: Spalten 2 und 8\n" +
+            "Zeile 7: Spalten 5 und 8\n\n" +
+            "Alle 3 Spalten sind 'abgedeckt'.\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "Die 4 aus allen anderen Zellen dieser 3 Spalten entfernen!\n\n" +
+            "[b]Tipp:[/b] Sehr selten, aber maechtig."
+        );
+    }
+
+    private static TipData CreateYWingTip()
+    {
+        var values = new int[,] {
+            { 0, 0, 0 },
+            { 0, 0, 0 },
+            { 0, 0, 0 }
+        };
+        var isGiven = new bool[,] {
+            { false, false, false },
+            { false, false, false },
+            { false, false, false }
+        };
+        var highlighted = new HashSet<(int, int)> { (0, 0), (0, 2), (2, 0) };
+        var related = new HashSet<(int, int)> { (2, 2) };
+        var candidates = new Dictionary<(int, int), int[]> {
+            { (0, 0), new[] { 1, 2 } },      // Pivot: AB
+            { (0, 2), new[] { 1, 3 } },      // Wing 1: AC
+            { (2, 0), new[] { 2, 3 } },      // Wing 2: BC
+            { (2, 2), new[] { 1, 3, 5 } }    // Affected cell
+        };
+
+        return new TipData(
+            "Y-Wing (XY-Wing)",
+            "[b][color=#4fc3f7]Y-Wing[/color][/b]\n\n" +
+            "3 Zellen mit je 2 Kandidaten bilden eine Kette.\n\n" +
+            "[b][color=#ffb74d]Beispiel:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related, null, candidates),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "[b]Pivot[/b] (0,0): Kandidaten {1,2}\n" +
+            "[b]Wing 1[/b] (0,2): Kandidaten {1,3}\n" +
+            "[b]Wing 2[/b] (2,0): Kandidaten {2,3}\n\n" +
+            "Pivot teilt sich je einen Kandidaten mit jedem Wing.\n" +
+            "Wings teilen sich Kandidat 3.\n\n" +
+            "[b]Logik:[/b]\n" +
+            "Egal welchen Wert der Pivot hat, einer der Wings wird 3.\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "3 aus Zellen entfernen, die beide Wings sehen koennen!"
+        );
+    }
+
     private static TipData CreateGeneralStrategiesTip()
     {
         return new TipData(
@@ -375,6 +444,58 @@ public partial class TipsMenu : Control
             "- Pruefe Kandidaten erneut\n" +
             "- Nutze den Hinweis-Button\n\n" +
             "[b][color=#4caf50]Goldene Regel: NIEMALS RATEN![/color][/b]",
+            null,
+            ""
+        );
+    }
+
+    private static TipData CreateKeyboardShortcutsTip()
+    {
+        return new TipData(
+            "Tastenkuerzel",
+            "[b][color=#4fc3f7]Tastenkuerzel[/color][/b]\n\n" +
+            "[b][color=#ffb74d]Navigation:[/color][/b]\n" +
+            "[b]Pfeiltasten[/b] – Zelle wechseln\n" +
+            "[b]Shift + Pfeiltasten[/b] – Mehrfachauswahl erweitern\n" +
+            "[b]ESC[/b] – Auswahl aufheben / Zurueck\n\n" +
+            "[b][color=#ffb74d]Eingabe:[/color][/b]\n" +
+            "[b]1-9[/b] – Zahl eingeben\n" +
+            "[b]Entf / Rueck[/b] – Zahl loeschen\n" +
+            "[b]N[/b] – Notizen-Modus umschalten\n\n" +
+            "[b][color=#ffb74d]Im Notizen-Modus:[/color][/b]\n" +
+            "[b]1-9[/b] – Notiz hinzufuegen (bei Mehrfachauswahl)\n" +
+            "[b]1-9[/b] – Notiz toggeln (bei Einzelauswahl)\n" +
+            "[b]Entf / Rueck[/b] – Alle Notizen loeschen\n\n" +
+            "[b][color=#ffb74d]Extras:[/color][/b]\n" +
+            "[b]Rechtsklick[/b] auf ▶Row/Col/Box – Modus wechseln\n\n" +
+            "[b][color=#4caf50]Tipp:[/color][/b] Mit Tastatur bist du schneller!",
+            null,
+            ""
+        );
+    }
+
+    private static TipData CreateMultiSelectTip()
+    {
+        return new TipData(
+            "Mehrfachauswahl",
+            "[b][color=#4fc3f7]Mehrfachauswahl[/color][/b]\n\n" +
+            "[b][color=#ffb74d]So waehlst du mehrere Zellen:[/color][/b]\n\n" +
+            "[b]Mit Maus:[/b]\n" +
+            "• [b]Ctrl + Klick[/b] – Einzelne Zellen hinzufuegen\n" +
+            "• [b]Ziehen[/b] – Rechteck auswaehlen\n\n" +
+            "[b]Mit Tastatur:[/b]\n" +
+            "• [b]Shift + Pfeiltasten[/b] – Auswahl erweitern\n\n" +
+            "[b][color=#ffb74d]Was du damit machen kannst:[/color][/b]\n\n" +
+            "[b]Im Notizen-Modus:[/b]\n" +
+            "• Zahl druecken → Notiz in ALLE Zellen\n" +
+            "• Entf/Rueck → Notizen aus ALLEN loeschen\n\n" +
+            "[b]Im normalen Modus:[/b]\n" +
+            "• Zahl druecken → Alle Zellen fuellen (wenn korrekt)\n" +
+            "• Entf/Rueck → Alle Zellen leeren\n\n" +
+            "[b][color=#4caf50]Perfekt fuer:[/color][/b]\n" +
+            "• Schnelles Notizen-Setzen\n" +
+            "• Kandidaten in einem Haus loeschen\n" +
+            "• Mehrere gleiche Zahlen eintragen",
             null,
             ""
         );

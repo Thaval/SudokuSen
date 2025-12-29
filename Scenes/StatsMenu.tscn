@@ -71,7 +71,7 @@ theme_override_constants/separation = 12
 [node name="OverviewTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "Übersicht"
+text = "📈 Übersicht"
 
 [node name="TotalGames" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
@@ -104,7 +104,7 @@ theme_override_constants/separation = 12
 [node name="TimeTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "Zeiten"
+text = "⏱️ Zeiten"
 
 [node name="BestTime" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
@@ -140,7 +140,7 @@ theme_override_constants/separation = 12
 [node name="MistakesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "Fehler"
+text = "⚠️ Fehler"
 
 [node name="AvgMistakesKids" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
@@ -168,7 +168,7 @@ theme_override_constants/separation = 12
 [node name="DailyTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "Daily"
+text = "📅 Daily Challenge"
 
 [node name="DailyStreak" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
 layout_mode = 2
@@ -184,6 +184,9 @@ fit_content = true
 bbcode_enabled = true
 text = ""
 
+[node name="DailyCalendarContainer" type="CenterContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
+layout_mode = 2
+
 [node name="HSeparator4" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
@@ -194,7 +197,7 @@ theme_override_constants/separation = 12
 [node name="TechniquesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TechniquesSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "Techniken"
+text = "🧠 Techniken"
 
 [node name="TechniquesSummary" type="RichTextLabel" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TechniquesSection"]
 layout_mode = 2
@@ -212,7 +215,7 @@ theme_override_constants/separation = 12
 [node name="HeatmapTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HeatmapSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "Mistake Heatmap"
+text = "🔥 Fehler-Heatmap"
 
 [node name="HeatmapContainer" type="CenterContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HeatmapSection"]
 layout_mode = 2
