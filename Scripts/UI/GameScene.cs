@@ -658,6 +658,9 @@ public partial class GameScene : Control
         if (_gameState == null || _cellButtons == null) return;
 
         int gridSize = _gameState.GridSize;
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        bool highlightRelatedCells = saveService.Settings.HighlightRelatedCells;
+        bool[] emptyCandidates = gridSize == 4 ? new bool[4] : new bool[9];
 
         for (int row = 0; row < gridSize; row++)
         {
@@ -680,8 +683,7 @@ public partial class GameScene : Control
                 bool isRelated = false;
                 if (_selectedRow >= 0 && _selectedCol >= 0)
                 {
-                    var saveService = GetNode<SaveService>("/root/SaveService");
-                    if (saveService.Settings.HighlightRelatedCells)
+                    if (highlightRelatedCells)
                     {
                         // Nur gleiche Zeile ODER gleiche Spalte (nicht die ausgewählte Zelle selbst)
                         isRelated = (row == _selectedRow || col == _selectedCol) &&
@@ -702,7 +704,6 @@ public partial class GameScene : Control
                 }
                 else
                 {
-                    bool[] emptyCandidates = new bool[gridSize == 4 ? 4 : 9];
                     button.SetCandidates(emptyCandidates, false);
                 }
             }
@@ -1954,6 +1955,8 @@ public partial class SudokuCellButton : Button
     private bool[] _candidates = new bool[9];
     private bool _showNotes;
     private bool _showCandidates;
+    private int _notesMask;
+    private int _candidatesMask;
 
     public SudokuCellButton(int row, int col)
     {
@@ -2036,16 +2039,43 @@ public partial class SudokuCellButton : Button
 
     public void SetNotes(bool[] notes, bool showNotes)
     {
+        int newMask = ComputeMask(notes, _gridSize);
+        if (_showNotes == showNotes && _notesMask == newMask)
+        {
+            _notes = notes; // keep latest reference (even if unchanged)
+            return;
+        }
+
         _notes = notes;
         _showNotes = showNotes;
+        _notesMask = newMask;
         UpdateNotesDisplay();
     }
 
     public void SetCandidates(bool[] candidates, bool showCandidates)
     {
+        int newMask = ComputeMask(candidates, _gridSize);
+        if (_showCandidates == showCandidates && _candidatesMask == newMask)
+        {
+            _candidates = candidates;
+            return;
+        }
+
         _candidates = candidates;
         _showCandidates = showCandidates;
+        _candidatesMask = newMask;
         UpdateNotesDisplay();
+    }
+
+    private static int ComputeMask(bool[] values, int gridSize)
+    {
+        int count = Math.Min(gridSize, Math.Min(9, values.Length));
+        int mask = 0;
+        for (int i = 0; i < count; i++)
+        {
+            if (values[i]) mask |= 1 << i;
+        }
+        return mask;
     }
 
     private void UpdateNotesDisplay()
@@ -2095,6 +2125,7 @@ public partial class SudokuCellButton : Button
 
     public void SetValue(int value, bool isGiven)
     {
+        if (_value == value && _isGiven == isGiven) return;
         _value = value;
         _isGiven = isGiven;
         Text = value > 0 ? value.ToString() : "";
@@ -2103,24 +2134,28 @@ public partial class SudokuCellButton : Button
 
     public void SetSelected(bool selected)
     {
+        if (_isSelected == selected) return;
         _isSelected = selected;
         UpdateAppearance();
     }
 
     public void SetHighlighted(bool highlighted)
     {
+        if (_isHighlighted == highlighted) return;
         _isHighlighted = highlighted;
         UpdateAppearance();
     }
 
     public void SetRelated(bool related)
     {
+        if (_isRelated == related) return;
         _isRelated = related;
         UpdateAppearance();
     }
 
     public void SetMultiSelected(bool multiSelected)
     {
+        if (_isMultiSelected == multiSelected) return;
         _isMultiSelected = multiSelected;
         UpdateAppearance();
     }
