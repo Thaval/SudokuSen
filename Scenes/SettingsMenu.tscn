@@ -236,3 +236,26 @@ text = "Time Attack"
 [node name="ChallengeTimeOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeTimeRow"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
+
+[node name="TechniquesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Techniken pro Schwierigkeit"
+
+[node name="TechniquesDescription" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+autowrap_mode = 2
+text = "Wähle welche Lösungstechniken pro Schwierigkeit benötigt werden."
+
+[node name="TechniquesContainer" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ResetTechniquesRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="ResetTechniquesButton" type="Button" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ResetTechniquesRow"]
+custom_minimum_size = Vector2(200, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "🔄 Auf Standard zurücksetzen"

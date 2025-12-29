@@ -42,16 +42,27 @@ public partial class DifficultyMenu : Control
         _backButton.Pressed += OnBackPressed;
 
         // Technik-Beschreibungen unter den Buttons
-        _kidsTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Kids);
-        _easyTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Easy);
-        _mediumTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Medium);
-        _hardTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Hard);
+        UpdateTechniqueLabels();
 
         ApplyTheme();
         var themeService = GetNode<ThemeService>("/root/ThemeService");
         themeService.ThemeChanged += OnThemeChanged;
 
         _easyButton.GrabFocus();
+    }
+
+    /// <summary>
+    /// Aktualisiert die Technik-Labels basierend auf den Einstellungen
+    /// </summary>
+    private void UpdateTechniqueLabels()
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        var settings = saveService.Settings;
+
+        _kidsTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Kids, settings.GetTechniquesForDifficulty(Difficulty.Kids));
+        _easyTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Easy, settings.GetTechniquesForDifficulty(Difficulty.Easy));
+        _mediumTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Medium, settings.GetTechniquesForDifficulty(Difficulty.Medium));
+        _hardTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Hard, settings.GetTechniquesForDifficulty(Difficulty.Hard));
     }
 
     public override void _ExitTree()

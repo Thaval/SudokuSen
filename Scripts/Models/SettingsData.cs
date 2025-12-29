@@ -56,6 +56,12 @@ public class SettingsData
     public Dictionary<string, int> TechniqueHintShownCounts { get; set; } = new();
     public Dictionary<string, int> TechniqueHintAppliedCounts { get; set; } = new();
 
+    // Configurable techniques per difficulty
+    public List<string>? TechniquesKids { get; set; }
+    public List<string>? TechniquesEasy { get; set; }
+    public List<string>? TechniquesMedium { get; set; }
+    public List<string>? TechniquesHard { get; set; }
+
     // Mistake heatmap (aggregated over games)
     public List<int> MistakeHeatmap9 { get; set; } = new(); // 81 entries
     public List<int> MistakeHeatmap4 { get; set; } = new(); // 16 entries
@@ -144,6 +150,56 @@ public class SettingsData
         TechniqueHintAppliedCounts[technique] = cur + 1;
     }
 
+    /// <summary>
+    /// Gibt die konfigurierten Techniken für eine Schwierigkeit zurück (oder null für Standard)
+    /// </summary>
+    public HashSet<string>? GetTechniquesForDifficulty(Difficulty difficulty)
+    {
+        var list = difficulty switch
+        {
+            Difficulty.Kids => TechniquesKids,
+            Difficulty.Easy => TechniquesEasy,
+            Difficulty.Medium => TechniquesMedium,
+            Difficulty.Hard => TechniquesHard,
+            _ => null
+        };
+        return list != null && list.Count > 0 ? new HashSet<string>(list) : null;
+    }
+
+    /// <summary>
+    /// Setzt die Techniken für eine Schwierigkeit
+    /// </summary>
+    public void SetTechniquesForDifficulty(Difficulty difficulty, HashSet<string> techniques)
+    {
+        var list = techniques.ToList();
+        switch (difficulty)
+        {
+            case Difficulty.Kids:
+                TechniquesKids = list;
+                break;
+            case Difficulty.Easy:
+                TechniquesEasy = list;
+                break;
+            case Difficulty.Medium:
+                TechniquesMedium = list;
+                break;
+            case Difficulty.Hard:
+                TechniquesHard = list;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Setzt alle Technik-Konfigurationen auf Standard zurück
+    /// </summary>
+    public void ResetTechniquesToDefault()
+    {
+        TechniquesKids = null;
+        TechniquesEasy = null;
+        TechniquesMedium = null;
+        TechniquesHard = null;
+    }
+
     private static void EnsureListSize(List<int> list, int size)
     {
         if (list.Count == size) return;
@@ -181,6 +237,10 @@ public class SettingsData
             ChallengeTimeAttackMinutes = ChallengeTimeAttackMinutes,
             TechniqueHintShownCounts = new Dictionary<string, int>(TechniqueHintShownCounts),
             TechniqueHintAppliedCounts = new Dictionary<string, int>(TechniqueHintAppliedCounts),
+            TechniquesKids = TechniquesKids != null ? new List<string>(TechniquesKids) : null,
+            TechniquesEasy = TechniquesEasy != null ? new List<string>(TechniquesEasy) : null,
+            TechniquesMedium = TechniquesMedium != null ? new List<string>(TechniquesMedium) : null,
+            TechniquesHard = TechniquesHard != null ? new List<string>(TechniquesHard) : null,
             MistakeHeatmap9 = new List<int>(MistakeHeatmap9),
             MistakeHeatmap4 = new List<int>(MistakeHeatmap4)
         };

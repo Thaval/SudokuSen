@@ -24,6 +24,12 @@ public partial class SettingsMenu : Control
     private CheckButton _challengePerfectCheck = null!;
     private OptionButton _challengeHintsOption = null!;
     private OptionButton _challengeTimeOption = null!;
+
+    // Technique configuration
+    private VBoxContainer _techniquesContainer = null!;
+    private Button _resetTechniquesButton = null!;
+    private readonly Dictionary<Difficulty, Dictionary<string, CheckButton>> _techniqueCheckboxes = new();
+
     private Button _backButton = null!;
 
     public override void _Ready()
@@ -49,6 +55,10 @@ public partial class SettingsMenu : Control
         _challengePerfectCheck = settingsContainer.GetNode<CheckButton>("ChallengePerfectRow/ChallengePerfectCheck");
         _challengeHintsOption = settingsContainer.GetNode<OptionButton>("ChallengeHintsRow/ChallengeHintsOption");
         _challengeTimeOption = settingsContainer.GetNode<OptionButton>("ChallengeTimeRow/ChallengeTimeOption");
+
+        _techniquesContainer = settingsContainer.GetNode<VBoxContainer>("TechniquesContainer");
+        _resetTechniquesButton = settingsContainer.GetNode<Button>("ResetTechniquesRow/ResetTechniquesButton");
+
         _backButton = GetNode<Button>("BackButton");
 
         // Theme-Optionen
@@ -64,6 +74,9 @@ public partial class SettingsMenu : Control
         _challengeTimeOption.AddItem("10 min", 10);
         _challengeTimeOption.AddItem("15 min", 15);
         _challengeTimeOption.AddItem("20 min", 20);
+
+        // Techniken-UI erstellen
+        CreateTechniqueUI();
 
         // Werte laden
         LoadSettings();
@@ -85,11 +98,146 @@ public partial class SettingsMenu : Control
         _challengePerfectCheck.Toggled += OnChallengePerfectToggled;
         _challengeHintsOption.ItemSelected += OnChallengeHintsSelected;
         _challengeTimeOption.ItemSelected += OnChallengeTimeSelected;
+
+        _resetTechniquesButton.Pressed += OnResetTechniquesPressed;
+
         _backButton.Pressed += OnBackPressed;
 
         ApplyTheme();
         var themeService = GetNode<ThemeService>("/root/ThemeService");
         themeService.ThemeChanged += OnThemeChanged;
+    }
+
+    private void CreateTechniqueUI()
+    {
+        var difficulties = new[] { Difficulty.Easy, Difficulty.Medium, Difficulty.Hard };
+        var difficultyNames = new Dictionary<Difficulty, string>
+        {
+            { Difficulty.Easy, "🟢 Leicht" },
+            { Difficulty.Medium, "🟠 Mittel" },
+            { Difficulty.Hard, "🔴 Schwer" }
+        };
+        var difficultyColors = new Dictionary<Difficulty, Color>
+        {
+            { Difficulty.Easy, new Color("4caf50") },
+            { Difficulty.Medium, new Color("ff9800") },
+            { Difficulty.Hard, new Color("f44336") }
+        };
+
+        foreach (var difficulty in difficulties)
+        {
+            // Container für diese Schwierigkeit
+            var diffContainer = new VBoxContainer();
+            diffContainer.Name = $"Diff{difficulty}Container";
+
+            // Header mit Collapse-Button
+            var headerContainer = new HBoxContainer();
+            var headerButton = new Button();
+            headerButton.Name = $"Header{difficulty}";
+            headerButton.Text = $"▼ {difficultyNames[difficulty]}";
+            headerButton.Flat = true;
+            headerButton.Alignment = HorizontalAlignment.Left;
+            headerButton.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+
+            // Farbigen Akzent hinzufügen
+            var accentStyle = new StyleBoxFlat();
+            accentStyle.BgColor = difficultyColors[difficulty].Darkened(0.6f);
+            accentStyle.CornerRadiusTopLeft = 4;
+            accentStyle.CornerRadiusTopRight = 4;
+            accentStyle.ContentMarginLeft = 8;
+            accentStyle.ContentMarginRight = 8;
+            accentStyle.ContentMarginTop = 4;
+            accentStyle.ContentMarginBottom = 4;
+            headerButton.AddThemeStyleboxOverride("normal", accentStyle);
+
+            var hoverStyle = new StyleBoxFlat();
+            hoverStyle.BgColor = difficultyColors[difficulty].Darkened(0.4f);
+            hoverStyle.CornerRadiusTopLeft = 4;
+            hoverStyle.CornerRadiusTopRight = 4;
+            hoverStyle.ContentMarginLeft = 8;
+            hoverStyle.ContentMarginRight = 8;
+            hoverStyle.ContentMarginTop = 4;
+            hoverStyle.ContentMarginBottom = 4;
+            headerButton.AddThemeStyleboxOverride("hover", hoverStyle);
+
+            headerContainer.AddChild(headerButton);
+            diffContainer.AddChild(headerContainer);
+
+            // Checkboxen-Container
+            var checkboxContainer = new VBoxContainer();
+            checkboxContainer.Name = $"Checkboxes{difficulty}";
+
+            // Margin für Einrückung
+            var marginContainer = new MarginContainer();
+            marginContainer.AddThemeConstantOverride("margin_left", 24);
+            marginContainer.AddChild(checkboxContainer);
+            diffContainer.AddChild(marginContainer);
+
+            // Collapse toggle
+            headerButton.Pressed += () =>
+            {
+                marginContainer.Visible = !marginContainer.Visible;
+                headerButton.Text = marginContainer.Visible
+                    ? $"▼ {difficultyNames[difficulty]}"
+                    : $"▶ {difficultyNames[difficulty]}";
+            };
+
+            // Checkbox-Dictionary für diese Schwierigkeit
+            _techniqueCheckboxes[difficulty] = new Dictionary<string, CheckButton>();
+
+            // Techniken für diese Schwierigkeit erstellen
+            foreach (var techId in TechniqueInfo.AllTechniqueIds)
+            {
+                if (!TechniqueInfo.Techniques.TryGetValue(techId, out var tech))
+                    continue;
+
+                // Zeige Techniken die für diese Schwierigkeit oder niedriger sind
+                bool isRelevant = TechniqueInfo.DefaultTechniquesPerDifficulty.GetValueOrDefault(difficulty, new HashSet<string>()).Contains(techId);
+                // Oder Techniken die potenziell aktiviert werden könnten
+                bool isPossible = tech.DifficultyLevel <= (int)difficulty + 1;
+
+                if (!isPossible) continue;
+
+                var checkRow = new HBoxContainer();
+
+                var checkButton = new CheckButton();
+                checkButton.Name = $"Tech{difficulty}{techId}";
+                checkButton.Text = tech.Name;
+                checkButton.TooltipText = $"{tech.Description}\n\nSchwierigkeit: {GetLevelName(tech.DifficultyLevel)}";
+                checkButton.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+
+                // Farbige Markierung je nach Technik-Level
+                if (tech.DifficultyLevel == 1)
+                    checkButton.Modulate = new Color("8bc34a"); // Grün
+                else if (tech.DifficultyLevel == 2)
+                    checkButton.Modulate = new Color("ffb74d"); // Orange
+                else
+                    checkButton.Modulate = new Color("ef5350"); // Rot
+
+                checkRow.AddChild(checkButton);
+                checkboxContainer.AddChild(checkRow);
+
+                _techniqueCheckboxes[difficulty][techId] = checkButton;
+
+                // Event
+                var capturedDifficulty = difficulty;
+                var capturedTechId = techId;
+                checkButton.Toggled += (pressed) => OnTechniqueToggled(capturedDifficulty, capturedTechId, pressed);
+            }
+
+            _techniquesContainer.AddChild(diffContainer);
+        }
+    }
+
+    private static string GetLevelName(int level)
+    {
+        return level switch
+        {
+            1 => "Leicht",
+            2 => "Mittel",
+            3 => "Schwer",
+            _ => "Unbekannt"
+        };
     }
 
     public override void _ExitTree()
@@ -131,12 +279,58 @@ public partial class SettingsMenu : Control
 
         SelectOptionById(_challengeHintsOption, settings.ChallengeHintLimit);
         SelectOptionById(_challengeTimeOption, settings.ChallengeTimeAttackMinutes);
+
+        // Technik-Checkboxen laden
+        LoadTechniqueSettings();
+    }
+
+    private void LoadTechniqueSettings()
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        var settings = saveService.Settings;
+
+        foreach (var difficulty in _techniqueCheckboxes.Keys)
+        {
+            var enabledTechniques = settings.GetTechniquesForDifficulty(difficulty)
+                ?? TechniqueInfo.DefaultTechniquesPerDifficulty.GetValueOrDefault(difficulty, new HashSet<string>());
+
+            foreach (var (techId, checkbox) in _techniqueCheckboxes[difficulty])
+            {
+                checkbox.SetPressedNoSignal(enabledTechniques.Contains(techId));
+            }
+        }
     }
 
     private void SaveSettings()
     {
         var saveService = GetNode<SaveService>("/root/SaveService");
         saveService.SaveSettings();
+    }
+
+    private void OnTechniqueToggled(Difficulty difficulty, string techId, bool pressed)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        var settings = saveService.Settings;
+
+        // Aktuelle Techniken für diese Schwierigkeit holen (oder Standard)
+        var currentTechniques = settings.GetTechniquesForDifficulty(difficulty)
+            ?? new HashSet<string>(TechniqueInfo.DefaultTechniquesPerDifficulty.GetValueOrDefault(difficulty, new HashSet<string>()));
+
+        if (pressed)
+            currentTechniques.Add(techId);
+        else
+            currentTechniques.Remove(techId);
+
+        settings.SetTechniquesForDifficulty(difficulty, currentTechniques);
+        SaveSettings();
+    }
+
+    private void OnResetTechniquesPressed()
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        saveService.Settings.ResetTechniquesToDefault();
+        SaveSettings();
+        LoadTechniqueSettings();
     }
 
     private void OnThemeSelected(long index)
@@ -301,10 +495,14 @@ public partial class SettingsMenu : Control
             }
             else if (child is BaseButton button)
             {
-                button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-                button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-                button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-                button.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
+                // Überspringe Buttons mit benutzerdefinierten Styles (Technik-Header)
+                if (!button.Name.ToString().StartsWith("Header"))
+                {
+                    button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+                    button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
+                    button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+                    button.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
+                }
                 button.AddThemeColorOverride("font_color", colors.TextPrimary);
                 button.AddThemeColorOverride("font_disabled_color", colors.TextSecondary);
             }

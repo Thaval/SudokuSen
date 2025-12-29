@@ -20,17 +20,31 @@ public partial class TipsMenu : Control
     // Tip-Daten mit Board-Konfigurationen
     private static readonly TipData[] Tips = new[]
     {
+        // Basic Techniques (Easy)
         CreateNakedSingleTip(),
         CreateHiddenSingleTip(),
         CreateScanningTip(),
         CreateCandidatesTip(),
+        // Medium Techniques
         CreateNakedPairTip(),
+        CreateNakedTripleTip(),
+        CreateNakedQuadTip(),
         CreateHiddenPairTip(),
+        CreateHiddenTripleTip(),
         CreatePointingPairTip(),
         CreateBoxLineTip(),
+        // Hard Techniques
         CreateXWingTip(),
         CreateSwordfishTip(),
+        CreateJellyfishTip(),
         CreateYWingTip(),
+        CreateXYZWingTip(),
+        CreateWWingTip(),
+        CreateSkyscraperTip(),
+        CreateTwoStringKiteTip(),
+        CreateEmptyRectangleTip(),
+        CreateSimpleColoringTip(),
+        // General Tips
         CreateGeneralStrategiesTip(),
         CreateKeyboardShortcutsTip(),
         CreateMultiSelectTip(),
@@ -268,6 +282,338 @@ public partial class TipsMenu : Control
             "Alle anderen Kandidaten aus [A] und [C] entfernen!\n" +
             "[A]: nur {1,4}\n" +
             "[C]: nur {1,4}"
+        );
+    }
+
+    private static TipData CreateNakedTripleTip()
+    {
+        var values = new int[,] {
+            { 0, 0, 0, 5, 1, 9 }
+        };
+        var isGiven = new bool[,] {
+            { false, false, false, true, true, true }
+        };
+        var highlighted = new HashSet<(int, int)> { (0, 0), (0, 1), (0, 2) };
+        var related = new HashSet<(int, int)>();
+        var candidates = new Dictionary<(int, int), int[]> {
+            { (0, 0), new[] { 2, 3 } },
+            { (0, 1), new[] { 3, 7 } },
+            { (0, 2), new[] { 2, 7 } }
+        };
+
+        return new TipData(
+            "Naked Triple (Nacktes Tripel)",
+            "[b][color=#4fc3f7]Naked Triple[/color][/b]\n\n" +
+            "Drei Zellen mit insgesamt [b]maximal drei Kandidaten[/b].\n" +
+            "Nicht alle Zellen muessen alle drei haben!\n\n" +
+            "[b][color=#ffb74d]Beispiel:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related, null, candidates),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "Zelle A: {2,3}\n" +
+            "Zelle B: {3,7}\n" +
+            "Zelle C: {2,7}\n\n" +
+            "Zusammen: nur {2,3,7} = Naked Triple!\n\n" +
+            "[b]Logik:[/b]\n" +
+            "Diese 3 Zahlen MUESSEN in diesen 3 Zellen sein.\n" +
+            "Also koennen sie aus anderen Zellen der Einheit entfernt werden.\n\n" +
+            "[b]Tipp:[/b] Achte auf Zellen mit nur 2 Kandidaten - sie bilden oft Triples!"
+        );
+    }
+
+    private static TipData CreateNakedQuadTip()
+    {
+        var values = new int[,] {
+            { 0, 0, 0, 0, 5, 6, 7, 8, 9 }
+        };
+        var isGiven = new bool[,] {
+            { false, false, false, false, true, true, true, true, true }
+        };
+        var highlighted = new HashSet<(int, int)> { (0, 0), (0, 1), (0, 2), (0, 3) };
+        var related = new HashSet<(int, int)>();
+        var candidates = new Dictionary<(int, int), int[]> {
+            { (0, 0), new[] { 1, 2 } },
+            { (0, 1), new[] { 2, 3 } },
+            { (0, 2), new[] { 3, 4 } },
+            { (0, 3), new[] { 1, 4 } }
+        };
+
+        return new TipData(
+            "Naked Quad (Nacktes Quartett)",
+            "[b][color=#4fc3f7]Naked Quad[/color][/b]\n\n" +
+            "Vier Zellen mit insgesamt [b]maximal vier Kandidaten[/b].\n\n" +
+            "[b][color=#ffb74d]Beispiel:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related, null, candidates),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "Zelle A: {1,2}\n" +
+            "Zelle B: {2,3}\n" +
+            "Zelle C: {3,4}\n" +
+            "Zelle D: {1,4}\n\n" +
+            "Zusammen: nur {1,2,3,4} = Naked Quad!\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "1,2,3,4 aus allen anderen Zellen der Einheit entfernen.\n\n" +
+            "[b]Hinweis:[/b]\n" +
+            "Quads sind selten, aber wenn du 3 Zellen mit 4+ gemeinsamen Kandidaten siehst, pruefe auf ein Quad!"
+        );
+    }
+
+    private static TipData CreateHiddenTripleTip()
+    {
+        var values = new int[,] {
+            { 0, 0, 0, 4, 5, 6, 7, 8, 9 }
+        };
+        var isGiven = new bool[,] {
+            { false, false, false, true, true, true, true, true, true }
+        };
+        var highlighted = new HashSet<(int, int)> { (0, 0), (0, 1), (0, 2) };
+        var related = new HashSet<(int, int)>();
+        var candidates = new Dictionary<(int, int), int[]> {
+            { (0, 0), new[] { 1, 2, 3 } },
+            { (0, 1), new[] { 1, 3 } },
+            { (0, 2), new[] { 2, 3 } }
+        };
+
+        return new TipData(
+            "Hidden Triple (Verstecktes Tripel)",
+            "[b][color=#4fc3f7]Hidden Triple[/color][/b]\n\n" +
+            "Drei Zahlen, die nur in [b]genau drei Zellen[/b] vorkommen koennen.\n\n" +
+            "[b][color=#ffb74d]Beispiel:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related, null, candidates),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "Wo koennen 1, 2, 3 in dieser Zeile stehen?\n" +
+            "1: nur in A oder B\n" +
+            "2: nur in A oder C\n" +
+            "3: nur in A, B oder C\n\n" +
+            "[b]Hidden Triple {1,2,3}![/b]\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "Alle ANDEREN Kandidaten aus A, B, C entfernen!\n" +
+            "Die Zellen behalten nur {1,2,3}.\n\n" +
+            "[b]Tipp:[/b] Hidden Triples sind schwer zu finden - suche nach Zahlen die nur 2-3 Optionen haben!"
+        );
+    }
+
+    private static TipData CreateJellyfishTip()
+    {
+        var values = new int[9, 9];
+        var isGiven = new bool[9, 9];
+        var highlighted = new HashSet<(int, int)> {
+            (0, 0), (0, 2), (0, 5), (0, 7),
+            (2, 0), (2, 2),
+            (5, 5), (5, 7),
+            (7, 0), (7, 7)
+        };
+        var related = new HashSet<(int, int)> { (4, 0), (4, 2), (6, 5), (8, 7) };
+
+        return new TipData(
+            "Jellyfish Technik",
+            "[b][color=#4fc3f7]Jellyfish[/color][/b]\n\n" +
+            "Erweiterung von Swordfish auf [b]4 Zeilen und 4 Spalten[/b].\n" +
+            "Sehr selten, aber aeusserst maechtig!\n\n" +
+            "[b][color=#ffb74d]Beispiel mit der 6:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "Die 6 kann in 4 Zeilen nur in bestimmten Spalten stehen:\n" +
+            "Zeile 1: Spalten 1, 3, 6, 8\n" +
+            "Zeile 3: Spalten 1, 3\n" +
+            "Zeile 6: Spalten 6, 8\n" +
+            "Zeile 8: Spalten 1, 8\n\n" +
+            "Alle 4 Spalten sind 'abgedeckt' von diesen 4 Zeilen.\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "Die 6 aus allen anderen Zellen in Spalten 1, 3, 6, 8 entfernen!\n\n" +
+            "[b]Hinweis:[/b] Jellyfish sind extrem selten - konzentriere dich erst auf X-Wing und Swordfish!"
+        );
+    }
+
+    private static TipData CreateXYZWingTip()
+    {
+        var values = new int[,] {
+            { 0, 0, 0 },
+            { 0, 0, 0 },
+            { 0, 0, 0 }
+        };
+        var isGiven = new bool[,] {
+            { false, false, false },
+            { false, false, false },
+            { false, false, false }
+        };
+        var highlighted = new HashSet<(int, int)> { (0, 0), (0, 2), (2, 0) };
+        var related = new HashSet<(int, int)> { (0, 1) };
+        var candidates = new Dictionary<(int, int), int[]> {
+            { (0, 0), new[] { 1, 2, 3 } },   // Pivot: ABC (3 Kandidaten!)
+            { (0, 2), new[] { 1, 3 } },      // Wing 1: AC
+            { (2, 0), new[] { 2, 3 } },      // Wing 2: BC
+            { (0, 1), new[] { 3, 5, 7 } }    // Affected cell
+        };
+
+        return new TipData(
+            "XYZ-Wing Technik",
+            "[b][color=#4fc3f7]XYZ-Wing[/color][/b]\n\n" +
+            "Wie Y-Wing, aber der Pivot hat [b]drei Kandidaten[/b] statt zwei.\n\n" +
+            "[b][color=#ffb74d]Beispiel:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related, null, candidates),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "[b]Pivot[/b] (0,0): Kandidaten {1,2,3} ← DREI!\n" +
+            "[b]Wing 1[/b] (0,2): Kandidaten {1,3}\n" +
+            "[b]Wing 2[/b] (2,0): Kandidaten {2,3}\n\n" +
+            "[b]Unterschied zu Y-Wing:[/b]\n" +
+            "Der Pivot hat alle 3 Kandidaten.\n" +
+            "Eliminierungen nur in Zellen die ALLE DREI sehen!\n\n" +
+            "[b]Logik:[/b]\n" +
+            "Egal welchen Wert der Pivot hat, eine der 3 Zellen wird 3.\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "3 aus Zellen entfernen, die Pivot UND beide Wings sehen.\n" +
+            "Hier: Zelle (0,1) verliert die 3!"
+        );
+    }
+
+    private static TipData CreateWWingTip()
+    {
+        var values = new int[9, 9];
+        var isGiven = new bool[9, 9];
+        var highlighted = new HashSet<(int, int)> { (1, 1), (1, 7), (5, 7) };
+        var related = new HashSet<(int, int)> { (5, 1) };
+        var candidates = new Dictionary<(int, int), int[]> {
+            { (1, 1), new[] { 3, 7 } },      // Bi-value cell 1
+            { (1, 7), new[] { 7 } },          // Strong link cell (nur 7 hier)
+            { (5, 7), new[] { 3, 7 } },      // Bi-value cell 2
+            { (5, 1), new[] { 3, 5, 8 } }    // Affected cell
+        };
+
+        return new TipData(
+            "W-Wing Technik",
+            "[b][color=#4fc3f7]W-Wing[/color][/b]\n\n" +
+            "Zwei Bi-Value Zellen mit [b]identischen Kandidaten[/b],\n" +
+            "verbunden durch einen [b]Strong Link[/b].\n\n" +
+            "[b][color=#ffb74d]Beispiel:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related, null, candidates),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "Zelle A (1,1): {3,7}\n" +
+            "Zelle B (5,7): {3,7} (gleiche Kandidaten!)\n\n" +
+            "Diese Zellen sehen sich NICHT direkt.\n" +
+            "Aber: Es gibt einen Strong Link auf 7 in Spalte 8.\n" +
+            "(7 kann in Spalte 8 nur an 2 Stellen sein)\n\n" +
+            "[b]Logik:[/b]\n" +
+            "Wenn A = 3, dann B = 7\n" +
+            "Wenn A = 7, dann durch Strong Link: auch B verbunden\n" +
+            "→ Eine der beiden ist immer 3!\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "3 aus Zellen entfernen, die beide Bi-Value Zellen sehen."
+        );
+    }
+
+    private static TipData CreateSkyscraperTip()
+    {
+        var values = new int[9, 9];
+        var isGiven = new bool[9, 9];
+        var highlighted = new HashSet<(int, int)> { (1, 2), (1, 6), (5, 2), (7, 6) };
+        var related = new HashSet<(int, int)> { (5, 6), (7, 2) };
+
+        return new TipData(
+            "Skyscraper Technik",
+            "[b][color=#4fc3f7]Skyscraper[/color][/b]\n\n" +
+            "Zwei Spalten mit je [b]genau 2 Kandidaten[/b] einer Zahl,\n" +
+            "die eine [b]gemeinsame Zeile teilen[/b].\n\n" +
+            "[b][color=#ffb74d]Beispiel mit der 4:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "Spalte 3: 4 nur in Zeile 2 und 6\n" +
+            "Spalte 7: 4 nur in Zeile 2 und 8\n\n" +
+            "[b]Basis:[/b] Zeile 2 (gemeinsam)\n" +
+            "[b]Spitzen:[/b] (6,3) und (8,7)\n\n" +
+            "[b]Logik:[/b]\n" +
+            "Eine der 4en in Zeile 2 ist korrekt.\n" +
+            "Je nachdem welche, wandert die andere 4 zur entsprechenden Spitze.\n" +
+            "→ Mindestens eine Spitze wird 4!\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "4 aus Zellen entfernen, die BEIDE Spitzen sehen."
+        );
+    }
+
+    private static TipData CreateTwoStringKiteTip()
+    {
+        var values = new int[9, 9];
+        var isGiven = new bool[9, 9];
+        var highlighted = new HashSet<(int, int)> { (0, 3), (0, 7), (5, 3), (7, 7) };
+        var related = new HashSet<(int, int)> { (5, 7) };
+
+        return new TipData(
+            "2-String Kite Technik",
+            "[b][color=#4fc3f7]2-String Kite[/color][/b]\n\n" +
+            "Ein Kandidat bildet Konjugat-Paare in einer [b]Zeile[/b]\n" +
+            "UND einer [b]Spalte[/b], die sich in einem Block treffen.\n\n" +
+            "[b][color=#ffb74d]Beispiel mit der 5:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "Zeile 1: 5 nur in Spalte 4 und 8 (Konjugat-Paar)\n" +
+            "Spalte 4: 5 nur in Zeile 1 und 6 (Konjugat-Paar)\n\n" +
+            "Die Paare treffen sich bei (1,4) im Block!\n" +
+            "Das bildet einen 'Drachen' (Kite).\n\n" +
+            "[b]Enden des Kites:[/b]\n" +
+            "(1,8) und (6,4)\n\n" +
+            "[b]Logik:[/b]\n" +
+            "Durch die Konjugat-Paare ist einer der Enden immer 5.\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "5 aus Zellen entfernen, die beide Enden sehen."
+        );
+    }
+
+    private static TipData CreateEmptyRectangleTip()
+    {
+        var values = new int[9, 9];
+        var isGiven = new bool[9, 9];
+        // Empty Rectangle in Block (Positionen wo Kandidat NICHT ist)
+        var highlighted = new HashSet<(int, int)> { (3, 0), (3, 1), (4, 0), (4, 1), (5, 2) };
+        var related = new HashSet<(int, int)> { (0, 2), (0, 8), (5, 8) };
+
+        return new TipData(
+            "Empty Rectangle Technik",
+            "[b][color=#4fc3f7]Empty Rectangle[/color][/b]\n\n" +
+            "Ein Kandidat bildet eine [b]L-Form[/b] in einem Block\n" +
+            "und interagiert mit einem [b]Konjugat-Paar[/b].\n\n" +
+            "[b][color=#ffb74d]Beispiel mit der 8:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related),
+            "[b][color=#81c784]Analyse:[/color][/b]\n\n" +
+            "Im Block links-Mitte bildet die 8 eine L-Form:\n" +
+            "- Zeilen 4-5 haben keine 8 in Spalte 1-2\n" +
+            "- Das 'Empty Rectangle' zeigt wohin die 8 NICHT kann\n\n" +
+            "Es gibt ein Konjugat-Paar fuer 8 in Zeile 1:\n" +
+            "(1,3) und (1,9)\n\n" +
+            "[b]Logik:[/b]\n" +
+            "Die L-Form und das Paar bilden eine Kette.\n" +
+            "Am Ende der Kette kann 8 eliminiert werden.\n\n" +
+            "[b]Konsequenz:[/b]\n" +
+            "8 aus der Ziel-Zelle entfernen.\n\n" +
+            "[b]Tipp:[/b] Suche nach Bloecken wo ein Kandidat nur in einer L-Form vorkommt!"
+        );
+    }
+
+    private static TipData CreateSimpleColoringTip()
+    {
+        var values = new int[9, 9];
+        var isGiven = new bool[9, 9];
+        // Colored cells (alternating)
+        var highlighted = new HashSet<(int, int)> { (0, 2), (4, 2), (4, 7), (8, 7) }; // Color A
+        var related = new HashSet<(int, int)> { (0, 5), (2, 2), (4, 4), (6, 7) };      // Color B
+
+        return new TipData(
+            "Simple Coloring (Ketten-Faerbung)",
+            "[b][color=#4fc3f7]Simple Coloring[/color][/b]\n\n" +
+            "Konjugat-Paare werden [b]abwechselnd gefaerbt[/b]\n" +
+            "um Widersprueche oder Eliminierungen zu finden.\n\n" +
+            "[b][color=#ffb74d]Beispiel mit der 9:[/color][/b]",
+            new MiniGridData(values, isGiven, highlighted, related),
+            "[b][color=#81c784]So geht's:[/color][/b]\n\n" +
+            "[b]Schritt 1:[/b] Finde alle Konjugat-Paare fuer eine Zahl\n" +
+            "(Einheiten wo die Zahl nur 2x vorkommt)\n\n" +
+            "[b]Schritt 2:[/b] Faerbe abwechselnd\n" +
+            "Wenn A [color=#4fc3f7]BLAU[/color] ist, ist sein Partner [color=#ffb74d]ORANGE[/color]\n\n" +
+            "[b]Schritt 3:[/b] Suche Widersprueche\n\n" +
+            "[b][color=#f44336]Regel 1 (Color Trap):[/color][/b]\n" +
+            "Sieht eine ungefaerbte Zelle BEIDE Farben?\n" +
+            "→ Diese Zelle kann die Zahl NICHT haben!\n\n" +
+            "[b][color=#f44336]Regel 2 (Color Wrap):[/color][/b]\n" +
+            "Sehen sich zwei Zellen der GLEICHEN Farbe?\n" +
+            "→ Diese Farbe ist FALSCH!\n" +
+            "→ Alle Zellen dieser Farbe sind nicht diese Zahl."
         );
     }
 
