@@ -167,12 +167,14 @@ public partial class DifficultyMenu : Control
 
     private void OnDifficultySelected(Difficulty difficulty)
     {
+        GD.Print($"[UI] DifficultyMenu: difficulty selected = {difficulty}");
         _audioService.PlayClick();
         _appState.StartNewGame(difficulty);
     }
 
     private void OnBackPressed()
     {
+        GD.Print("[UI] DifficultyMenu: Back pressed");
         _audioService.PlayClick();
         _appState.GoToMainMenu();
     }

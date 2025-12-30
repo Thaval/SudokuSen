@@ -163,54 +163,63 @@ public partial class MainMenu : Control
 
     private void OnContinuePressed()
     {
+        GD.Print("[UI] MainMenu: Continue pressed");
         _audioService.PlayClick();
         _appState.ContinueGame();
     }
 
     private void OnStartPressed()
     {
+        GD.Print("[UI] MainMenu: Start pressed");
         _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_DIFFICULTY);
     }
 
     private void OnDailyPressed()
     {
+        GD.Print("[UI] MainMenu: Daily pressed");
         _audioService.PlayClick();
         _appState.StartDailyGame();
     }
 
     private void OnSettingsPressed()
     {
+        GD.Print("[UI] MainMenu: Settings pressed");
         _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_SETTINGS);
     }
 
     private void OnHistoryPressed()
     {
+        GD.Print("[UI] MainMenu: History pressed");
         _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_HISTORY);
     }
 
     private void OnStatsPressed()
     {
+        GD.Print("[UI] MainMenu: Stats pressed");
         _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_STATS);
     }
 
     private void OnTipsPressed()
     {
+        GD.Print("[UI] MainMenu: Tips pressed");
         _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_TIPS);
     }
 
     private void OnScenariosPressed()
     {
+        GD.Print("[UI] MainMenu: Scenarios pressed");
         _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_SCENARIOS);
     }
 
     private void OnQuitPressed()
     {
+        GD.Print("[UI] MainMenu: Quit pressed");
         _audioService.PlayClick();
         GetTree().Quit();
     }

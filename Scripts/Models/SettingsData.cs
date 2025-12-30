@@ -33,6 +33,12 @@ public class SettingsData
     /// <summary>Musik-Lautstärke (0-100)</summary>
     public int MusicVolume { get; set; } = 50;
 
+    /// <summary>Musik-Track für Menü (0 = Aus, 1-3 = verschiedene Tracks)</summary>
+    public int MenuMusicTrack { get; set; } = 3;
+
+    /// <summary>Musik-Track für Spiel (0 = Aus, 1-3 = verschiedene Tracks)</summary>
+    public int GameMusicTrack { get; set; } = 1;
+
     /// <summary>Lernmodus: zeigt bei Fehlern eine kurze Erklärung</summary>
     public bool LearnModeEnabled { get; set; } = true;
 
@@ -232,6 +238,10 @@ public class SettingsData
             HighlightRelatedCells = HighlightRelatedCells,
             SoundEnabled = SoundEnabled,
             Volume = Volume,
+            MusicEnabled = MusicEnabled,
+            MusicVolume = MusicVolume,
+            MenuMusicTrack = MenuMusicTrack,
+            GameMusicTrack = GameMusicTrack,
             LearnModeEnabled = LearnModeEnabled,
             ColorblindPaletteEnabled = ColorblindPaletteEnabled,
             UiScalePercent = UiScalePercent,

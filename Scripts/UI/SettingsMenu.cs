@@ -37,6 +37,8 @@ public partial class SettingsMenu : Control
     private CheckButton _musicCheck = null!;
     private HSlider _musicVolumeSlider = null!;
     private Label _musicVolumeValue = null!;
+    private OptionButton _menuMusicOption = null!;
+    private OptionButton _gameMusicOption = null!;
 
     private CheckButton _smartCleanupCheck = null!;
     private CheckButton _houseAutoFillCheck = null!;
@@ -88,6 +90,9 @@ public partial class SettingsMenu : Control
         _musicCheck = settingsContainer.GetNode<CheckButton>("MusicRow/MusicCheck");
         _musicVolumeSlider = settingsContainer.GetNode<HSlider>("MusicVolumeRow/MusicVolumeSlider");
         _musicVolumeValue = settingsContainer.GetNode<Label>("MusicVolumeRow/MusicVolumeValue");
+
+        // Music track selection - create dynamically after MusicVolumeRow
+        CreateMusicTrackOptions(settingsContainer);
 
         _smartCleanupCheck = settingsContainer.GetNode<CheckButton>("SmartCleanupRow/SmartCleanupCheck");
         _houseAutoFillCheck = settingsContainer.GetNode<CheckButton>("HouseAutoFillRow/HouseAutoFillCheck");
@@ -142,6 +147,8 @@ public partial class SettingsMenu : Control
         _sfxVolumeSlider.ValueChanged += OnSfxVolumeChanged;
         _musicCheck.Toggled += OnMusicToggled;
         _musicVolumeSlider.ValueChanged += OnMusicVolumeChanged;
+        _menuMusicOption.ItemSelected += OnMenuMusicSelected;
+        _gameMusicOption.ItemSelected += OnGameMusicSelected;
 
         _smartCleanupCheck.Toggled += OnSmartCleanupToggled;
         _houseAutoFillCheck.Toggled += OnHouseAutoFillToggled;
@@ -157,6 +164,49 @@ public partial class SettingsMenu : Control
 
         ApplyTheme();
         _themeService.ThemeChanged += OnThemeChanged;
+    }
+
+    private void CreateMusicTrackOptions(VBoxContainer settingsContainer)
+    {
+        // Find the index of MusicVolumeRow to insert after it
+        var musicVolumeRow = settingsContainer.GetNode<HBoxContainer>("MusicVolumeRow");
+        int insertIndex = musicVolumeRow.GetIndex() + 1;
+
+        // Menu Music Row
+        var menuMusicRow = new HBoxContainer();
+        menuMusicRow.Name = "MenuMusicRow";
+        var menuMusicLabel = new Label();
+        menuMusicLabel.Text = "Menü-Musik";
+        menuMusicLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        menuMusicRow.AddChild(menuMusicLabel);
+
+        _menuMusicOption = new OptionButton();
+        _menuMusicOption.CustomMinimumSize = new Vector2(150, 0);
+        for (int i = 0; i < AudioService.MusicTrackNames.Length; i++)
+        {
+            _menuMusicOption.AddItem(AudioService.MusicTrackNames[i], i);
+        }
+        menuMusicRow.AddChild(_menuMusicOption);
+        settingsContainer.AddChild(menuMusicRow);
+        settingsContainer.MoveChild(menuMusicRow, insertIndex);
+
+        // Game Music Row
+        var gameMusicRow = new HBoxContainer();
+        gameMusicRow.Name = "GameMusicRow";
+        var gameMusicLabel = new Label();
+        gameMusicLabel.Text = "Spiel-Musik";
+        gameMusicLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        gameMusicRow.AddChild(gameMusicLabel);
+
+        _gameMusicOption = new OptionButton();
+        _gameMusicOption.CustomMinimumSize = new Vector2(150, 0);
+        for (int i = 0; i < AudioService.MusicTrackNames.Length; i++)
+        {
+            _gameMusicOption.AddItem(AudioService.MusicTrackNames[i], i);
+        }
+        gameMusicRow.AddChild(_gameMusicOption);
+        settingsContainer.AddChild(gameMusicRow);
+        settingsContainer.MoveChild(gameMusicRow, insertIndex + 1);
     }
 
     private void CreateTechniqueUI()
@@ -333,6 +383,8 @@ public partial class SettingsMenu : Control
         _musicCheck.ButtonPressed = settings.MusicEnabled;
         _musicVolumeSlider.Value = settings.MusicVolume;
         _musicVolumeValue.Text = $"{settings.MusicVolume}%";
+        _menuMusicOption.Selected = settings.MenuMusicTrack;
+        _gameMusicOption.Selected = settings.GameMusicTrack;
 
         _smartCleanupCheck.ButtonPressed = settings.SmartNoteCleanupEnabled;
         _houseAutoFillCheck.ButtonPressed = settings.HouseAutoFillEnabled;
@@ -345,6 +397,8 @@ public partial class SettingsMenu : Control
 
         // Technik-Checkboxen laden
         LoadTechniqueSettings();
+
+        GD.Print($"[UI] SettingsMenu: loaded | theme={settings.ThemeIndex}, colorblind={settings.ColorblindPaletteEnabled}, sfx={settings.SoundEnabled}({settings.Volume}%), music={settings.MusicEnabled}({settings.MusicVolume}%), menuTrack={settings.MenuMusicTrack}, gameTrack={settings.GameMusicTrack}, uiScale={settings.UiScalePercent}%");
     }
 
     private void UpdateStoragePathInfo()
@@ -373,7 +427,7 @@ public partial class SettingsMenu : Control
 
     private void SaveSettings()
     {
-
+        GD.Print("[UI] SettingsMenu: SaveSettings()" );
         _saveService.SaveSettings();
     }
 
@@ -484,7 +538,7 @@ public partial class SettingsMenu : Control
 
     private void OnThemeSelected(long index)
     {
-
+        GD.Print($"[UI] SettingsMenu: Theme selected = {index}");
         _saveService.Settings.ThemeIndex = (int)index;
         SaveSettings();
 
@@ -494,14 +548,14 @@ public partial class SettingsMenu : Control
 
     private void OnLearnToggled(bool pressed)
     {
-
+        GD.Print($"[UI] SettingsMenu: LearnMode toggled = {pressed}");
         _saveService.Settings.LearnModeEnabled = pressed;
         SaveSettings();
     }
 
     private void OnColorblindToggled(bool pressed)
     {
-
+        GD.Print($"[UI] SettingsMenu: Farbblind-Palette toggled = {pressed}");
         _saveService.Settings.ColorblindPaletteEnabled = pressed;
         SaveSettings();
 
@@ -514,6 +568,8 @@ public partial class SettingsMenu : Control
         int pct = (int)Math.Round(value);
         _uiScaleValue.Text = $"{pct}%";
 
+        GD.Print($"[UI] SettingsMenu: UI scale changed = {pct}%");
+
 
         _saveService.Settings.UiScalePercent = pct;
         SaveSettings();
@@ -524,6 +580,7 @@ public partial class SettingsMenu : Control
 
     private void OnSfxToggled(bool pressed)
     {
+        GD.Print($"[UI] SettingsMenu: SFX enabled = {pressed}");
         _saveService.Settings.SoundEnabled = pressed;
         SaveSettings();
         _audioService.SoundEnabled = pressed;
@@ -533,6 +590,8 @@ public partial class SettingsMenu : Control
     {
         int pct = (int)Math.Round(value);
         _sfxVolumeValue.Text = $"{pct}%";
+
+        GD.Print($"[UI] SettingsMenu: SFX volume = {pct}%");
         _saveService.Settings.Volume = pct;
         SaveSettings();
         _audioService.SfxVolume = pct / 100f;
@@ -542,6 +601,7 @@ public partial class SettingsMenu : Control
 
     private void OnMusicToggled(bool pressed)
     {
+        GD.Print($"[UI] SettingsMenu: Music enabled = {pressed}");
         _saveService.Settings.MusicEnabled = pressed;
         SaveSettings();
         _audioService.MusicEnabled = pressed;
@@ -551,56 +611,78 @@ public partial class SettingsMenu : Control
     {
         int pct = (int)Math.Round(value);
         _musicVolumeValue.Text = $"{pct}%";
+
+        GD.Print($"[UI] SettingsMenu: Music volume = {pct}%");
         _saveService.Settings.MusicVolume = pct;
         SaveSettings();
         _audioService.MusicVolume = pct / 100f;
     }
 
+    private void OnMenuMusicSelected(long index)
+    {
+        int trackId = _menuMusicOption.GetItemId((int)index);
+        string trackName = index < AudioService.MusicTrackNames.Length ? AudioService.MusicTrackNames[trackId] : $"Track {trackId}";
+        GD.Print($"[UI] SettingsMenu: Menu music track = {trackId} ({trackName})");
+        _saveService.Settings.MenuMusicTrack = trackId;
+        SaveSettings();
+        _audioService.MenuMusicTrack = trackId;
+    }
+
+    private void OnGameMusicSelected(long index)
+    {
+        int trackId = _gameMusicOption.GetItemId((int)index);
+        string trackName = index < AudioService.MusicTrackNames.Length ? AudioService.MusicTrackNames[trackId] : $"Track {trackId}";
+        GD.Print($"[UI] SettingsMenu: Game music track = {trackId} ({trackName})");
+        _saveService.Settings.GameMusicTrack = trackId;
+        SaveSettings();
+        _audioService.GameMusicTrack = trackId;
+    }
+
     private void OnSmartCleanupToggled(bool pressed)
     {
-
+        GD.Print($"[UI] SettingsMenu: Smart cleanup toggled = {pressed}");
         _saveService.Settings.SmartNoteCleanupEnabled = pressed;
         SaveSettings();
     }
 
     private void OnHouseAutoFillToggled(bool pressed)
     {
-
+        GD.Print($"[UI] SettingsMenu: House auto-fill toggled = {pressed}");
         _saveService.Settings.HouseAutoFillEnabled = pressed;
         SaveSettings();
     }
 
     private void OnDeadlyToggled(bool pressed)
     {
-
+        GD.Print($"[UI] SettingsMenu: Deadly mode toggled = {pressed}");
         _saveService.Settings.DeadlyModeEnabled = pressed;
         SaveSettings();
     }
 
     private void OnHideToggled(bool pressed)
     {
-
+        GD.Print($"[UI] SettingsMenu: Hide completed numbers toggled = {pressed}");
         _saveService.Settings.HideCompletedNumbers = pressed;
         SaveSettings();
     }
 
     private void OnHighlightToggled(bool pressed)
     {
-
+        GD.Print($"[UI] SettingsMenu: Highlight related cells toggled = {pressed}");
         _saveService.Settings.HighlightRelatedCells = pressed;
         SaveSettings();
     }
 
     private void OnChallengeNoNotesToggled(bool pressed)
     {
-
+        GD.Print($"[UI] SettingsMenu: Challenge 'No notes' toggled = {pressed}");
         _saveService.Settings.ChallengeNoNotes = pressed;
         SaveSettings();
     }
 
     private void OnChallengePerfectToggled(bool pressed)
     {
-
+        GD.Print($"[UI] SettingsMenu: Challenge 'Perfect run' toggled = {pressed}");
         _saveService.Settings.ChallengePerfectRun = pressed;
         SaveSettings();
     }
@@ -609,6 +691,8 @@ public partial class SettingsMenu : Control
     {
         int id = _challengeHintsOption.GetItemId((int)index);
 
+        GD.Print($"[UI] SettingsMenu: Challenge hint limit = {id}");
+
         _saveService.Settings.ChallengeHintLimit = id;
         SaveSettings();
     }
@@ -616,6 +700,8 @@ public partial class SettingsMenu : Control
     private void OnChallengeTimeSelected(long index)
     {
         int id = _challengeTimeOption.GetItemId((int)index);
+
+        GD.Print($"[UI] SettingsMenu: Challenge time attack minutes = {id}");
 
         _saveService.Settings.ChallengeTimeAttackMinutes = id;
         SaveSettings();
@@ -636,6 +722,7 @@ public partial class SettingsMenu : Control
 
     private void OnBackPressed()
     {
+        GD.Print("[UI] SettingsMenu: Back pressed");
         _audioService.PlayClick();
         _appState.GoToMainMenu();
     }
@@ -678,6 +765,14 @@ public partial class SettingsMenu : Control
             }
             else if (child is BaseButton button)
             {
+                // Keep default CheckButton visuals (switch/checkbox). Only adjust font colors.
+                if (button is CheckButton)
+                {
+                    button.AddThemeColorOverride("font_color", colors.TextPrimary);
+                    button.AddThemeColorOverride("font_disabled_color", colors.TextSecondary);
+                }
+                else
+                {
                 // Überspringe Buttons mit benutzerdefinierten Styles (Technik-Header)
                 if (!button.Name.ToString().StartsWith("Header"))
                 {
@@ -688,6 +783,7 @@ public partial class SettingsMenu : Control
                 }
                 button.AddThemeColorOverride("font_color", colors.TextPrimary);
                 button.AddThemeColorOverride("font_disabled_color", colors.TextSecondary);
+                }
             }
 
             if (child is Node n)

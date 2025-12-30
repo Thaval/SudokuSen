@@ -893,12 +893,15 @@ public partial class GameScene : Control
         bool ctrlPressed = Input.IsKeyPressed(Key.Ctrl);
         bool shiftPressed = Input.IsKeyPressed(Key.Shift);
 
+        string cellRef = ToCellRef(row, col);
+
         // Ctrl+Klick: Zur Mehrfachauswahl hinzufügen/entfernen
         if (ctrlPressed)
         {
             if (_selectedCells.Contains((row, col)))
             {
                 _selectedCells.Remove((row, col));
+                GD.Print($"[Game] Cell {cellRef} removed from multi-selection (Ctrl+click), selected={_selectedCells.Count}");
                 // Wenn die Hauptauswahl entfernt wurde, neue setzen
                 if (row == _selectedRow && col == _selectedCol)
                 {
@@ -920,6 +923,7 @@ public partial class GameScene : Control
                 _selectedCells.Add((row, col));
                 _selectedRow = row;
                 _selectedCol = col;
+                GD.Print($"[Game] Cell {cellRef} added to multi-selection (Ctrl+click), selected={_selectedCells.Count}");
             }
         }
         // Shift+Klick: Bereich auswählen
@@ -928,6 +932,7 @@ public partial class GameScene : Control
             SelectRange(_selectedRow, _selectedCol, row, col);
             _selectedRow = row;
             _selectedCol = col;
+            GD.Print($"[Game] Range selected (Shift+click) to {cellRef}, selected={_selectedCells.Count}");
         }
         // Normaler Klick: Einzelauswahl
         else
@@ -936,6 +941,7 @@ public partial class GameScene : Control
             _selectedCells.Add((row, col));
             _selectedRow = row;
             _selectedCol = col;
+            GD.Print($"[Game] Cell {cellRef} selected (value={cell.Value}, isGiven={cell.IsGiven})");
 
             // Drag starten
             _isDragging = true;
@@ -990,6 +996,8 @@ public partial class GameScene : Control
     {
         if (_selectedRow >= 0 && _selectedCol >= 0)
         {
+            string cellRef = ToCellRef(_selectedRow, _selectedCol);
+            GD.Print($"[Game] NumberPad pressed: {(number == 0 ? "Erase" : number.ToString())} at {cellRef}, notesMode={_isNotesMode}, multiSelect={_selectedCells.Count}");
             TrySetNumberOnSelection(number);
         }
     }
@@ -1022,6 +1030,7 @@ public partial class GameScene : Control
             if (idx < 0 || idx >= cell.Notes.Length) return;
             bool wasSet = cell.Notes[idx];
             cell.Notes[idx] = !cell.Notes[idx];
+            GD.Print($"[Game] Note {number} {(wasSet ? "removed" : "added")} at {ToCellRef(_selectedRow, _selectedCol)}");
             _audioService.PlayNotePlaceOrRemove(!wasSet);
             SaveAndUpdate();
             return;
@@ -1030,6 +1039,7 @@ public partial class GameScene : Control
         // Löschen erlauben
         if (number == 0)
         {
+            GD.Print($"[Game] Number removed at {ToCellRef(_selectedRow, _selectedCol)} (was {cell.Value})");
             cell.Value = 0;
             // Auch alle Notizen löschen
             for (int i = 0; i < 9; i++)
@@ -1048,6 +1058,7 @@ public partial class GameScene : Control
         if (number != cell.Solution)
         {
             // Fehler!
+            GD.Print($"[Game] WRONG number {number} at {ToCellRef(_selectedRow, _selectedCol)} (expected {cell.Solution})");
             _audioService.PlayError();
             RecordMistakeForHeatmap(_selectedRow, _selectedCol);
 
@@ -1079,12 +1090,16 @@ public partial class GameScene : Control
                 ShowGameOverOverlay();
                 return;
             }
-
-            MaybeShowTutorOverlay(number);
+            else
+            {
+                // Game still ongoing - show tutor for feedback
+                MaybeShowTutorOverlay(number);
+            }
         }
         else
         {
             // Korrekte Zahl
+            GD.Print($"[Game] CORRECT number {number} placed at {ToCellRef(_selectedRow, _selectedCol)}");
             _audioService.PlayNumberPlace();
             cell.Value = number;
             _highlightedNumber = number;
@@ -1192,7 +1207,7 @@ public partial class GameScene : Control
 
         body += $"\n\nTipp: In {cellRef} gehört {cell.Solution}.";
 
-        ShowSimpleOverlay("📘 Tutor", body);
+        ShowDismissableOverlay("📘 Tutor", body);
     }
 
     private List<string> FindRuleConflicts(int row, int col, int number)
@@ -1248,6 +1263,12 @@ public partial class GameScene : Control
     private void ShowSimpleOverlay(string title, string message)
     {
         var overlay = CreateOverlay(title, message, new Color("64b5f6"));
+        _overlayContainer.AddChild(overlay);
+    }
+
+    private void ShowDismissableOverlay(string title, string message)
+    {
+        var overlay = CreateDismissableOverlay(title, message, new Color("64b5f6"));
         _overlayContainer.AddChild(overlay);
     }
 
@@ -1336,8 +1357,68 @@ public partial class GameScene : Control
         return bgRect;
     }
 
+    private Control CreateDismissableOverlay(string title, string message, Color accentColor)
+    {
+        var colors = _themeService.CurrentColors;
+
+        // Hintergrund
+        var bgRect = new ColorRect();
+        bgRect.Color = new Color(0, 0, 0, 0.7f);
+        bgRect.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+
+        // Panel
+        var centerContainer = new CenterContainer();
+        centerContainer.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        bgRect.AddChild(centerContainer);
+
+        var panel = new PanelContainer();
+        panel.CustomMinimumSize = new Vector2(350, 250);
+        var panelStyle = _themeService.CreatePanelStyleBox(16, 32);
+        panel.AddThemeStyleboxOverride("panel", panelStyle);
+        centerContainer.AddChild(panel);
+
+        var vbox = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 16);
+        panel.AddChild(vbox);
+
+        // Title
+        var titleLabel = new Label();
+        titleLabel.Text = title;
+        titleLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        titleLabel.AddThemeFontSizeOverride("font_size", 32);
+        titleLabel.AddThemeColorOverride("font_color", accentColor);
+        vbox.AddChild(titleLabel);
+
+        // Message
+        var messageLabel = new Label();
+        messageLabel.Text = message;
+        messageLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        messageLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        messageLabel.CustomMinimumSize = new Vector2(300, 0);
+        messageLabel.AddThemeColorOverride("font_color", colors.TextPrimary);
+        vbox.AddChild(messageLabel);
+
+        // Spacer
+        var spacer = new Control();
+        spacer.SizeFlagsVertical = Control.SizeFlags.Expand;
+        vbox.AddChild(spacer);
+
+        // Button
+        var button = new Button();
+        button.Text = "Schließen";
+        button.CustomMinimumSize = new Vector2(0, 50);
+        ApplyButtonStyle(button, includeDisabled: false);
+        button.Pressed += () => {
+            bgRect.QueueFree();
+        };
+        vbox.AddChild(button);
+
+        return bgRect;
+    }
+
     private void OnBackPressed()
     {
+        GD.Print("[Game] Back button pressed - returning to menu");
         _audioService.PlayClick();
 
         // Spiel speichern
@@ -1537,6 +1618,7 @@ public partial class GameScene : Control
                     HouseAutoFillMode.Block => HouseAutoFillMode.Row,
                     _ => HouseAutoFillMode.Row
                 };
+                GD.Print($"[Game] HouseAutoFill mode cycled to {_houseAutoFillMode}");
                 UpdateHouseAutoFillButtonAppearance();
                 GetViewport().SetInputAsHandled();
                 return;
@@ -1592,6 +1674,7 @@ public partial class GameScene : Control
 
         if (!_saveService.Settings.HouseAutoFillEnabled) return;
 
+        GD.Print($"[Game] HouseAutoFill applied: mode={_houseAutoFillMode}, cell={ToCellRef(_selectedRow, _selectedCol)}");
         AutoFillNotesForSelectedHouse();
     }
 
@@ -1653,6 +1736,7 @@ public partial class GameScene : Control
     private void OnAutoCandidatesButtonPressed()
     {
         _showAutoCandidates = !_showAutoCandidates;
+        GD.Print($"[Game] Auto-Candidates toggled = {_showAutoCandidates}");
         UpdateAutoCandidatesButtonAppearance();
         UpdateGrid();
     }
@@ -1660,6 +1744,7 @@ public partial class GameScene : Control
     private void OnNotesButtonPressed()
     {
         _isNotesMode = !_isNotesMode;
+        GD.Print($"[Game] Notes mode toggled = {_isNotesMode}");
         UpdateNotesButtonAppearance();
     }
 
@@ -1728,12 +1813,14 @@ public partial class GameScene : Control
         // Hints sind nur für 9x9 verfügbar
         if (_gameState.GridSize != 9)
         {
+            GD.Print("[Game] Hint requested but grid is not 9x9");
             return;
         }
 
         // Challenge: hint limit
         if (_gameState.ChallengeHintLimit > 0 && _gameState.HintsUsed >= _gameState.ChallengeHintLimit)
         {
+            GD.Print($"[Game] Hint limit reached ({_gameState.HintsUsed}/{_gameState.ChallengeHintLimit})");
             ApplyChallengeUi();
             ShowHintLimitOverlay();
             return;
@@ -1744,6 +1831,7 @@ public partial class GameScene : Control
 
         if (_currentHint == null)
         {
+            GD.Print("[Game] No hint available");
             ShowNoHintOverlay();
             return;
         }
@@ -1751,6 +1839,8 @@ public partial class GameScene : Control
         _gameState.HintsUsed++;
         _appState.SaveGame();
         ApplyChallengeUi();
+
+        GD.Print($"[Game] Hint shown: technique={_currentHint.TechniqueName}, cell={ToCellRef(_currentHint.Row, _currentHint.Col)}, value={_currentHint.Value}, hintsUsed={_gameState.HintsUsed}");
 
         // Technique progression
         _saveService.Settings.IncrementTechniqueShown(_currentHint.TechniqueName);
@@ -1976,6 +2066,7 @@ public partial class GameScene : Control
         if (_hintPage > 0)
         {
             _hintPage--;
+            GD.Print($"[Game] Hint page: prev -> {_hintPage + 1}/4");
             ShowHintOverlay();
         }
     }
@@ -1985,16 +2076,19 @@ public partial class GameScene : Control
         if (_hintPage < 3)
         {
             _hintPage++;
+            GD.Print($"[Game] Hint page: next -> {_hintPage + 1}/4");
             ShowHintOverlay();
         }
         else
         {
+            GD.Print("[Game] Hint overlay closed (finished)");
             OnHintClosePressed();
         }
     }
 
     private void OnHintClosePressed()
     {
+        GD.Print("[Game] Hint overlay closed");
         CloseHintOverlay();
         _isPaused = false;
         _currentHint = null;

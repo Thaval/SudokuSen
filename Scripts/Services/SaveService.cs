@@ -63,15 +63,18 @@ public partial class SaveService : Node
 
     public override void _Ready()
     {
+        GD.Print("[Save] SaveService ready");
         LoadAll();
     }
 
     public void LoadAll()
     {
+        GD.Print("[Save] LoadAll() start");
         LoadSettings();
         EnsureStorageDirectory();
         LoadSaveGame();
         LoadHistory();
+        GD.Print($"[Save] LoadAll() done | storage={GetResolvedStoragePath()}");
     }
 
     /// <summary>
@@ -105,12 +108,18 @@ public partial class SaveService : Node
                 string json = file.GetAsText();
                 Settings = JsonSerializer.Deserialize<SettingsData>(json) ?? new();
                 Settings.EnsureHeatmapSizes();
+
+                GD.Print($"[Save] Settings loaded from {ProjectSettings.GlobalizePath(SETTINGS_PATH)} | theme={Settings.ThemeIndex}, colorblind={Settings.ColorblindPaletteEnabled}, sfx={Settings.SoundEnabled}({Settings.Volume}%), music={Settings.MusicEnabled}({Settings.MusicVolume}%)");
             }
             catch (Exception e)
             {
                 GD.PrintErr($"Fehler beim Laden der Einstellungen: {e.Message}");
                 Settings = new();
             }
+        }
+        else
+        {
+            GD.Print($"[Save] Settings file not found at {ProjectSettings.GlobalizePath(SETTINGS_PATH)} (using defaults)");
         }
     }
 
@@ -121,6 +130,8 @@ public partial class SaveService : Node
             using var file = FileAccess.Open(SETTINGS_PATH, FileAccess.ModeFlags.Write);
             string json = JsonSerializer.Serialize(Settings, _jsonOptions);
             file.StoreString(json);
+
+            GD.Print($"[Save] Settings saved to {ProjectSettings.GlobalizePath(SETTINGS_PATH)} | theme={Settings.ThemeIndex}, colorblind={Settings.ColorblindPaletteEnabled}, sfx={Settings.SoundEnabled}({Settings.Volume}%), music={Settings.MusicEnabled}({Settings.MusicVolume}%)");
         }
         catch (Exception e)
         {
@@ -147,6 +158,7 @@ public partial class SaveService : Node
                 if (saveData != null)
                 {
                     CurrentGame = saveData.ToGameState();
+                    GD.Print($"[Save] SaveGame loaded from {ProjectSettings.GlobalizePath(savePath)}");
                 }
             }
             catch (Exception e)
@@ -154,6 +166,10 @@ public partial class SaveService : Node
                 GD.PrintErr($"Fehler beim Laden des Spielstands: {e.Message}");
                 CurrentGame = null;
             }
+        }
+        else
+        {
+            GD.Print($"[Save] No SaveGame at {ProjectSettings.GlobalizePath(savePath)}");
         }
     }
 
@@ -168,6 +184,7 @@ public partial class SaveService : Node
             var saveData = SaveGameData.FromGameState(gameState);
             string json = JsonSerializer.Serialize(saveData, _jsonOptions);
             file.StoreString(json);
+            GD.Print($"[Save] SaveGame saved to {ProjectSettings.GlobalizePath(savePath)} | status={gameState.Status}, elapsed={gameState.ElapsedSeconds:0.0}s");
         }
         catch (Exception e)
         {
@@ -182,6 +199,7 @@ public partial class SaveService : Node
         if (FileAccess.FileExists(savePath))
         {
             DirAccess.RemoveAbsolute(savePath);
+            GD.Print($"[Save] SaveGame deleted at {ProjectSettings.GlobalizePath(savePath)}");
         }
     }
 
@@ -199,12 +217,17 @@ public partial class SaveService : Node
                 using var file = FileAccess.Open(historyPath, FileAccess.ModeFlags.Read);
                 string json = file.GetAsText();
                 History = JsonSerializer.Deserialize<List<HistoryEntry>>(json) ?? new();
+                GD.Print($"[Save] History loaded from {ProjectSettings.GlobalizePath(historyPath)} | count={History.Count}");
             }
             catch (Exception e)
             {
                 GD.PrintErr($"Fehler beim Laden des Verlaufs: {e.Message}");
                 History = new();
             }
+        }
+        else
+        {
+            GD.Print($"[Save] No History at {ProjectSettings.GlobalizePath(historyPath)}");
         }
     }
 
@@ -223,6 +246,7 @@ public partial class SaveService : Node
             using var file = FileAccess.Open(historyPath, FileAccess.ModeFlags.Write);
             string json = JsonSerializer.Serialize(History, _jsonOptions);
             file.StoreString(json);
+            GD.Print($"[Save] History saved to {ProjectSettings.GlobalizePath(historyPath)} | count={History.Count}");
         }
         catch (Exception e)
         {
