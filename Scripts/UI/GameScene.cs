@@ -5,6 +5,11 @@ namespace MySudoku.UI;
 /// </summary>
 public partial class GameScene : Control
 {
+    // Cached Service References (initialized in _Ready)
+    private ThemeService _themeService = null!;
+    private SaveService _saveService = null!;
+    private AppState _appState = null!;
+
     // UI-Elemente
     private Button _backButton = null!;
     private Button _hintButton = null!;
@@ -33,10 +38,16 @@ public partial class GameScene : Control
     private int _selectedCol = -1;
     private int _highlightedNumber = 0;
     private double _elapsedTime = 0;
+    private int _lastTimerSecond = -1; // Cache to avoid per-frame string allocations
     private bool _isGameOver = false;
     private bool _isPaused = false;
     private bool _isNotesMode = false;
     private bool _showAutoCandidates = false;
+
+    // Reusable arrays for hot paths (avoid per-frame allocations)
+    private readonly bool[] _candidatesPool = new bool[9];
+    private readonly bool[] _emptyCandidates4 = new bool[4];
+    private readonly bool[] _emptyCandidates9 = new bool[9];
 
     private enum HouseAutoFillMode
     {
@@ -62,6 +73,11 @@ public partial class GameScene : Control
 
     public override void _Ready()
     {
+        // Cache service references
+        _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _saveService = GetNode<SaveService>("/root/SaveService");
+        _appState = GetNode<AppState>("/root/AppState");
+
         // UI-Referenzen holen
         _backButton = GetNode<Button>("VBoxContainer/HeaderMargin/Header/BackButton");
         _difficultyLabel = GetNode<Label>("VBoxContainer/HeaderMargin/Header/DifficultyLabel");
@@ -91,8 +107,7 @@ public partial class GameScene : Control
 
         // Theme anwenden
         ApplyTheme();
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged += OnThemeChanged;
+        _themeService.ThemeChanged += OnThemeChanged;
 
         // Spiel laden
         LoadGame();
@@ -100,16 +115,30 @@ public partial class GameScene : Control
 
     public override void _ExitTree()
     {
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged -= OnThemeChanged;
+        _themeService.ThemeChanged -= OnThemeChanged;
 
         // Spiel speichern beim Verlassen
         if (_gameState != null && !_isGameOver)
         {
             _gameState.ElapsedSeconds = _elapsedTime;
-            var appState = GetNode<AppState>("/root/AppState");
-            appState.SaveGame();
+            _appState.SaveGame();
         }
+    }
+
+    /// <summary>
+    /// Applies standard button styling with normal, hover, pressed, and disabled states.
+    /// </summary>
+    private void ApplyButtonStyle(Button button, bool includeDisabled = true)
+    {
+        var colors = _themeService.CurrentColors;
+        button.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        button.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        button.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
+        if (includeDisabled)
+        {
+            button.AddThemeStyleboxOverride("disabled", _themeService.CreateButtonStyleBox(disabled: true));
+        }
+        button.AddThemeColorOverride("font_color", colors.TextPrimary);
     }
 
     public override void _Process(double delta)
@@ -124,8 +153,7 @@ public partial class GameScene : Control
         {
             _isGameOver = true;
             _gameState.ElapsedSeconds = _elapsedTime;
-            var appState = GetNode<AppState>("/root/AppState");
-            appState.EndGame(GameStatus.Lost);
+            _appState.EndGame(GameStatus.Lost);
             ShowTimeAttackOverlay();
         }
     }
@@ -301,14 +329,23 @@ public partial class GameScene : Control
             // Delete in notes mode clears notes (does not delete values)
             if (number == 0)
             {
-                var targets = _selectedCells.Count > 0 ? _selectedCells : new HashSet<(int row, int col)> { (_selectedRow, _selectedCol) };
-
-                foreach (var (row, col) in targets)
+                if (_selectedCells.Count > 0)
                 {
-                    if (row < 0 || col < 0) continue;
-                    var cell = _gameState.Grid[row, col];
-                    if (cell.IsGiven) continue;
-                    for (int i = 0; i < 9; i++) cell.Notes[i] = false;
+                    foreach (var (row, col) in _selectedCells)
+                    {
+                        if (row < 0 || col < 0) continue;
+                        var cell = _gameState.Grid[row, col];
+                        if (cell.IsGiven) continue;
+                        for (int i = 0; i < 9; i++) cell.Notes[i] = false;
+                    }
+                }
+                else if (_selectedRow >= 0 && _selectedCol >= 0)
+                {
+                    var cell = _gameState.Grid[_selectedRow, _selectedCol];
+                    if (!cell.IsGiven)
+                    {
+                        for (int i = 0; i < 9; i++) cell.Notes[i] = false;
+                    }
                 }
 
                 SaveAndUpdate();
@@ -348,13 +385,7 @@ public partial class GameScene : Control
                 _selectedCol = col;
                 TrySetNumber(number);
             }
-            // Zurück zur letzten Zelle
-            if (_selectedCells.Count > 0)
-            {
-                var last = _selectedCells.Last();
-                _selectedRow = last.row;
-                _selectedCol = last.col;
-            }
+            // _selectedRow/_selectedCol are already set to the last cell from the loop
         }
         else
         {
@@ -403,12 +434,11 @@ public partial class GameScene : Control
         }
 
         // Theme auf neue Zellen anwenden
-        var theme = GetNode<ThemeService>("/root/ThemeService");
         for (int row = 0; row < gridSize; row++)
         {
             for (int col = 0; col < gridSize; col++)
             {
-                _cellButtons[row, col].ApplyTheme(theme);
+                _cellButtons[row, col].ApplyTheme(_themeService);
             }
         }
 
@@ -482,16 +512,11 @@ public partial class GameScene : Control
         }
 
         // Theme anwenden
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
         foreach (var button in _numberButtons)
         {
             if (button == null) continue;
-            button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-            button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-            button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-            button.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
-            button.AddThemeColorOverride("font_color", colors.TextPrimary);
+            ApplyButtonStyle(button);
             button.AddThemeColorOverride("font_disabled_color", colors.TextSecondary);
             button.AddThemeFontSizeOverride("font_size", 24);
         }
@@ -499,8 +524,7 @@ public partial class GameScene : Control
 
     private void CreateAxisLabels()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         // Spalten-Labels (A-I) oben - erstelle alle 9, verstecke je nach GridSize
         var colLabelsContainer = GetNode<HBoxContainer>("VBoxContainer/GridCenterContainer/GridWrapper/ColLabelsContainer/ColLabels");
@@ -566,17 +590,17 @@ public partial class GameScene : Control
 
     private void LoadGame()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        _gameState = appState.CurrentGame;
+        _gameState = _appState.CurrentGame;
 
         if (_gameState == null)
         {
             GD.PrintErr("Kein Spielstand gefunden!");
-            appState.GoToMainMenu();
+            _appState.GoToMainMenu();
             return;
         }
 
         _elapsedTime = _gameState.ElapsedSeconds;
+        _lastTimerSecond = -1; // Force immediate timer display update
 
         // Grid und NumberPad für aktuelle GridSize erstellen
         RecreateGridForGameState();
@@ -601,8 +625,7 @@ public partial class GameScene : Control
 
         if (_houseAutoFillButton != null)
         {
-            var saveService = GetNode<SaveService>("/root/SaveService");
-            _houseAutoFillButton.Visible = !_gameState.ChallengeNoNotes && saveService.Settings.HouseAutoFillEnabled;
+            _houseAutoFillButton.Visible = !_gameState.ChallengeNoNotes && _saveService.Settings.HouseAutoFillEnabled;
             _houseAutoFillButton.Disabled = _gameState.ChallengeNoNotes;
         }
 
@@ -623,8 +646,7 @@ public partial class GameScene : Control
                     : "Tipp anzeigen\nZeigt einen Hinweis für den nächsten Zug");
 
             // Visueller Hint wenn Limit erreicht
-            var theme = GetNode<ThemeService>("/root/ThemeService");
-            var colors = theme.CurrentColors;
+            var colors = _themeService.CurrentColors;
             _hintButton.AddThemeColorOverride("font_color", (limit > 0 && remaining == 0) ? colors.TextSecondary : colors.TextPrimary);
         }
     }
@@ -674,6 +696,10 @@ public partial class GameScene : Control
 
     private void UpdateTimerDisplay()
     {
+        int currentSecond = (int)_elapsedTime;
+        if (currentSecond == _lastTimerSecond) return;
+        _lastTimerSecond = currentSecond;
+
         var ts = TimeSpan.FromSeconds(_elapsedTime);
         string elapsedText = ts.Hours > 0
             ? $"{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}"
@@ -711,9 +737,8 @@ public partial class GameScene : Control
         if (_gameState == null || _cellButtons == null) return;
 
         int gridSize = _gameState.GridSize;
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        bool highlightRelatedCells = saveService.Settings.HighlightRelatedCells;
-        bool[] emptyCandidates = gridSize == 4 ? new bool[4] : new bool[9];
+        bool highlightRelatedCells = _saveService.Settings.HighlightRelatedCells;
+        bool[] emptyCandidates = gridSize == 4 ? _emptyCandidates4 : _emptyCandidates9;
 
         for (int row = 0; row < gridSize; row++)
         {
@@ -765,26 +790,27 @@ public partial class GameScene : Control
 
     private bool[] CalculateCandidates(int row, int col)
     {
-        if (_gameState == null) return new bool[9];
+        if (_gameState == null) return _candidatesPool;
 
         int gridSize = _gameState.GridSize;
         int blockSize = _gameState.BlockSize;
-        bool[] candidates = new bool[gridSize];
+
+        // Reset pool array (use only up to gridSize elements)
         for (int i = 0; i < gridSize; i++)
-            candidates[i] = true;
+            _candidatesPool[i] = true;
 
         // Zeile prüfen
         for (int c = 0; c < gridSize; c++)
         {
             int val = _gameState.Grid[row, c].Value;
-            if (val > 0) candidates[val - 1] = false;
+            if (val > 0) _candidatesPool[val - 1] = false;
         }
 
         // Spalte prüfen
         for (int r = 0; r < gridSize; r++)
         {
             int val = _gameState.Grid[r, col].Value;
-            if (val > 0) candidates[val - 1] = false;
+            if (val > 0) _candidatesPool[val - 1] = false;
         }
 
         // Block prüfen (2x2 für Kids, 3x3 für Standard)
@@ -795,21 +821,19 @@ public partial class GameScene : Control
             for (int c = blockCol; c < blockCol + blockSize; c++)
             {
                 int val = _gameState.Grid[r, c].Value;
-                if (val > 0) candidates[val - 1] = false;
+                if (val > 0) _candidatesPool[val - 1] = false;
             }
         }
 
-        return candidates;
+        return _candidatesPool;
     }
 
     private void UpdateNumberCounts()
     {
         if (_gameState == null) return;
 
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
-        bool hideCompleted = saveService.Settings.HideCompletedNumbers;
+        var colors = _themeService.CurrentColors;
+        bool hideCompleted = _saveService.Settings.HideCompletedNumbers;
         int gridSize = _gameState.GridSize;
 
         for (int i = 1; i <= gridSize; i++)
@@ -841,14 +865,14 @@ public partial class GameScene : Control
             // Highlight aktive Zahl im Numpad
             if (isHighlighted && !isComplete)
             {
-                var highlightStyle = theme.CreateButtonStyleBox();
+                var highlightStyle = _themeService.CreateButtonStyleBox();
                 highlightStyle.BgColor = colors.CellBackgroundHighlighted;
                 _numberButtons[i].AddThemeStyleboxOverride("normal", highlightStyle);
                 _numberButtons[i].AddThemeColorOverride("font_color", colors.TextPrimary);
             }
             else if (!isComplete)
             {
-                _numberButtons[i].AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+                _numberButtons[i].AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
                 _numberButtons[i].AddThemeColorOverride("font_color", colors.TextPrimary);
             }
         }
@@ -1016,18 +1040,16 @@ public partial class GameScene : Control
             // Fehler!
             RecordMistakeForHeatmap(_selectedRow, _selectedCol);
 
-            var appState = GetNode<AppState>("/root/AppState");
-
             // Perfect Run => sofort verloren
             if (_gameState.ChallengePerfectRun)
             {
                 _isGameOver = true;
                 _gameState.ElapsedSeconds = _elapsedTime;
-                appState.EndGame(GameStatus.Lost);
+                _appState.EndGame(GameStatus.Lost);
                 ShowPerfectRunFailedOverlay();
                 return;
             }
-            bool gameOver = appState.RegisterMistake();
+            bool gameOver = _appState.RegisterMistake();
 
             UpdateMistakesLabel();
 
@@ -1042,7 +1064,7 @@ public partial class GameScene : Control
                 // Game Over!
                 _isGameOver = true;
                 _gameState.ElapsedSeconds = _elapsedTime;
-                appState.EndGame(GameStatus.Lost);
+                _appState.EndGame(GameStatus.Lost);
                 ShowGameOverOverlay();
                 return;
             }
@@ -1063,9 +1085,8 @@ public partial class GameScene : Control
                 var h = _lastHintTracking.Value;
                 if (h.row == _selectedRow && h.col == _selectedCol && h.value == number)
                 {
-                    var saveService = GetNode<SaveService>("/root/SaveService");
-                    saveService.Settings.IncrementTechniqueApplied(h.technique);
-                    saveService.SaveSettings();
+                    _saveService.Settings.IncrementTechniqueApplied(h.technique);
+                    _saveService.SaveSettings();
                     _lastHintTracking = null;
                 }
             }
@@ -1075,8 +1096,7 @@ public partial class GameScene : Control
             {
                 _isGameOver = true;
                 _gameState.ElapsedSeconds = _elapsedTime;
-                var appState = GetNode<AppState>("/root/AppState");
-                appState.EndGame(GameStatus.Won);
+                _appState.EndGame(GameStatus.Won);
                 ShowWinOverlay();
                 return;
             }
@@ -1090,8 +1110,7 @@ public partial class GameScene : Control
         if (_gameState == null) return;
         if (placedNumber <= 0) return;
 
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        if (!saveService.Settings.SmartNoteCleanupEnabled) return;
+        if (!_saveService.Settings.SmartNoteCleanupEnabled) return;
 
         int size = _gameState.GridSize;
         int blockSize = _gameState.BlockSize;
@@ -1135,16 +1154,14 @@ public partial class GameScene : Control
     private void RecordMistakeForHeatmap(int row, int col)
     {
         if (_gameState == null) return;
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.RecordMistake(_gameState.GridSize, row, col);
-        saveService.SaveSettings();
+        _saveService.Settings.RecordMistake(_gameState.GridSize, row, col);
+        _saveService.SaveSettings();
     }
 
     private void MaybeShowTutorOverlay(int attemptedNumber)
     {
         if (_gameState == null) return;
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        if (!saveService.Settings.LearnModeEnabled) return;
+        if (!_saveService.Settings.LearnModeEnabled) return;
 
         var cell = _gameState.Grid[_selectedRow, _selectedCol];
         string cellRef = ToCellRef(_selectedRow, _selectedCol);
@@ -1227,8 +1244,7 @@ public partial class GameScene : Control
         if (_gameState == null) return;
 
         _gameState.ElapsedSeconds = _elapsedTime;
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.SaveGame();
+        _appState.SaveGame();
 
         UpdateGrid();
         UpdateNumberCounts();
@@ -1252,8 +1268,7 @@ public partial class GameScene : Control
 
     private Control CreateOverlay(string title, string message, Color accentColor)
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         // Hintergrund
         var bgRect = new ColorRect();
@@ -1267,7 +1282,7 @@ public partial class GameScene : Control
 
         var panel = new PanelContainer();
         panel.CustomMinimumSize = new Vector2(350, 250);
-        var panelStyle = theme.CreatePanelStyleBox(16, 32);
+        var panelStyle = _themeService.CreatePanelStyleBox(16, 32);
         panel.AddThemeStyleboxOverride("panel", panelStyle);
         centerContainer.AddChild(panel);
 
@@ -1299,13 +1314,9 @@ public partial class GameScene : Control
         var button = new Button();
         button.Text = "Zurück zum Menü";
         button.CustomMinimumSize = new Vector2(0, 50);
-        button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-        button.AddThemeColorOverride("font_color", colors.TextPrimary);
+        ApplyButtonStyle(button, includeDisabled: false);
         button.Pressed += () => {
-            var appState = GetNode<AppState>("/root/AppState");
-            appState.GoToMainMenu();
+            _appState.GoToMainMenu();
         };
         vbox.AddChild(button);
 
@@ -1318,12 +1329,10 @@ public partial class GameScene : Control
         if (_gameState != null && !_isGameOver)
         {
             _gameState.ElapsedSeconds = _elapsedTime;
-            var appState = GetNode<AppState>("/root/AppState");
-            appState.SaveGame();
+            _appState.SaveGame();
         }
 
-        var appState2 = GetNode<AppState>("/root/AppState");
-        appState2.GoToMainMenu();
+        _appState.GoToMainMenu();
     }
 
     private void OnThemeChanged(int themeIndex)
@@ -1333,8 +1342,7 @@ public partial class GameScene : Control
 
     private void ApplyTheme()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         // Header
         _difficultyLabel.AddThemeColorOverride("font_color", colors.TextPrimary);
@@ -1342,10 +1350,7 @@ public partial class GameScene : Control
         _mistakesLabel.AddThemeColorOverride("font_color", colors.TextPrimary);
 
         // Back Button
-        _backButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _backButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _backButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-        _backButton.AddThemeColorOverride("font_color", colors.TextPrimary);
+        ApplyButtonStyle(_backButton, includeDisabled: false);
 
         // Grid Panel
         var gridStyle = new StyleBoxFlat();
@@ -1368,7 +1373,7 @@ public partial class GameScene : Control
             {
                 for (int col = 0; col < gridSize; col++)
                 {
-                    _cellButtons[row, col].ApplyTheme(theme);
+                    _cellButtons[row, col].ApplyTheme(_themeService);
                 }
             }
         }
@@ -1377,11 +1382,7 @@ public partial class GameScene : Control
         foreach (var button in _numberButtons)
         {
             if (button == null) continue;
-            button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-            button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-            button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-            button.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
-            button.AddThemeColorOverride("font_color", colors.TextPrimary);
+            ApplyButtonStyle(button);
             button.AddThemeColorOverride("font_disabled_color", colors.TextSecondary);
             button.AddThemeFontSizeOverride("font_size", 24);
         }
@@ -1389,10 +1390,7 @@ public partial class GameScene : Control
         // Hint Button
         if (_hintButton != null)
         {
-            _hintButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-            _hintButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-            _hintButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-            _hintButton.AddThemeColorOverride("font_color", colors.TextPrimary);
+            ApplyButtonStyle(_hintButton, includeDisabled: false);
         }
 
         // Auto-Candidates Button
@@ -1432,16 +1430,15 @@ public partial class GameScene : Control
     private void CreateHintButton()
     {
         var header = GetNode<HBoxContainer>("VBoxContainer/HeaderMargin/Header");
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         _hintButton = new Button();
         _hintButton.Text = "💡";
         _hintButton.CustomMinimumSize = new Vector2(50, 40);
         _hintButton.TooltipText = "Tipp anzeigen\nZeigt einen Hinweis für den nächsten Zug";
-        _hintButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _hintButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _hintButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _hintButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _hintButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _hintButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         _hintButton.AddThemeColorOverride("font_color", colors.TextPrimary);
         _hintButton.AddThemeFontSizeOverride("font_size", 20);
         _hintButton.Pressed += OnHintButtonPressed;
@@ -1454,16 +1451,15 @@ public partial class GameScene : Control
     private void CreateAutoCandidatesButton()
     {
         var header = GetNode<HBoxContainer>("VBoxContainer/HeaderMargin/Header");
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         _autoCandidatesButton = new Button();
         _autoCandidatesButton.Text = "📋";
         _autoCandidatesButton.CustomMinimumSize = new Vector2(50, 40);
         _autoCandidatesButton.TooltipText = "Auto-Kandidaten anzeigen/verbergen\nZeigt alle möglichen Zahlen (grau)";
-        _autoCandidatesButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _autoCandidatesButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _autoCandidatesButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _autoCandidatesButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _autoCandidatesButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _autoCandidatesButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         _autoCandidatesButton.AddThemeColorOverride("font_color", colors.TextSecondary);
         _autoCandidatesButton.AddThemeFontSizeOverride("font_size", 18);
         _autoCandidatesButton.Pressed += OnAutoCandidatesButtonPressed;
@@ -1477,16 +1473,15 @@ public partial class GameScene : Control
     private void CreateNotesButton()
     {
         // Füge hinter dem Eraser-Button im NumberPad ein
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         _notesButton = new Button();
         _notesButton.Text = "✏️";
         _notesButton.CustomMinimumSize = new Vector2(50, 60);
         _notesButton.TooltipText = "Notizen-Modus (N)\nEigene Notizen setzen (blau)\nCtrl+Klick für Mehrfachauswahl";
-        _notesButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _notesButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _notesButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _notesButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _notesButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _notesButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         _notesButton.AddThemeColorOverride("font_color", colors.TextPrimary);
         _notesButton.AddThemeFontSizeOverride("font_size", 18);
         _notesButton.Pressed += OnNotesButtonPressed;
@@ -1497,14 +1492,13 @@ public partial class GameScene : Control
     private void CreateHouseAutoFillButton()
     {
         // Single button: click = apply, right-click or shift+click = cycle mode
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         _houseAutoFillButton = new Button();
         _houseAutoFillButton.CustomMinimumSize = new Vector2(70, 60);
-        _houseAutoFillButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _houseAutoFillButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _houseAutoFillButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _houseAutoFillButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _houseAutoFillButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _houseAutoFillButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         _houseAutoFillButton.AddThemeColorOverride("font_color", colors.TextPrimary);
         _houseAutoFillButton.AddThemeFontSizeOverride("font_size", 14);
         _houseAutoFillButton.GuiInput += OnHouseAutoFillGuiInput;
@@ -1546,8 +1540,7 @@ public partial class GameScene : Control
     {
         if (_houseAutoFillButton == null) return;
 
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         // Full descriptive labels
         string modeLabel = _houseAutoFillMode switch
@@ -1570,9 +1563,9 @@ public partial class GameScene : Control
         _houseAutoFillButton.TooltipText = $"Klick: Auto-Notizen für {modeText} einfügen\nRechtsklick/Shift+Klick: Modus wechseln";
 
         // Style like other number pad buttons (not highlighted)
-        _houseAutoFillButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _houseAutoFillButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _houseAutoFillButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _houseAutoFillButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _houseAutoFillButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _houseAutoFillButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         _houseAutoFillButton.AddThemeColorOverride("font_color", colors.TextPrimary);
     }
 
@@ -1582,8 +1575,7 @@ public partial class GameScene : Control
         if (_selectedRow < 0 || _selectedCol < 0) return;
         if (_gameState.ChallengeNoNotes) return;
 
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        if (!saveService.Settings.HouseAutoFillEnabled) return;
+        if (!_saveService.Settings.HouseAutoFillEnabled) return;
 
         AutoFillNotesForSelectedHouse();
     }
@@ -1658,13 +1650,12 @@ public partial class GameScene : Control
 
     private void UpdateAutoCandidatesButtonAppearance()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         if (_showAutoCandidates)
         {
             // Aktiv - Accent-Farbe
-            var activeStyle = theme.CreateButtonStyleBox();
+            var activeStyle = _themeService.CreateButtonStyleBox();
             activeStyle.BgColor = colors.Accent;
             _autoCandidatesButton.AddThemeStyleboxOverride("normal", activeStyle);
             _autoCandidatesButton.AddThemeColorOverride("font_color", colors.Background);
@@ -1672,33 +1663,32 @@ public partial class GameScene : Control
         else
         {
             // Inaktiv - Normal
-            _autoCandidatesButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
+            _autoCandidatesButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
             _autoCandidatesButton.AddThemeColorOverride("font_color", colors.TextSecondary);
         }
     }
 
     private void UpdateNotesButtonAppearance()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         if (_isNotesMode)
         {
             // Aktiv - Accent-Farbe mit verstärktem Stil für Touch-Geräte
-            var activeStyle = theme.CreateButtonStyleBox();
+            var activeStyle = _themeService.CreateButtonStyleBox();
             activeStyle.BgColor = colors.Accent;
             activeStyle.BorderColor = colors.Accent.Lightened(0.3f);
             activeStyle.SetBorderWidthAll(3);
             _notesButton.AddThemeStyleboxOverride("normal", activeStyle);
 
             // Auch hover/pressed für konsistente Touch-Erfahrung
-            var hoverStyle = theme.CreateButtonStyleBox();
+            var hoverStyle = _themeService.CreateButtonStyleBox();
             hoverStyle.BgColor = colors.Accent.Lightened(0.1f);
             hoverStyle.BorderColor = colors.Accent.Lightened(0.4f);
             hoverStyle.SetBorderWidthAll(3);
             _notesButton.AddThemeStyleboxOverride("hover", hoverStyle);
 
-            var pressedStyle = theme.CreateButtonStyleBox();
+            var pressedStyle = _themeService.CreateButtonStyleBox();
             pressedStyle.BgColor = colors.Accent.Darkened(0.1f);
             pressedStyle.BorderColor = colors.Accent;
             pressedStyle.SetBorderWidthAll(3);
@@ -1709,9 +1699,9 @@ public partial class GameScene : Control
         else
         {
             // Inaktiv - Normal
-            _notesButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-            _notesButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-            _notesButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+            _notesButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+            _notesButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+            _notesButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
             _notesButton.AddThemeColorOverride("font_color", colors.TextPrimary);
         }
     }
@@ -1744,14 +1734,12 @@ public partial class GameScene : Control
         }
 
         _gameState.HintsUsed++;
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.SaveGame();
+        _appState.SaveGame();
         ApplyChallengeUi();
 
         // Technique progression
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.IncrementTechniqueShown(_currentHint.TechniqueName);
-        saveService.SaveSettings();
+        _saveService.Settings.IncrementTechniqueShown(_currentHint.TechniqueName);
+        _saveService.SaveSettings();
         _lastHintTracking = (_currentHint.Row, _currentHint.Col, _currentHint.Value, _currentHint.TechniqueName);
 
         _isPaused = true;
@@ -1782,8 +1770,7 @@ public partial class GameScene : Control
         // Entferne vorheriges Overlay
         CloseHintOverlay();
 
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         // Hintergrund (semi-transparent)
         _hintOverlay = new ColorRect();
@@ -1798,7 +1785,7 @@ public partial class GameScene : Control
 
         var panel = new PanelContainer();
         panel.CustomMinimumSize = new Vector2(500, 580);
-        var panelStyle = theme.CreatePanelStyleBox(16, 24);
+        var panelStyle = _themeService.CreatePanelStyleBox(16, 24);
         panel.AddThemeStyleboxOverride("panel", panelStyle);
         centerContainer.AddChild(panel);
 
@@ -1820,9 +1807,7 @@ public partial class GameScene : Control
         var closeButton = new Button();
         closeButton.Text = "✕";
         closeButton.CustomMinimumSize = new Vector2(36, 36);
-        closeButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        closeButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        closeButton.AddThemeColorOverride("font_color", colors.TextPrimary);
+        ApplyButtonStyle(closeButton, includeDisabled: false);
         closeButton.Pressed += OnHintClosePressed;
         headerBox.AddChild(closeButton);
 
@@ -1830,7 +1815,7 @@ public partial class GameScene : Control
         var gridCenter = new CenterContainer();
         vbox.AddChild(gridCenter);
 
-        var miniGrid = CreateHintMiniGrid(theme, colors);
+        var miniGrid = CreateHintMiniGrid(colors);
         gridCenter.AddChild(miniGrid);
 
         // Seiten-Inhalt (Text)
@@ -1857,10 +1842,7 @@ public partial class GameScene : Control
         prevButton.Text = "← Zurück";
         prevButton.CustomMinimumSize = new Vector2(100, 36);
         prevButton.Disabled = _hintPage == 0;
-        prevButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        prevButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        prevButton.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
-        prevButton.AddThemeColorOverride("font_color", colors.TextPrimary);
+        ApplyButtonStyle(prevButton);
         prevButton.Pressed += OnHintPrevPressed;
         navBox.AddChild(prevButton);
 
@@ -1874,14 +1856,12 @@ public partial class GameScene : Control
         var nextButton = new Button();
         nextButton.Text = _hintPage == 3 ? "Schließen" : "Weiter →";
         nextButton.CustomMinimumSize = new Vector2(100, 36);
-        nextButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        nextButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        nextButton.AddThemeColorOverride("font_color", colors.TextPrimary);
+        ApplyButtonStyle(nextButton, includeDisabled: false);
         nextButton.Pressed += OnHintNextPressed;
         navBox.AddChild(nextButton);
     }
 
-    private Control CreateHintMiniGrid(ThemeService theme, ThemeService.ThemeColors colors)
+    private Control CreateHintMiniGrid(ThemeService.ThemeColors colors)
     {
         if (_gameState == null || _currentHint == null) return new Control();
 
@@ -1922,7 +1902,7 @@ public partial class GameScene : Control
             isGiven,
             highlightedCells,
             relatedCells,
-            theme,
+            _themeService,
             colors,
             solutionCell,
             candidates: null,
@@ -2016,349 +1996,4 @@ public partial class GameScene : Control
     }
 
     #endregion
-}
-
-/// <summary>
-/// Custom Button für Sudoku-Zellen
-/// </summary>
-public partial class SudokuCellButton : Button
-{
-    [Signal]
-    public delegate void CellClickedEventHandler(int row, int col);
-
-    [Signal]
-    public delegate void CellHoveredEventHandler(int row, int col);
-
-    public int Row { get; }
-    public int Col { get; }
-
-    private int _value;
-    private bool _isGiven;
-    private bool _isSelected;
-    private bool _isMultiSelected;
-    private bool _isHighlighted;
-    private bool _isRelated;
-    private bool _isFlashingError;
-    private double _flashTimer;
-
-    // Grid-Konfiguration (dynamisch für Kids vs. Standard)
-    private int _gridSize = 9;
-    private int _blockSize = 3;
-
-    // Notes/Candidates Display
-    private GridContainer? _notesGrid;
-    private Label[] _noteLabels = new Label[9];
-    private bool[] _notes = new bool[9];
-    private bool[] _candidates = new bool[9];
-    private bool _showNotes;
-    private bool _showCandidates;
-    private int _notesMask;
-    private int _candidatesMask;
-
-    public SudokuCellButton(int row, int col)
-    {
-        Row = row;
-        Col = col;
-        FocusMode = FocusModeEnum.None;
-        ClipText = false;
-    }
-
-    public void SetGridConfig(int gridSize, int blockSize)
-    {
-        _gridSize = gridSize;
-        _blockSize = blockSize;
-    }
-
-    public override void _Ready()
-    {
-        Pressed += OnPressed;
-        MouseEntered += OnMouseEntered;
-        CreateNotesGrid();
-    }
-
-    public override void _Process(double delta)
-    {
-        if (_isFlashingError)
-        {
-            _flashTimer -= delta;
-            if (_flashTimer <= 0)
-            {
-                _isFlashingError = false;
-                UpdateAppearance();
-            }
-        }
-    }
-
-    private void OnPressed()
-    {
-        EmitSignal(SignalName.CellClicked, Row, Col);
-    }
-
-    private void OnMouseEntered()
-    {
-        EmitSignal(SignalName.CellHovered, Row, Col);
-    }
-
-    private void CreateNotesGrid()
-    {
-        // Erstelle ein Grid für die Notizen/Kandidaten
-        // Größe basiert auf _gridSize: 2x2 für Kids (4), 3x3 für Standard (9)
-        int notesColumns = _gridSize == 4 ? 2 : 3;
-        int notesCount = _gridSize;
-
-        _notesGrid = new GridContainer();
-        _notesGrid.Columns = notesColumns;
-        _notesGrid.SetAnchorsPreset(LayoutPreset.FullRect);
-        _notesGrid.GrowHorizontal = GrowDirection.Both;
-        _notesGrid.GrowVertical = GrowDirection.Both;
-        _notesGrid.SizeFlagsHorizontal = SizeFlags.Expand | SizeFlags.Fill;
-        _notesGrid.SizeFlagsVertical = SizeFlags.Expand | SizeFlags.Fill;
-        _notesGrid.AddThemeConstantOverride("h_separation", 0);
-        _notesGrid.AddThemeConstantOverride("v_separation", 0);
-        _notesGrid.Visible = false;
-
-        for (int i = 0; i < notesCount; i++)
-        {
-            var label = new Label();
-            label.Text = "";
-            label.HorizontalAlignment = HorizontalAlignment.Center;
-            label.VerticalAlignment = VerticalAlignment.Center;
-            label.SizeFlagsHorizontal = SizeFlags.Expand | SizeFlags.Fill;
-            label.SizeFlagsVertical = SizeFlags.Expand | SizeFlags.Fill;
-            // Größere Schrift für Kids (weniger Zahlen, mehr Platz)
-            label.AddThemeFontSizeOverride("font_size", _gridSize == 4 ? 14 : 10);
-            _noteLabels[i] = label;
-            _notesGrid.AddChild(label);
-        }
-
-        AddChild(_notesGrid);
-    }
-
-    public void SetNotes(bool[] notes, bool showNotes)
-    {
-        int newMask = ComputeMask(notes, _gridSize);
-        if (_showNotes == showNotes && _notesMask == newMask)
-        {
-            _notes = notes; // keep latest reference (even if unchanged)
-            return;
-        }
-
-        _notes = notes;
-        _showNotes = showNotes;
-        _notesMask = newMask;
-        UpdateNotesDisplay();
-    }
-
-    public void SetCandidates(bool[] candidates, bool showCandidates)
-    {
-        int newMask = ComputeMask(candidates, _gridSize);
-        if (_showCandidates == showCandidates && _candidatesMask == newMask)
-        {
-            _candidates = candidates;
-            return;
-        }
-
-        _candidates = candidates;
-        _showCandidates = showCandidates;
-        _candidatesMask = newMask;
-        UpdateNotesDisplay();
-    }
-
-    private static int ComputeMask(bool[] values, int gridSize)
-    {
-        int count = Math.Min(gridSize, Math.Min(9, values.Length));
-        int mask = 0;
-        for (int i = 0; i < count; i++)
-        {
-            if (values[i]) mask |= 1 << i;
-        }
-        return mask;
-    }
-
-    private void UpdateNotesDisplay()
-    {
-        if (_notesGrid == null) return;
-
-        var theme = ThemeService.Instance;
-        if (theme == null) return;
-
-        var colors = theme.CurrentColors;
-
-        // Wenn ein Wert gesetzt ist, keine Notizen anzeigen
-        if (_value != 0)
-        {
-            _notesGrid.Visible = false;
-            return;
-        }
-
-        bool hasAnyToShow = false;
-        int notesCount = _gridSize;
-
-        for (int i = 0; i < notesCount; i++)
-        {
-            bool showNote = _showNotes && i < _notes.Length && _notes[i];
-            bool showCandidate = _showCandidates && i < _candidates.Length && _candidates[i] && !(i < _notes.Length && _notes[i]);
-
-            if (showNote)
-            {
-                _noteLabels[i].Text = (i + 1).ToString();
-                _noteLabels[i].AddThemeColorOverride("font_color", colors.Accent); // Blau für Notizen (Theme-aware)
-                hasAnyToShow = true;
-            }
-            else if (showCandidate)
-            {
-                _noteLabels[i].Text = (i + 1).ToString();
-                _noteLabels[i].AddThemeColorOverride("font_color", colors.TextSecondary); // Grau für Kandidaten (Theme-aware)
-                hasAnyToShow = true;
-            }
-            else
-            {
-                _noteLabels[i].Text = "";
-            }
-        }
-
-        _notesGrid.Visible = hasAnyToShow;
-    }
-
-    public void SetValue(int value, bool isGiven)
-    {
-        if (_value == value && _isGiven == isGiven) return;
-        _value = value;
-        _isGiven = isGiven;
-        Text = value > 0 ? value.ToString() : "";
-        UpdateAppearance();
-    }
-
-    public void SetSelected(bool selected)
-    {
-        if (_isSelected == selected) return;
-        _isSelected = selected;
-        UpdateAppearance();
-    }
-
-    public void SetHighlighted(bool highlighted)
-    {
-        if (_isHighlighted == highlighted) return;
-        _isHighlighted = highlighted;
-        UpdateAppearance();
-    }
-
-    public void SetRelated(bool related)
-    {
-        if (_isRelated == related) return;
-        _isRelated = related;
-        UpdateAppearance();
-    }
-
-    public void SetMultiSelected(bool multiSelected)
-    {
-        if (_isMultiSelected == multiSelected) return;
-        _isMultiSelected = multiSelected;
-        UpdateAppearance();
-    }
-
-    public void FlashError()
-    {
-        _isFlashingError = true;
-        _flashTimer = 0.5;
-        UpdateAppearance();
-    }
-
-    public void ApplyTheme(ThemeService theme)
-    {
-        UpdateAppearance();
-    }
-
-    private void UpdateAppearance()
-    {
-        var theme = ThemeService.Instance;
-        if (theme == null) return;
-
-        var colors = theme.CurrentColors;
-
-        // StyleBox basierend auf Zustand
-        var style = theme.CreateCellStyleBox(
-            _isGiven,
-            _isSelected,
-            _isHighlighted,
-            _isRelated,
-            _isFlashingError,
-            Row,
-            Col
-        );
-
-        // Multi-Select Styling überschreibt normale Hintergrundfarbe
-        if (_isMultiSelected && !_isSelected)
-        {
-            var multiSelectColor = colors.Accent.Lerp(colors.CellBackground, 0.6f);
-            style.BgColor = multiSelectColor;
-        }
-
-        // Related-Zellen bekommen subtilen blauen Hintergrund-Tint (statt Border)
-        if (_isRelated && !_isSelected && !_isMultiSelected)
-        {
-            var relatedBgColor = colors.Accent.Lerp(colors.CellBackground, 0.85f);
-            style.BgColor = relatedBgColor;
-        }
-
-        // Margins für Grid-Linien
-        // Normale Zellen-Grenzen: 1px
-        // Block-Grenzen: 3px mit spezieller Farbe (2x2 für Kids, 3x3 für Standard)
-        bool isRightBlockBorder = (Col + 1) % _blockSize == 0 && Col < _gridSize - 1;
-        bool isBottomBlockBorder = (Row + 1) % _blockSize == 0 && Row < _gridSize - 1;
-        bool isLeftBlockBorder = Col % _blockSize == 0 && Col > 0;
-        bool isTopBlockBorder = Row % _blockSize == 0 && Row > 0;
-
-        style.ContentMarginRight = isRightBlockBorder ? 3 : 1;
-        style.ContentMarginBottom = isBottomBlockBorder ? 3 : 1;
-        style.ContentMarginLeft = isLeftBlockBorder ? 3 : 1;
-        style.ContentMarginTop = isTopBlockBorder ? 3 : 1;
-
-        // 3x3-Block-Grenzen mit eigener Farbe hervorheben
-        var blockBorderColor = colors.GridLineThick;
-
-        // Block-Grenzen setzen (für alle Zellen)
-        if (isRightBlockBorder)
-        {
-            style.BorderWidthRight = 3;
-            style.BorderColor = blockBorderColor;
-        }
-        if (isBottomBlockBorder)
-        {
-            style.BorderWidthBottom = 3;
-            style.BorderColor = blockBorderColor;
-        }
-        if (isLeftBlockBorder)
-        {
-            style.BorderWidthLeft = 3;
-            style.BorderColor = blockBorderColor;
-        }
-        if (isTopBlockBorder)
-        {
-            style.BorderWidthTop = 3;
-            style.BorderColor = blockBorderColor;
-        }
-
-        AddThemeStyleboxOverride("normal", style);
-        AddThemeStyleboxOverride("hover", style);
-        AddThemeStyleboxOverride("pressed", style);
-        AddThemeStyleboxOverride("focus", style);
-
-        // Textfarbe
-        Color textColor;
-        if (_isFlashingError)
-            textColor = colors.TextError;
-        else if (_isGiven)
-            textColor = colors.TextGiven;
-        else
-            textColor = colors.TextUser;
-
-        AddThemeColorOverride("font_color", textColor);
-        AddThemeColorOverride("font_hover_color", textColor);
-        AddThemeColorOverride("font_pressed_color", textColor);
-
-        // Größere Schrift für Kids-Modus (größere Zellen)
-        int fontSize = _gridSize == 4 ? 36 : 24;
-        AddThemeFontSizeOverride("font_size", fontSize);
-    }
 }

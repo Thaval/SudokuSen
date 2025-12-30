@@ -5,6 +5,11 @@ namespace MySudoku.UI;
 /// </summary>
 public partial class SettingsMenu : Control
 {
+    // Cached Service References
+    private ThemeService _themeService = null!;
+    private SaveService _saveService = null!;
+    private AppState _appState = null!;
+
     private PanelContainer _panel = null!;
     private Label _title = null!;
 
@@ -41,6 +46,11 @@ public partial class SettingsMenu : Control
 
     public override void _Ready()
     {
+        // Cache service references
+        _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _saveService = GetNode<SaveService>("/root/SaveService");
+        _appState = GetNode<AppState>("/root/AppState");
+
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("Title");
 
@@ -122,8 +132,7 @@ public partial class SettingsMenu : Control
         _backButton.Pressed += OnBackPressed;
 
         ApplyTheme();
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged += OnThemeChanged;
+        _themeService.ThemeChanged += OnThemeChanged;
     }
 
     private void CreateTechniqueUI()
@@ -260,8 +269,8 @@ public partial class SettingsMenu : Control
 
     public override void _ExitTree()
     {
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged -= OnThemeChanged;
+
+        _themeService.ThemeChanged -= OnThemeChanged;
     }
 
     public override void _Input(InputEvent @event)
@@ -275,8 +284,8 @@ public partial class SettingsMenu : Control
 
     private void LoadSettings()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        var settings = saveService.Settings;
+
+        var settings = _saveService.Settings;
 
         // Storage path
         _storagePathEdit.Text = settings.CustomStoragePath;
@@ -308,15 +317,15 @@ public partial class SettingsMenu : Control
 
     private void UpdateStoragePathInfo()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        string resolvedPath = saveService.GetResolvedStoragePath();
+
+        string resolvedPath = _saveService.GetResolvedStoragePath();
         _storagePathInfo.Text = $"📂 {resolvedPath}";
     }
 
     private void LoadTechniqueSettings()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        var settings = saveService.Settings;
+
+        var settings = _saveService.Settings;
 
         foreach (var difficulty in _techniqueCheckboxes.Keys)
         {
@@ -332,14 +341,14 @@ public partial class SettingsMenu : Control
 
     private void SaveSettings()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.SaveSettings();
+
+        _saveService.SaveSettings();
     }
 
     private void OnTechniqueToggled(Difficulty difficulty, string techId, bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        var settings = saveService.Settings;
+
+        var settings = _saveService.Settings;
 
         // Aktuelle Techniken für diese Schwierigkeit holen (oder Standard)
         var currentTechniques = settings.GetTechniquesForDifficulty(difficulty)
@@ -356,8 +365,8 @@ public partial class SettingsMenu : Control
 
     private void OnResetTechniquesPressed()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.ResetTechniquesToDefault();
+
+        _saveService.Settings.ResetTechniquesToDefault();
         SaveSettings();
         LoadTechniqueSettings();
     }
@@ -376,7 +385,7 @@ public partial class SettingsMenu : Control
 
     private void ApplyStoragePath(string path)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
+
         string cleanPath = path.Trim();
 
         // Validate path if not empty
@@ -393,17 +402,17 @@ public partial class SettingsMenu : Control
                 {
                     // Show error - path is invalid
                     _storagePathInfo.Text = "❌ Ungültiger Pfad - konnte nicht erstellt werden";
-                    _storagePathEdit.Text = saveService.Settings.CustomStoragePath;
+                    _storagePathEdit.Text = _saveService.Settings.CustomStoragePath;
                     return;
                 }
             }
         }
 
-        saveService.Settings.CustomStoragePath = cleanPath;
+        _saveService.Settings.CustomStoragePath = cleanPath;
         SaveSettings();
 
         // Reload data from new location
-        saveService.LoadAll();
+        _saveService.LoadAll();
         UpdateStoragePathInfo();
     }
 
@@ -423,8 +432,8 @@ public partial class SettingsMenu : Control
         }
 
         // Set initial directory
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        string currentPath = saveService.GetResolvedStoragePath();
+
+        string currentPath = _saveService.GetResolvedStoragePath();
         if (DirAccess.DirExistsAbsolute(currentPath))
         {
             _fileDialog.CurrentDir = currentPath;
@@ -443,29 +452,29 @@ public partial class SettingsMenu : Control
 
     private void OnThemeSelected(long index)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.ThemeIndex = (int)index;
+
+        _saveService.Settings.ThemeIndex = (int)index;
         SaveSettings();
 
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.SetTheme((int)index);
+
+        _themeService.SetTheme((int)index);
     }
 
     private void OnLearnToggled(bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.LearnModeEnabled = pressed;
+
+        _saveService.Settings.LearnModeEnabled = pressed;
         SaveSettings();
     }
 
     private void OnColorblindToggled(bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.ColorblindPaletteEnabled = pressed;
+
+        _saveService.Settings.ColorblindPaletteEnabled = pressed;
         SaveSettings();
 
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.SetColorblindPalette(pressed);
+
+        _themeService.SetColorblindPalette(pressed);
     }
 
     private void OnUiScaleChanged(double value)
@@ -473,76 +482,76 @@ public partial class SettingsMenu : Control
         int pct = (int)Math.Round(value);
         _uiScaleValue.Text = $"{pct}%";
 
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.UiScalePercent = pct;
+
+        _saveService.Settings.UiScalePercent = pct;
         SaveSettings();
 
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ApplyUiScale(pct);
+
+        _themeService.ApplyUiScale(pct);
     }
 
     private void OnSmartCleanupToggled(bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.SmartNoteCleanupEnabled = pressed;
+
+        _saveService.Settings.SmartNoteCleanupEnabled = pressed;
         SaveSettings();
     }
 
     private void OnHouseAutoFillToggled(bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.HouseAutoFillEnabled = pressed;
+
+        _saveService.Settings.HouseAutoFillEnabled = pressed;
         SaveSettings();
     }
 
     private void OnDeadlyToggled(bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.DeadlyModeEnabled = pressed;
+
+        _saveService.Settings.DeadlyModeEnabled = pressed;
         SaveSettings();
     }
 
     private void OnHideToggled(bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.HideCompletedNumbers = pressed;
+
+        _saveService.Settings.HideCompletedNumbers = pressed;
         SaveSettings();
     }
 
     private void OnHighlightToggled(bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.HighlightRelatedCells = pressed;
+
+        _saveService.Settings.HighlightRelatedCells = pressed;
         SaveSettings();
     }
 
     private void OnChallengeNoNotesToggled(bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.ChallengeNoNotes = pressed;
+
+        _saveService.Settings.ChallengeNoNotes = pressed;
         SaveSettings();
     }
 
     private void OnChallengePerfectToggled(bool pressed)
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.ChallengePerfectRun = pressed;
+
+        _saveService.Settings.ChallengePerfectRun = pressed;
         SaveSettings();
     }
 
     private void OnChallengeHintsSelected(long index)
     {
         int id = _challengeHintsOption.GetItemId((int)index);
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.ChallengeHintLimit = id;
+
+        _saveService.Settings.ChallengeHintLimit = id;
         SaveSettings();
     }
 
     private void OnChallengeTimeSelected(long index)
     {
         int id = _challengeTimeOption.GetItemId((int)index);
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        saveService.Settings.ChallengeTimeAttackMinutes = id;
+
+        _saveService.Settings.ChallengeTimeAttackMinutes = id;
         SaveSettings();
     }
 
@@ -561,8 +570,7 @@ public partial class SettingsMenu : Control
 
     private void OnBackPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.GoToMainMenu();
+        _appState.GoToMainMenu();
     }
 
     private void OnThemeChanged(int themeIndex)
@@ -572,21 +580,21 @@ public partial class SettingsMenu : Control
 
     private void ApplyTheme()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
 
-        var panelStyle = theme.CreatePanelStyleBox(12, 0);
+        var colors = _themeService.CurrentColors;
+
+        var panelStyle = _themeService.CreatePanelStyleBox(12, 0);
         _panel.AddThemeStyleboxOverride("panel", panelStyle);
 
         _title.AddThemeColorOverride("font_color", colors.TextPrimary);
 
         var settingsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer");
-        ApplyThemeRecursive(settingsContainer, theme, colors);
+        ApplyThemeRecursive(settingsContainer, _themeService, colors);
 
         // Back Button
-        _backButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _backButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _backButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _backButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _backButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _backButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         _backButton.AddThemeColorOverride("font_color", colors.TextPrimary);
     }
 

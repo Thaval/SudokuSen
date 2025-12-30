@@ -34,20 +34,23 @@ public static class HintService
         var hiddenSingle = FindHiddenSingle(gameState);
         if (hiddenSingle != null) return hiddenSingle;
 
+        // Calculate candidates once for all advanced techniques
+        var candidates = CalculateAllCandidates(gameState);
+
         // 3. Naked Pair
-        var nakedPair = FindNakedPair(gameState);
+        var nakedPair = FindNakedPair(gameState, candidates);
         if (nakedPair != null) return nakedPair;
 
         // 4. Pointing Pair
-        var pointingPair = FindPointingPair(gameState);
+        var pointingPair = FindPointingPair(gameState, candidates);
         if (pointingPair != null) return pointingPair;
 
         // 5. Box/Line Reduction
-        var boxLine = FindBoxLineReduction(gameState);
+        var boxLine = FindBoxLineReduction(gameState, candidates);
         if (boxLine != null) return boxLine;
 
         // 6. X-Wing
-        var xwing = FindXWing(gameState);
+        var xwing = FindXWing(gameState, candidates);
         if (xwing != null) return xwing;
 
         // Fallback: Finde einfach die nächste lösbare Zelle
@@ -240,10 +243,8 @@ public static class HintService
     /// <summary>
     /// Naked Pair: Zwei Zellen mit genau denselben zwei Kandidaten
     /// </summary>
-    private static Hint? FindNakedPair(SudokuGameState gameState)
+    private static Hint? FindNakedPair(SudokuGameState gameState, HashSet<int>[,] candidates)
     {
-        var candidates = CalculateAllCandidates(gameState);
-
         // Prüfe jede Zeile
         for (int row = 0; row < 9; row++)
         {
@@ -312,10 +313,8 @@ public static class HintService
     /// <summary>
     /// Pointing Pair: Kandidat in Block nur in einer Zeile/Spalte
     /// </summary>
-    private static Hint? FindPointingPair(SudokuGameState gameState)
+    private static Hint? FindPointingPair(SudokuGameState gameState, HashSet<int>[,] candidates)
     {
-        var candidates = CalculateAllCandidates(gameState);
-
         for (int blockRow = 0; blockRow < 3; blockRow++)
         {
             for (int blockCol = 0; blockCol < 3; blockCol++)
@@ -411,10 +410,8 @@ public static class HintService
     /// <summary>
     /// Box/Line Reduction: Kandidat in Zeile/Spalte nur in einem Block
     /// </summary>
-    private static Hint? FindBoxLineReduction(SudokuGameState gameState)
+    private static Hint? FindBoxLineReduction(SudokuGameState gameState, HashSet<int>[,] candidates)
     {
-        var candidates = CalculateAllCandidates(gameState);
-
         // Prüfe jede Zeile
         for (int row = 0; row < 9; row++)
         {
@@ -478,10 +475,8 @@ public static class HintService
     /// <summary>
     /// X-Wing: Rechteck-Muster
     /// </summary>
-    private static Hint? FindXWing(SudokuGameState gameState)
+    private static Hint? FindXWing(SudokuGameState gameState, HashSet<int>[,] candidates)
     {
-        var candidates = CalculateAllCandidates(gameState);
-
         for (int num = 1; num <= 9; num++)
         {
             // Finde Zeilen wo num nur in 2 Spalten vorkommt

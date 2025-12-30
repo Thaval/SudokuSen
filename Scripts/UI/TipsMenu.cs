@@ -15,6 +15,10 @@ public partial class TipsMenu : Control
     private Button _nextButton = null!;
     private Label _pageLabel = null!;
 
+    // Cached service references
+    private ThemeService _themeService = null!;
+    private AppState _appState = null!;
+
     private int _currentTip = 0;
 
     // Tip-Daten mit Board-Konfigurationen
@@ -1000,6 +1004,9 @@ public partial class TipsMenu : Control
 
     public override void _Ready()
     {
+        _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _appState = GetNode<AppState>("/root/AppState");
+
         _backButton = GetNode<Button>("BackButton");
         _title = GetNode<Label>("Title");
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
@@ -1019,16 +1026,14 @@ public partial class TipsMenu : Control
         _nextButton.Pressed += OnNextPressed;
 
         ApplyTheme();
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged += OnThemeChanged;
+        _themeService.ThemeChanged += OnThemeChanged;
 
         ShowTip(_currentTip);
     }
 
     public override void _ExitTree()
     {
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged -= OnThemeChanged;
+        _themeService.ThemeChanged -= OnThemeChanged;
     }
 
     public override void _Input(InputEvent @event)
@@ -1067,8 +1072,7 @@ public partial class TipsMenu : Control
             child.QueueFree();
         }
 
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         // Content Before
         if (!string.IsNullOrEmpty(tip.ContentBefore))
@@ -1094,7 +1098,7 @@ public partial class TipsMenu : Control
                 tip.Grid.IsGiven,
                 tip.Grid.HighlightedCells,
                 tip.Grid.RelatedCells,
-                theme,
+                _themeService,
                 colors,
                 tip.Grid.SolutionCell,
                 tip.Grid.Candidates
@@ -1139,8 +1143,7 @@ public partial class TipsMenu : Control
 
     private void OnBackPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.GoToMainMenu();
+        _appState.GoToMainMenu();
     }
 
     private void OnThemeChanged(int themeIndex)
@@ -1151,19 +1154,18 @@ public partial class TipsMenu : Control
 
     private void ApplyTheme()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         _title.AddThemeColorOverride("font_color", colors.TextPrimary);
         _tipTitle.AddThemeColorOverride("font_color", colors.Accent);
         _pageLabel.AddThemeColorOverride("font_color", colors.TextSecondary);
 
-        var panelStyle = theme.CreatePanelStyleBox(12, 0);
+        var panelStyle = _themeService.CreatePanelStyleBox(12, 0);
         _panel.AddThemeStyleboxOverride("panel", panelStyle);
 
-        ApplyButtonTheme(_backButton, theme);
-        ApplyButtonTheme(_prevButton, theme);
-        ApplyButtonTheme(_nextButton, theme);
+        ApplyButtonTheme(_backButton, _themeService);
+        ApplyButtonTheme(_prevButton, _themeService);
+        ApplyButtonTheme(_nextButton, _themeService);
     }
 
     private void ApplyButtonTheme(Button button, ThemeService theme)

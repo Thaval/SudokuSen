@@ -5,6 +5,11 @@ namespace MySudoku.UI;
 /// </summary>
 public partial class MainMenu : Control
 {
+    // Cached Service References
+    private ThemeService _themeService = null!;
+    private SaveService _saveService = null!;
+    private AppState _appState = null!;
+
     private Button _continueButton = null!;
     private Button _startButton = null!;
     private Button _dailyButton = null!;
@@ -21,6 +26,11 @@ public partial class MainMenu : Control
 
     public override void _Ready()
     {
+        // Cache service references
+        _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _saveService = GetNode<SaveService>("/root/SaveService");
+        _appState = GetNode<AppState>("/root/AppState");
+
         // Hole Referenzen
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Title");
@@ -51,8 +61,7 @@ public partial class MainMenu : Control
 
         // Theme anwenden
         ApplyTheme();
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged += OnThemeChanged;
+        _themeService.ThemeChanged += OnThemeChanged;
 
         // Continue-Button nur anzeigen wenn SaveGame existiert
         UpdateContinueButton();
@@ -64,8 +73,7 @@ public partial class MainMenu : Control
 
     public override void _ExitTree()
     {
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged -= OnThemeChanged;
+        _themeService.ThemeChanged -= OnThemeChanged;
     }
 
     private void SetInitialFocus()
@@ -78,14 +86,12 @@ public partial class MainMenu : Control
 
     private void UpdateContinueButton()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        _continueButton.Visible = saveService.HasSaveGame;
+        _continueButton.Visible = _saveService.HasSaveGame;
     }
 
     private void UpdateDailyInfo()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        var settings = saveService.Settings;
+        var settings = _saveService.Settings;
         string today = DateTime.Today.ToString("yyyy-MM-dd");
         bool doneToday = settings.HasCompletedDaily(today);
 
@@ -111,11 +117,10 @@ public partial class MainMenu : Control
 
     private void ApplyTheme()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         // Panel-Style
-        var panelStyle = theme.CreatePanelStyleBox(12, 0);
+        var panelStyle = _themeService.CreatePanelStyleBox(12, 0);
         _panel.AddThemeStyleboxOverride("panel", panelStyle);
 
         // Title-Farbe
@@ -124,26 +129,26 @@ public partial class MainMenu : Control
         _dailyInfo.AddThemeColorOverride("font_color", colors.TextSecondary);
 
         // Button-Styles
-        ApplyButtonTheme(_continueButton, theme);
-        ApplyButtonTheme(_startButton, theme);
-        ApplyButtonTheme(_dailyButton, theme);
-        ApplyButtonTheme(_scenariosButton, theme);
-        ApplyButtonTheme(_settingsButton, theme);
-        ApplyButtonTheme(_historyButton, theme);
-        ApplyButtonTheme(_statsButton, theme);
-        ApplyButtonTheme(_tipsButton, theme);
-        ApplyButtonTheme(_quitButton, theme);
+        ApplyButtonTheme(_continueButton);
+        ApplyButtonTheme(_startButton);
+        ApplyButtonTheme(_dailyButton);
+        ApplyButtonTheme(_scenariosButton);
+        ApplyButtonTheme(_settingsButton);
+        ApplyButtonTheme(_historyButton);
+        ApplyButtonTheme(_statsButton);
+        ApplyButtonTheme(_tipsButton);
+        ApplyButtonTheme(_quitButton);
     }
 
-    private void ApplyButtonTheme(Button button, ThemeService theme)
+    private void ApplyButtonTheme(Button button)
     {
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
-        button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-        button.AddThemeStyleboxOverride("disabled", theme.CreateButtonStyleBox(disabled: true));
-        button.AddThemeStyleboxOverride("focus", theme.CreateButtonStyleBox(hover: true));
+        button.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        button.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        button.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
+        button.AddThemeStyleboxOverride("disabled", _themeService.CreateButtonStyleBox(disabled: true));
+        button.AddThemeStyleboxOverride("focus", _themeService.CreateButtonStyleBox(hover: true));
 
         button.AddThemeColorOverride("font_color", colors.TextPrimary);
         button.AddThemeColorOverride("font_hover_color", colors.TextPrimary);
@@ -153,50 +158,42 @@ public partial class MainMenu : Control
 
     private void OnContinuePressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.ContinueGame();
+        _appState.ContinueGame();
     }
 
     private void OnStartPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.NavigateTo(AppState.SCENE_DIFFICULTY);
+        _appState.NavigateTo(AppState.SCENE_DIFFICULTY);
     }
 
     private void OnDailyPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.StartDailyGame();
+        _appState.StartDailyGame();
     }
 
     private void OnSettingsPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.NavigateTo(AppState.SCENE_SETTINGS);
+        _appState.NavigateTo(AppState.SCENE_SETTINGS);
     }
 
     private void OnHistoryPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.NavigateTo(AppState.SCENE_HISTORY);
+        _appState.NavigateTo(AppState.SCENE_HISTORY);
     }
 
     private void OnStatsPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.NavigateTo(AppState.SCENE_STATS);
+        _appState.NavigateTo(AppState.SCENE_STATS);
     }
 
     private void OnTipsPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.NavigateTo(AppState.SCENE_TIPS);
+        _appState.NavigateTo(AppState.SCENE_TIPS);
     }
 
     private void OnScenariosPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.NavigateTo(AppState.SCENE_SCENARIOS);
+        _appState.NavigateTo(AppState.SCENE_SCENARIOS);
     }
 
     private void OnQuitPressed()

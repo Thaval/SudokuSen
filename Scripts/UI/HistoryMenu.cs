@@ -11,8 +11,17 @@ public partial class HistoryMenu : Control
     private VBoxContainer _historyList = null!;
     private Label _emptyLabel = null!;
 
+    // Cached service references
+    private ThemeService _themeService = null!;
+    private SaveService _saveService = null!;
+    private AppState _appState = null!;
+
     public override void _Ready()
     {
+        _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _saveService = GetNode<SaveService>("/root/SaveService");
+        _appState = GetNode<AppState>("/root/AppState");
+
         _backButton = GetNode<Button>("BackButton");
         _title = GetNode<Label>("Title");
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
@@ -22,16 +31,14 @@ public partial class HistoryMenu : Control
         _backButton.Pressed += OnBackPressed;
 
         ApplyTheme();
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged += OnThemeChanged;
+        _themeService.ThemeChanged += OnThemeChanged;
 
         LoadHistory();
     }
 
     public override void _ExitTree()
     {
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged -= OnThemeChanged;
+        _themeService.ThemeChanged -= OnThemeChanged;
     }
 
     public override void _Input(InputEvent @event)
@@ -45,8 +52,7 @@ public partial class HistoryMenu : Control
 
     private void LoadHistory()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        var history = saveService.History;
+        var history = _saveService.History;
 
         // Vorhandene Einträge löschen (außer EmptyLabel)
         foreach (var child in _historyList.GetChildren())
@@ -63,12 +69,11 @@ public partial class HistoryMenu : Control
 
         _emptyLabel.Visible = false;
 
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         foreach (var entry in history)
         {
-            var entryPanel = CreateHistoryEntry(entry, theme, colors);
+            var entryPanel = CreateHistoryEntry(entry, _themeService, colors);
             _historyList.AddChild(entryPanel);
         }
     }
@@ -151,8 +156,7 @@ public partial class HistoryMenu : Control
 
     private void OnBackPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.GoToMainMenu();
+        _appState.GoToMainMenu();
     }
 
     private void OnThemeChanged(int themeIndex)
@@ -163,18 +167,17 @@ public partial class HistoryMenu : Control
 
     private void ApplyTheme()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         _title.AddThemeColorOverride("font_color", colors.TextPrimary);
         _emptyLabel.AddThemeColorOverride("font_color", colors.TextSecondary);
 
-        var panelStyle = theme.CreatePanelStyleBox(8, 8);
+        var panelStyle = _themeService.CreatePanelStyleBox(8, 8);
         _panel.AddThemeStyleboxOverride("panel", panelStyle);
 
-        _backButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _backButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _backButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _backButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _backButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _backButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         _backButton.AddThemeColorOverride("font_color", colors.TextPrimary);
     }
 }

@@ -15,6 +15,10 @@ public partial class ScenariosMenu : Control
     private VBoxContainer _techniquesContainer = null!;
     private ScrollContainer _scrollContainer = null!;
 
+    // Cached service references
+    private ThemeService _themeService = null!;
+    private AppState _appState = null!;
+
     // Gruppierte Techniken
     private static readonly (string Category, string[] TechniqueIds)[] TechniqueGroups = new[]
     {
@@ -25,6 +29,9 @@ public partial class ScenariosMenu : Control
 
     public override void _Ready()
     {
+        _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _appState = GetNode<AppState>("/root/AppState");
+
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("Title");
         _description = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Description");
@@ -37,14 +44,12 @@ public partial class ScenariosMenu : Control
         CreateTechniqueButtons();
         ApplyTheme();
 
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged += OnThemeChanged;
+        _themeService.ThemeChanged += OnThemeChanged;
     }
 
     public override void _ExitTree()
     {
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged -= OnThemeChanged;
+        _themeService.ThemeChanged -= OnThemeChanged;
     }
 
     public override void _Input(InputEvent @event)
@@ -58,8 +63,7 @@ public partial class ScenariosMenu : Control
 
     private void CreateTechniqueButtons()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         foreach (var (category, techniqueIds) in TechniqueGroups)
         {
@@ -89,9 +93,9 @@ public partial class ScenariosMenu : Control
                 button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
                 // Button-Style
-                button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-                button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-                button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+                button.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+                button.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+                button.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
                 button.AddThemeColorOverride("font_color", colors.TextPrimary);
 
                 var capturedTechId = techId;
@@ -114,14 +118,12 @@ public partial class ScenariosMenu : Control
 
         GD.Print($"Starting scenario for technique: {technique.Name}");
 
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.StartScenarioGame(techniqueId);
+        _appState.StartScenarioGame(techniqueId);
     }
 
     private void OnBackPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.GoToMainMenu();
+        _appState.GoToMainMenu();
     }
 
     private void OnThemeChanged(int themeIndex)
@@ -137,18 +139,17 @@ public partial class ScenariosMenu : Control
 
     private void ApplyTheme()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
-        var panelStyle = theme.CreatePanelStyleBox(12, 0);
+        var panelStyle = _themeService.CreatePanelStyleBox(12, 0);
         _panel.AddThemeStyleboxOverride("panel", panelStyle);
 
         _title.AddThemeColorOverride("font_color", colors.TextPrimary);
         _description.AddThemeColorOverride("font_color", colors.TextSecondary);
 
-        _backButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _backButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _backButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _backButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _backButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _backButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         _backButton.AddThemeColorOverride("font_color", colors.TextPrimary);
     }
 }

@@ -5,22 +5,28 @@ namespace MySudoku.UI;
 /// </summary>
 public partial class Main : Control
 {
+    // Cached Service References
+    private ThemeService _themeService = null!;
+    private AppState _appState = null!;
+
     private Control _sceneContainer = null!;
     private ColorRect _background = null!;
     private Node? _currentScene;
 
     public override void _Ready()
     {
+        // Cache service references
+        _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _appState = GetNode<AppState>("/root/AppState");
+
         _sceneContainer = GetNode<Control>("SceneContainer");
         _background = GetNode<ColorRect>("Background");
 
         // Verbinde mit AppState für Szenenwechsel
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.SceneChangeRequested += OnSceneChangeRequested;
+        _appState.SceneChangeRequested += OnSceneChangeRequested;
 
         // Verbinde mit ThemeService
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged += OnThemeChanged;
+        _themeService.ThemeChanged += OnThemeChanged;
 
         // Initiales Theme anwenden
         ApplyTheme();
@@ -31,11 +37,8 @@ public partial class Main : Control
 
     public override void _ExitTree()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.SceneChangeRequested -= OnSceneChangeRequested;
-
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged -= OnThemeChanged;
+        _appState.SceneChangeRequested -= OnSceneChangeRequested;
+        _themeService.ThemeChanged -= OnThemeChanged;
     }
 
     private void OnSceneChangeRequested(string scenePath)
@@ -50,8 +53,7 @@ public partial class Main : Control
 
     private void ApplyTheme()
     {
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        _background.Color = themeService.CurrentColors.Background;
+        _background.Color = _themeService.CurrentColors.Background;
     }
 
     private void LoadScene(string scenePath)

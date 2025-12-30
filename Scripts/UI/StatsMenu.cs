@@ -5,6 +5,11 @@ namespace MySudoku.UI;
 /// </summary>
 public partial class StatsMenu : Control
 {
+    // Cached Service References
+    private ThemeService _themeService = null!;
+    private SaveService _saveService = null!;
+    private AppState _appState = null!;
+
     private Button _backButton = null!;
     private Label _title = null!;
     private PanelContainer _panel = null!;
@@ -43,6 +48,11 @@ public partial class StatsMenu : Control
 
     public override void _Ready()
     {
+        // Cache service references
+        _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _saveService = GetNode<SaveService>("/root/SaveService");
+        _appState = GetNode<AppState>("/root/AppState");
+
         _backButton = GetNode<Button>("BackButton");
         _title = GetNode<Label>("Title");
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
@@ -84,16 +94,14 @@ public partial class StatsMenu : Control
         _backButton.Pressed += OnBackPressed;
 
         ApplyTheme();
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged += OnThemeChanged;
+        _themeService.ThemeChanged += OnThemeChanged;
 
         CalculateStats();
     }
 
     public override void _ExitTree()
     {
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged -= OnThemeChanged;
+        _themeService.ThemeChanged -= OnThemeChanged;
     }
 
     public override void _Input(InputEvent @event)
@@ -107,9 +115,8 @@ public partial class StatsMenu : Control
 
     private void CalculateStats()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        var history = saveService.History;
-        var settings = saveService.Settings;
+        var history = _saveService.History;
+        var settings = _saveService.Settings;
 
         // Nur abgeschlossene Spiele
         var completed = history.Where(h => h.Status != GameStatus.InProgress).ToList();
@@ -173,8 +180,7 @@ public partial class StatsMenu : Control
             child.QueueFree();
         }
 
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         var today = DateTime.Today;
         int daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
@@ -226,7 +232,7 @@ public partial class StatsMenu : Control
                 var cell = new PanelContainer();
                 cell.CustomMinimumSize = new Vector2(32, 32);
 
-                var style = theme.CreatePanelStyleBox(6, 0);
+                var style = _themeService.CreatePanelStyleBox(6, 0);
                 if (isToday)
                 {
                     style.BorderColor = colors.Accent;
@@ -341,8 +347,7 @@ public partial class StatsMenu : Control
         }
 
         settings.EnsureHeatmapSizes();
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         int gridSize = 9;
         var heat = settings.MistakeHeatmap9;
@@ -362,7 +367,7 @@ public partial class StatsMenu : Control
                 var cell = new PanelContainer();
                 cell.CustomMinimumSize = new Vector2(32, 32);
 
-                var sb = theme.CreatePanelStyleBox(4, 0);
+                var sb = _themeService.CreatePanelStyleBox(4, 0);
                 float t = max > 0 ? (float)v / max : 0f;
                 // Blend between normal cell bg and accent
                 sb.BgColor = colors.CellBackground.Lerp(colors.Accent, 0.55f * t);
@@ -408,8 +413,7 @@ public partial class StatsMenu : Control
 
     private void OnBackPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.GoToMainMenu();
+        _appState.GoToMainMenu();
     }
 
     private void OnThemeChanged(int themeIndex)
@@ -419,17 +423,16 @@ public partial class StatsMenu : Control
 
     private void ApplyTheme()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         _title.AddThemeColorOverride("font_color", colors.TextPrimary);
 
-        var panelStyle = theme.CreatePanelStyleBox(12, 0);
+        var panelStyle = _themeService.CreatePanelStyleBox(12, 0);
         _panel.AddThemeStyleboxOverride("panel", panelStyle);
 
-        _backButton.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-        _backButton.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-        _backButton.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
+        _backButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _backButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _backButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         _backButton.AddThemeColorOverride("font_color", colors.TextPrimary);
 
         // Alle Labels im Panel

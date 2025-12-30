@@ -5,6 +5,11 @@ namespace MySudoku.UI;
 /// </summary>
 public partial class DifficultyMenu : Control
 {
+    // Cached Service References
+    private ThemeService _themeService = null!;
+    private SaveService _saveService = null!;
+    private AppState _appState = null!;
+
     private Button _kidsButton = null!;
     private Button _easyButton = null!;
     private Button _mediumButton = null!;
@@ -20,6 +25,11 @@ public partial class DifficultyMenu : Control
 
     public override void _Ready()
     {
+        // Cache service references
+        _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _saveService = GetNode<SaveService>("/root/SaveService");
+        _appState = GetNode<AppState>("/root/AppState");
+
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("Title");
         _description = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Description");
@@ -45,8 +55,7 @@ public partial class DifficultyMenu : Control
         UpdateTechniqueLabels();
 
         ApplyTheme();
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged += OnThemeChanged;
+        _themeService.ThemeChanged += OnThemeChanged;
 
         _easyButton.GrabFocus();
     }
@@ -56,8 +65,7 @@ public partial class DifficultyMenu : Control
     /// </summary>
     private void UpdateTechniqueLabels()
     {
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        var settings = saveService.Settings;
+        var settings = _saveService.Settings;
 
         _kidsTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Kids, settings.GetTechniquesForDifficulty(Difficulty.Kids));
         _easyTechniques.Text = TechniqueInfo.GetShortTechniqueList(Difficulty.Easy, settings.GetTechniquesForDifficulty(Difficulty.Easy));
@@ -67,8 +75,7 @@ public partial class DifficultyMenu : Control
 
     public override void _ExitTree()
     {
-        var themeService = GetNode<ThemeService>("/root/ThemeService");
-        themeService.ThemeChanged -= OnThemeChanged;
+        _themeService.ThemeChanged -= OnThemeChanged;
     }
 
     public override void _Input(InputEvent @event)
@@ -87,10 +94,9 @@ public partial class DifficultyMenu : Control
 
     private void ApplyTheme()
     {
-        var theme = GetNode<ThemeService>("/root/ThemeService");
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
-        var panelStyle = theme.CreatePanelStyleBox(12, 0);
+        var panelStyle = _themeService.CreatePanelStyleBox(12, 0);
         _panel.AddThemeStyleboxOverride("panel", panelStyle);
 
         _title.AddThemeColorOverride("font_color", colors.TextPrimary);
@@ -102,16 +108,16 @@ public partial class DifficultyMenu : Control
         _mediumTechniques.AddThemeColorOverride("font_color", colors.TextSecondary);
         _hardTechniques.AddThemeColorOverride("font_color", colors.TextSecondary);
 
-        ApplyButtonTheme(_kidsButton, theme, new Color("2196f3")); // Blau für Kids
-        ApplyButtonTheme(_easyButton, theme, new Color("4caf50")); // Grün
-        ApplyButtonTheme(_mediumButton, theme, new Color("ff9800")); // Orange
-        ApplyButtonTheme(_hardButton, theme, new Color("f44336")); // Rot
-        ApplyButtonTheme(_backButton, theme);
+        ApplyButtonTheme(_kidsButton, new Color("2196f3")); // Blau für Kids
+        ApplyButtonTheme(_easyButton, new Color("4caf50")); // Grün
+        ApplyButtonTheme(_mediumButton, new Color("ff9800")); // Orange
+        ApplyButtonTheme(_hardButton, new Color("f44336")); // Rot
+        ApplyButtonTheme(_backButton);
     }
 
-    private void ApplyButtonTheme(Button button, ThemeService theme, Color? accentColor = null)
+    private void ApplyButtonTheme(Button button, Color? accentColor = null)
     {
-        var colors = theme.CurrentColors;
+        var colors = _themeService.CurrentColors;
 
         if (accentColor.HasValue)
         {
@@ -147,10 +153,10 @@ public partial class DifficultyMenu : Control
         }
         else
         {
-            button.AddThemeStyleboxOverride("normal", theme.CreateButtonStyleBox());
-            button.AddThemeStyleboxOverride("hover", theme.CreateButtonStyleBox(hover: true));
-            button.AddThemeStyleboxOverride("pressed", theme.CreateButtonStyleBox(pressed: true));
-            button.AddThemeStyleboxOverride("focus", theme.CreateButtonStyleBox(hover: true));
+            button.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+            button.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+            button.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
+            button.AddThemeStyleboxOverride("focus", _themeService.CreateButtonStyleBox(hover: true));
             button.AddThemeColorOverride("font_color", colors.TextPrimary);
             button.AddThemeColorOverride("font_hover_color", colors.TextPrimary);
             button.AddThemeColorOverride("font_pressed_color", colors.TextPrimary);
@@ -159,13 +165,11 @@ public partial class DifficultyMenu : Control
 
     private void OnDifficultySelected(Difficulty difficulty)
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.StartNewGame(difficulty);
+        _appState.StartNewGame(difficulty);
     }
 
     private void OnBackPressed()
     {
-        var appState = GetNode<AppState>("/root/AppState");
-        appState.GoToMainMenu();
+        _appState.GoToMainMenu();
     }
 }
