@@ -9,6 +9,7 @@ public partial class MainMenu : Control
     private ThemeService _themeService = null!;
     private SaveService _saveService = null!;
     private AppState _appState = null!;
+    private AudioService _audioService = null!;
 
     private Button _continueButton = null!;
     private Button _startButton = null!;
@@ -30,6 +31,10 @@ public partial class MainMenu : Control
         _themeService = GetNode<ThemeService>("/root/ThemeService");
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
+        _audioService = GetNode<AudioService>("/root/AudioService");
+
+        // Start menu music
+        _audioService.StartMenuMusic();
 
         // Hole Referenzen
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
@@ -158,46 +163,55 @@ public partial class MainMenu : Control
 
     private void OnContinuePressed()
     {
+        _audioService.PlayClick();
         _appState.ContinueGame();
     }
 
     private void OnStartPressed()
     {
+        _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_DIFFICULTY);
     }
 
     private void OnDailyPressed()
     {
+        _audioService.PlayClick();
         _appState.StartDailyGame();
     }
 
     private void OnSettingsPressed()
     {
+        _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_SETTINGS);
     }
 
     private void OnHistoryPressed()
     {
+        _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_HISTORY);
     }
 
     private void OnStatsPressed()
     {
+        _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_STATS);
     }
 
     private void OnTipsPressed()
     {
+        _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_TIPS);
     }
 
     private void OnScenariosPressed()
     {
+        _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_SCENARIOS);
     }
 
     private void OnQuitPressed()
     {
+        _audioService.PlayClick();
         GetTree().Quit();
     }
 }

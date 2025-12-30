@@ -9,6 +9,7 @@ public partial class DifficultyMenu : Control
     private ThemeService _themeService = null!;
     private SaveService _saveService = null!;
     private AppState _appState = null!;
+    private AudioService _audioService = null!;
 
     private Button _kidsButton = null!;
     private Button _easyButton = null!;
@@ -29,6 +30,7 @@ public partial class DifficultyMenu : Control
         _themeService = GetNode<ThemeService>("/root/ThemeService");
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
+        _audioService = GetNode<AudioService>("/root/AudioService");
 
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("Title");
@@ -165,11 +167,13 @@ public partial class DifficultyMenu : Control
 
     private void OnDifficultySelected(Difficulty difficulty)
     {
+        _audioService.PlayClick();
         _appState.StartNewGame(difficulty);
     }
 
     private void OnBackPressed()
     {
+        _audioService.PlayClick();
         _appState.GoToMainMenu();
     }
 }

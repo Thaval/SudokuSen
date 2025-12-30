@@ -15,11 +15,16 @@ run/main_scene="res://Scenes/Main.tscn"
 config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"
+
 [autoload]
 
 SaveService="*res://Scripts/Services/SaveService.cs"
 AppState="*res://Scripts/Services/AppState.cs"
 ThemeService="*res://Scripts/Services/ThemeService.cs"
+AudioService="*res://Scripts/Services/AudioService.cs"
 
 [display]
 

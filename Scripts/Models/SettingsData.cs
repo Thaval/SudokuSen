@@ -21,11 +21,17 @@ public class SettingsData
     /// <summary>Zeile/Spalte/Block bei Auswahl highlighten</summary>
     public bool HighlightRelatedCells { get; set; } = true;
 
-    /// <summary>Sound aktiviert</summary>
+    /// <summary>Sound-Effekte aktiviert</summary>
     public bool SoundEnabled { get; set; } = true;
 
-    /// <summary>Lautstärke (0-100)</summary>
+    /// <summary>SFX-Lautstärke (0-100)</summary>
     public int Volume { get; set; } = 80;
+
+    /// <summary>Musik aktiviert</summary>
+    public bool MusicEnabled { get; set; } = true;
+
+    /// <summary>Musik-Lautstärke (0-100)</summary>
+    public int MusicVolume { get; set; } = 50;
 
     /// <summary>Lernmodus: zeigt bei Fehlern eine kurze Erklärung</summary>
     public bool LearnModeEnabled { get; set; } = true;

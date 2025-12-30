@@ -9,6 +9,7 @@ public partial class GameScene : Control
     private ThemeService _themeService = null!;
     private SaveService _saveService = null!;
     private AppState _appState = null!;
+    private AudioService _audioService = null!;
 
     // UI-Elemente
     private Button _backButton = null!;
@@ -77,6 +78,10 @@ public partial class GameScene : Control
         _themeService = GetNode<ThemeService>("/root/ThemeService");
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
+        _audioService = GetNode<AudioService>("/root/AudioService");
+
+        // Start game music
+        _audioService.StartGameMusic();
 
         // UI-Referenzen holen
         _backButton = GetNode<Button>("VBoxContainer/HeaderMargin/Header/BackButton");
@@ -882,6 +887,8 @@ public partial class GameScene : Control
     {
         if (_isGameOver || _gameState == null) return;
 
+        _audioService.PlayCellSelect();
+
         var cell = _gameState.Grid[row, col];
         bool ctrlPressed = Input.IsKeyPressed(Key.Ctrl);
         bool shiftPressed = Input.IsKeyPressed(Key.Shift);
@@ -1013,7 +1020,9 @@ public partial class GameScene : Control
             // Toggle die Notiz (bounds check for Kids mode)
             int idx = number - 1;
             if (idx < 0 || idx >= cell.Notes.Length) return;
+            bool wasSet = cell.Notes[idx];
             cell.Notes[idx] = !cell.Notes[idx];
+            _audioService.PlayNotePlaceOrRemove(!wasSet);
             SaveAndUpdate();
             return;
         }
@@ -1026,6 +1035,7 @@ public partial class GameScene : Control
             for (int i = 0; i < 9; i++)
                 cell.Notes[i] = false;
             _highlightedNumber = 0;
+            _audioService.PlayNumberRemove();
             SaveAndUpdate();
             return;
         }
@@ -1038,6 +1048,7 @@ public partial class GameScene : Control
         if (number != cell.Solution)
         {
             // Fehler!
+            _audioService.PlayError();
             RecordMistakeForHeatmap(_selectedRow, _selectedCol);
 
             // Perfect Run => sofort verloren
@@ -1074,6 +1085,7 @@ public partial class GameScene : Control
         else
         {
             // Korrekte Zahl
+            _audioService.PlayNumberPlace();
             cell.Value = number;
             _highlightedNumber = number;
 
@@ -1252,6 +1264,7 @@ public partial class GameScene : Control
 
     private void ShowWinOverlay()
     {
+        _audioService.PlayWin();
         var overlay = CreateOverlay("🎉 Gratulation!",
             $"Du hast das Sudoku gelöst!\n\n⏱️ Zeit: {_timerLabel.Text}\n❌ Fehler: {_gameState?.Mistakes ?? 0}",
             new Color("4caf50"));
@@ -1325,6 +1338,8 @@ public partial class GameScene : Control
 
     private void OnBackPressed()
     {
+        _audioService.PlayClick();
+
         // Spiel speichern
         if (_gameState != null && !_isGameOver)
         {

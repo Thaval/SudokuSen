@@ -9,6 +9,7 @@ public partial class SettingsMenu : Control
     private ThemeService _themeService = null!;
     private SaveService _saveService = null!;
     private AppState _appState = null!;
+    private AudioService _audioService = null!;
 
     private PanelContainer _panel = null!;
     private Label _title = null!;
@@ -28,6 +29,14 @@ public partial class SettingsMenu : Control
     private CheckButton _colorblindCheck = null!;
     private HSlider _uiScaleSlider = null!;
     private Label _uiScaleValue = null!;
+
+    // Audio
+    private CheckButton _sfxCheck = null!;
+    private HSlider _sfxVolumeSlider = null!;
+    private Label _sfxVolumeValue = null!;
+    private CheckButton _musicCheck = null!;
+    private HSlider _musicVolumeSlider = null!;
+    private Label _musicVolumeValue = null!;
 
     private CheckButton _smartCleanupCheck = null!;
     private CheckButton _houseAutoFillCheck = null!;
@@ -50,6 +59,7 @@ public partial class SettingsMenu : Control
         _themeService = GetNode<ThemeService>("/root/ThemeService");
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
+        _audioService = GetNode<AudioService>("/root/AudioService");
 
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("Title");
@@ -70,6 +80,14 @@ public partial class SettingsMenu : Control
         _colorblindCheck = settingsContainer.GetNode<CheckButton>("ColorblindRow/ColorblindCheck");
         _uiScaleSlider = settingsContainer.GetNode<HSlider>("UiScaleRow/UiScaleSlider");
         _uiScaleValue = settingsContainer.GetNode<Label>("UiScaleRow/UiScaleValue");
+
+        // Audio
+        _sfxCheck = settingsContainer.GetNode<CheckButton>("SfxRow/SfxCheck");
+        _sfxVolumeSlider = settingsContainer.GetNode<HSlider>("SfxVolumeRow/SfxVolumeSlider");
+        _sfxVolumeValue = settingsContainer.GetNode<Label>("SfxVolumeRow/SfxVolumeValue");
+        _musicCheck = settingsContainer.GetNode<CheckButton>("MusicRow/MusicCheck");
+        _musicVolumeSlider = settingsContainer.GetNode<HSlider>("MusicVolumeRow/MusicVolumeSlider");
+        _musicVolumeValue = settingsContainer.GetNode<Label>("MusicVolumeRow/MusicVolumeValue");
 
         _smartCleanupCheck = settingsContainer.GetNode<CheckButton>("SmartCleanupRow/SmartCleanupCheck");
         _houseAutoFillCheck = settingsContainer.GetNode<CheckButton>("HouseAutoFillRow/HouseAutoFillCheck");
@@ -118,6 +136,12 @@ public partial class SettingsMenu : Control
         _learnCheck.Toggled += OnLearnToggled;
         _colorblindCheck.Toggled += OnColorblindToggled;
         _uiScaleSlider.ValueChanged += OnUiScaleChanged;
+
+        // Events - Audio
+        _sfxCheck.Toggled += OnSfxToggled;
+        _sfxVolumeSlider.ValueChanged += OnSfxVolumeChanged;
+        _musicCheck.Toggled += OnMusicToggled;
+        _musicVolumeSlider.ValueChanged += OnMusicVolumeChanged;
 
         _smartCleanupCheck.Toggled += OnSmartCleanupToggled;
         _houseAutoFillCheck.Toggled += OnHouseAutoFillToggled;
@@ -301,6 +325,14 @@ public partial class SettingsMenu : Control
 
         _uiScaleSlider.Value = settings.UiScalePercent;
         _uiScaleValue.Text = $"{settings.UiScalePercent}%";
+
+        // Audio
+        _sfxCheck.ButtonPressed = settings.SoundEnabled;
+        _sfxVolumeSlider.Value = settings.Volume;
+        _sfxVolumeValue.Text = $"{settings.Volume}%";
+        _musicCheck.ButtonPressed = settings.MusicEnabled;
+        _musicVolumeSlider.Value = settings.MusicVolume;
+        _musicVolumeValue.Text = $"{settings.MusicVolume}%";
 
         _smartCleanupCheck.ButtonPressed = settings.SmartNoteCleanupEnabled;
         _houseAutoFillCheck.ButtonPressed = settings.HouseAutoFillEnabled;
@@ -490,6 +522,40 @@ public partial class SettingsMenu : Control
         _themeService.ApplyUiScale(pct);
     }
 
+    private void OnSfxToggled(bool pressed)
+    {
+        _saveService.Settings.SoundEnabled = pressed;
+        SaveSettings();
+        _audioService.SoundEnabled = pressed;
+    }
+
+    private void OnSfxVolumeChanged(double value)
+    {
+        int pct = (int)Math.Round(value);
+        _sfxVolumeValue.Text = $"{pct}%";
+        _saveService.Settings.Volume = pct;
+        SaveSettings();
+        _audioService.SfxVolume = pct / 100f;
+        // Play a test sound
+        _audioService.PlayClick();
+    }
+
+    private void OnMusicToggled(bool pressed)
+    {
+        _saveService.Settings.MusicEnabled = pressed;
+        SaveSettings();
+        _audioService.MusicEnabled = pressed;
+    }
+
+    private void OnMusicVolumeChanged(double value)
+    {
+        int pct = (int)Math.Round(value);
+        _musicVolumeValue.Text = $"{pct}%";
+        _saveService.Settings.MusicVolume = pct;
+        SaveSettings();
+        _audioService.MusicVolume = pct / 100f;
+    }
+
     private void OnSmartCleanupToggled(bool pressed)
     {
 
@@ -570,6 +636,7 @@ public partial class SettingsMenu : Control
 
     private void OnBackPressed()
     {
+        _audioService.PlayClick();
         _appState.GoToMainMenu();
     }
 

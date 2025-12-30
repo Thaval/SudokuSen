@@ -203,6 +203,81 @@ max_value = 150.0
 step = 5.0
 value = 100.0
 
+[node name="AudioSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="AudioTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "🔊 Audio"
+
+[node name="SfxRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="SfxLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Sound-Effekte"
+
+[node name="SfxCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxRow"]
+layout_mode = 2
+
+[node name="SfxVolumeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="SfxVolumeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxVolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SFX-Lautstärke"
+
+[node name="SfxVolumeValue" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(48, 0)
+horizontal_alignment = 2
+text = "80%"
+
+[node name="SfxVolumeSlider" type="HSlider" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 24)
+min_value = 0.0
+max_value = 100.0
+step = 5.0
+value = 80.0
+
+[node name="MusicRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="MusicLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Musik"
+
+[node name="MusicCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicRow"]
+layout_mode = 2
+
+[node name="MusicVolumeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="MusicVolumeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicVolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Musik-Lautstärke"
+
+[node name="MusicVolumeValue" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(48, 0)
+horizontal_alignment = 2
+text = "50%"
+
+[node name="MusicVolumeSlider" type="HSlider" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 24)
+min_value = 0.0
+max_value = 100.0
+step = 5.0
+value = 50.0
+
 [node name="NotesAssistSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 16
