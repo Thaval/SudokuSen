@@ -14,9 +14,23 @@ public partial class AudioService : Node
     [Signal]
     public delegate void SfxVolumeChangedEventHandler(float volume);
 
-    // Audio players
-    private AudioStreamPlayer _sfxPlayer = null!;
+    // SFX player pool - multiple players allow overlapping sounds and prevent interruption
+    private const int SFX_POOL_SIZE = 4;
+    private readonly List<AudioStreamPlayer> _sfxPool = new();
+    private int _sfxPoolIndex = 0;
+
+    // Music player (single, looping)
     private AudioStreamPlayer _musicPlayer = null!;
+
+    // Silent "keep-alive" player - keeps audio driver active so short SFX don't get swallowed
+    private AudioStreamPlayer _keepAlivePlayer = null!;
+
+    // Cached service reference
+    private SaveService _saveService = null!;
+
+    private bool _readyForPlayback = false;
+    private ulong _sfxAttemptId = 0;
+    private ulong _musicDecisionId = 0;
 
     // Generated SFX streams
     private AudioStream _clickSound = null!;
@@ -63,6 +77,8 @@ public partial class AudioService : Node
             _musicEnabled = value;
             if (!_musicEnabled)
                 _musicPlayer?.Stop();
+            else
+                SetInGame(_inGame);
         }
     }
 
@@ -115,28 +131,91 @@ public partial class AudioService : Node
 
     public override void _ExitTree()
     {
+        if (_saveService != null)
+            _saveService.SettingsChanged -= OnSettingsChanged;
+
         if (Instance == this)
             Instance = null;
     }
 
     public override void _Ready()
     {
-        // Create audio players
-        _sfxPlayer = new AudioStreamPlayer();
+        // Cache service reference
+        _saveService = GetNode<SaveService>("/root/SaveService");
+        _saveService.EnsureLoaded();
+
+        // Create SFX player pool - multiple players prevent sounds from being cut off
+        string sfxBus = AudioServer.GetBusIndex("SFX") >= 0 ? "SFX" : "Master";
+        for (int i = 0; i < SFX_POOL_SIZE; i++)
+        {
+            var player = new AudioStreamPlayer();
+            player.Bus = sfxBus;
+            player.Name = $"SfxPlayer_{i}";
+            AddChild(player);
+            _sfxPool.Add(player);
+
+            int playerIndex = i;
+            player.Finished += () =>
+            {
+                GD.Print($"[Audio][SFX] Finished | player={playerIndex}, bus={player.Bus}");
+            };
+        }
+
+        // Create music player
         _musicPlayer = new AudioStreamPlayer();
-
-        // Route players to named buses (falls back to Master if buses aren't present)
-        _sfxPlayer.Bus = "SFX";
-        _musicPlayer.Bus = "Music";
-
-        AddChild(_sfxPlayer);
+        _musicPlayer.Bus = AudioServer.GetBusIndex("Music") >= 0 ? "Music" : "Master";
         AddChild(_musicPlayer);
+
+        _musicPlayer.Finished += () =>
+        {
+            GD.Print($"[Audio][Music] Finished | bus={_musicPlayer.Bus}, playing={_musicPlayer.Playing}");
+        };
+
+        // Create keep-alive player - plays silent loop to keep audio driver active
+        // This prevents the audio driver from going idle and swallowing short SFX
+        _keepAlivePlayer = new AudioStreamPlayer();
+        _keepAlivePlayer.Bus = sfxBus;
+        _keepAlivePlayer.Name = "KeepAlivePlayer";
+        _keepAlivePlayer.VolumeDb = -80f; // Inaudible
+        AddChild(_keepAlivePlayer);
 
         LoadAssetsOrGenerateFallback();
 
-        // Load settings
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        ApplySettings(saveService.Settings);
+        // Start the keep-alive silent loop
+        StartKeepAlive();
+
+        _readyForPlayback = true;
+
+        // Log detailed audio bus configuration
+        LogAudioBusConfiguration();
+
+        string sfxBusName = _sfxPool.Count > 0 ? _sfxPool[0].Bus : "none";
+        int sfxBusIdx = AudioServer.GetBusIndex(sfxBusName);
+        GD.Print($"[Audio] Ready | sfxBus={sfxBusName}(idx={sfxBusIdx}), sfxPoolSize={_sfxPool.Count}, musicBus={_musicPlayer.Bus}(idx={AudioServer.GetBusIndex(_musicPlayer.Bus)}), keepAlive=active");
+
+        // Load settings (use cached reference)
+        _saveService.SettingsChanged += OnSettingsChanged;
+        ApplySettings(_saveService.Settings);
+    }
+
+    private void LogAudioBusConfiguration()
+    {
+        int busCount = AudioServer.BusCount;
+        GD.Print($"[Audio] Bus configuration: {busCount} buses");
+        for (int i = 0; i < busCount; i++)
+        {
+            string busName = AudioServer.GetBusName(i);
+            float volDb = AudioServer.GetBusVolumeDb(i);
+            bool muted = AudioServer.IsBusMute(i);
+            bool solo = AudioServer.IsBusSolo(i);
+            string send = AudioServer.GetBusSend(i);
+            GD.Print($"[Audio]   Bus[{i}] '{busName}': volDb={volDb:0.00}, muted={muted}, solo={solo}, send='{send}'");
+        }
+    }
+
+    private void OnSettingsChanged()
+    {
+        ApplySettings(_saveService.Settings);
     }
 
     private void LoadAssetsOrGenerateFallback()
@@ -177,6 +256,16 @@ public partial class AudioService : Node
             4 => 3,
             _ => 0
         };
+    }
+
+    private int NormalizeTrackIndex(int trackIndex)
+    {
+        if (trackIndex <= 0) return 0;
+        if (_musicTracks.Count <= 1) return 0;
+
+        // Clamp to valid range. If settings contain an out-of-range index, keep music enabled but choose the
+        // closest valid track index instead of turning music off.
+        return Mathf.Clamp(trackIndex, 0, _musicTracks.Count - 1);
     }
 
     private static AudioStream? TryLoadStream(string path)
@@ -408,23 +497,26 @@ public partial class AudioService : Node
         _musicEnabled = settings.MusicEnabled;
         _sfxVolume = settings.Volume / 100f;
         _musicVolume = settings.MusicVolume / 100f;
-        // Migrate old saved indices if needed (Ambient Pad removed)
-        _menuMusicTrack = settings.MenuMusicTrack <= 4 ? MigrateLegacyTrackIndex(settings.MenuMusicTrack) : 0;
-        _gameMusicTrack = settings.GameMusicTrack <= 4 ? MigrateLegacyTrackIndex(settings.GameMusicTrack) : 0;
 
-        // Persist migrated values back so UI matches and future loads are stable
+        // Normalize track indices to avoid invalid values causing unexpected behavior.
+        // NOTE: We intentionally do not attempt to auto-migrate older index schemes here because without an
+        // explicit settings version it is ambiguous and can break valid current selections.
+        _menuMusicTrack = NormalizeTrackIndex(settings.MenuMusicTrack);
+        _gameMusicTrack = NormalizeTrackIndex(settings.GameMusicTrack);
+
+        // Persist only if the stored values are invalid/out-of-range.
         if (settings.MenuMusicTrack != _menuMusicTrack || settings.GameMusicTrack != _gameMusicTrack)
         {
-            GD.Print($"[Audio] Migrated music tracks: menu {settings.MenuMusicTrack}->{_menuMusicTrack}, game {settings.GameMusicTrack}->{_gameMusicTrack}");
+            GD.Print($"[Audio] Normalized music track indices: menu {settings.MenuMusicTrack}->{_menuMusicTrack}, game {settings.GameMusicTrack}->{_gameMusicTrack}");
             settings.MenuMusicTrack = _menuMusicTrack;
             settings.GameMusicTrack = _gameMusicTrack;
             try
             {
-                GetNode<SaveService>("/root/SaveService").SaveSettings();
+                _saveService.SaveSettings();
             }
             catch (Exception e)
             {
-                GD.PrintErr($"[Audio] Failed to persist migrated music track settings: {e.Message}");
+                GD.PrintErr($"[Audio] Failed to persist normalized music track settings: {e.Message}");
             }
         }
 
@@ -436,6 +528,7 @@ public partial class AudioService : Node
         if (!_musicEnabled)
         {
             _musicPlayer?.Stop();
+            GD.Print($"[Audio][Music] Stop (disabled) | playing={_musicPlayer?.Playing}");
         }
         else
         {
@@ -448,51 +541,119 @@ public partial class AudioService : Node
 
     public void PlayClick()
     {
-        PlaySfx(_clickSound);
+        PlaySfx("click", _clickSound);
     }
 
     public void PlayCellSelect()
     {
-        PlaySfx(_cellSelectSound);
+        PlaySfx("cell_select", _cellSelectSound);
     }
 
     public void PlayNumberPlace()
     {
-        PlaySfx(_numberPlaceSound);
+        PlaySfx("number_place", _numberPlaceSound);
     }
 
     public void PlayNumberRemove()
     {
-        PlaySfx(_numberRemoveSound);
+        PlaySfx("number_remove", _numberRemoveSound);
     }
 
     public void PlayNotePlaceOrRemove(bool isPlacing)
     {
-        PlaySfx(isPlacing ? _notePlaceSound : _noteRemoveSound);
+        PlaySfx(isPlacing ? "note_place" : "note_remove", isPlacing ? _notePlaceSound : _noteRemoveSound);
     }
 
     public void PlayError()
     {
-        PlaySfx(_errorSound);
+        PlaySfx("error", _errorSound);
     }
 
     public void PlaySuccess()
     {
-        PlaySfx(_successSound);
+        PlaySfx("success", _successSound);
     }
 
     public void PlayWin()
     {
-        PlaySfx(_winSound);
+        PlaySfx("win", _winSound);
     }
 
-    private void PlaySfx(AudioStream? stream)
+    private void PlaySfx(string name, AudioStream? stream)
     {
-        if (!_soundEnabled || stream == null) return;
+        _sfxAttemptId++;
+        ulong id = _sfxAttemptId;
 
-        _sfxPlayer.Stream = stream;
-        _sfxPlayer.VolumeDb = Mathf.LinearToDb(_sfxVolume);
-        _sfxPlayer.Play();
+        if (!_readyForPlayback)
+        {
+            GD.Print($"[Audio][SFX#{id}] Skip {name}: not ready | enabled={_soundEnabled}");
+            return;
+        }
+
+        if (!_soundEnabled)
+        {
+            GD.Print($"[Audio][SFX#{id}] Skip {name}: SFX disabled | vol={_sfxVolume:0.00}");
+            return;
+        }
+
+        if (stream == null)
+        {
+            GD.Print($"[Audio][SFX#{id}] Skip {name}: stream is null");
+            return;
+        }
+
+        if (_sfxPool.Count == 0)
+        {
+            GD.Print($"[Audio][SFX#{id}] Skip {name}: no players in pool");
+            return;
+        }
+
+        // Get next player from pool (round-robin)
+        var player = _sfxPool[_sfxPoolIndex];
+        int playerIdx = _sfxPoolIndex;
+        _sfxPoolIndex = (_sfxPoolIndex + 1) % _sfxPool.Count;
+
+        if (!player.IsInsideTree())
+        {
+            GD.Print($"[Audio][SFX#{id}] Skip {name}: player[{playerIdx}] not inside tree");
+            return;
+        }
+
+        int busIdx = AudioServer.GetBusIndex(player.Bus);
+        if (busIdx < 0)
+        {
+            GD.Print($"[Audio][SFX#{id}] Skip {name}: invalid bus '{player.Bus}'");
+            return;
+        }
+
+        // Check bus state - is it muted or has zero volume?
+        bool busMuted = AudioServer.IsBusMute(busIdx);
+        float busVolDb = AudioServer.GetBusVolumeDb(busIdx);
+        bool busEffectivelyMuted = busMuted || busVolDb <= -60f;
+
+        string streamPath = stream.ResourcePath;
+        string streamInfo = string.IsNullOrWhiteSpace(streamPath) ? stream.GetClass() : streamPath;
+        double streamLength = stream.GetLength();
+
+        // Stop any currently playing sound on this player and play new sound
+        if (player.Playing)
+        {
+            player.Stop();
+        }
+
+        player.Stream = stream;
+        player.VolumeDb = Mathf.LinearToDb(_sfxVolume);
+        player.Play();
+
+        // Detailed diagnostics
+        GD.Print($"[Audio][SFX#{id}] Play {name} | player={playerIdx}, playing={player.Playing}, volDb={player.VolumeDb:0.00}, volLin={_sfxVolume:0.00}");
+        GD.Print($"[Audio][SFX#{id}]   bus={player.Bus}(idx={busIdx}), busVolDb={busVolDb:0.00}, busMuted={busMuted}, effectivelyMuted={busEffectivelyMuted}");
+        GD.Print($"[Audio][SFX#{id}]   stream={streamInfo}, length={streamLength:0.000}s");
+
+        if (busEffectivelyMuted)
+        {
+            GD.PrintErr($"[Audio][SFX#{id}] WARNING: Bus '{player.Bus}' is effectively muted!");
+        }
     }
 
     // --- Music Control ---
@@ -500,9 +661,20 @@ public partial class AudioService : Node
     public void SetInGame(bool inGame)
     {
         _inGame = inGame;
+
+        _musicDecisionId++;
+        ulong id = _musicDecisionId;
+
+        if (!_readyForPlayback)
+        {
+            GD.Print($"[Audio][Music#{id}] Skip SetInGame({inGame}): not ready | enabled={_musicEnabled}");
+            return;
+        }
+
         if (!_musicEnabled)
         {
             _musicPlayer?.Stop();
+            GD.Print($"[Audio][Music#{id}] Stop (disabled) | inGame={_inGame}");
             return;
         }
 
@@ -512,7 +684,7 @@ public partial class AudioService : Node
         if (trackIndex <= 0 || trackIndex >= _musicTracks.Count)
         {
             _musicPlayer?.Stop();
-            GD.Print($"[Audio] Music off for {(inGame ? "game" : "menu")} (track index {trackIndex})");
+            GD.Print($"[Audio][Music#{id}] Stop (track off/out of range) | context={(inGame ? "game" : "menu")}, trackIndex={trackIndex}, tracks={_musicTracks.Count}");
             return;
         }
 
@@ -520,12 +692,15 @@ public partial class AudioService : Node
         if (desired == null)
         {
             _musicPlayer?.Stop();
-            GD.Print($"[Audio] No music stream available for track {trackIndex}");
+            GD.Print($"[Audio][Music#{id}] Stop (missing stream) | trackIndex={trackIndex}");
             return;
         }
 
         if (_musicPlayer.Stream == desired && _musicPlayer.Playing)
+        {
+            GD.Print($"[Audio][Music#{id}] No-op (already playing) | context={(inGame ? "game" : "menu")}, trackIndex={trackIndex}");
             return;
+        }
 
         _musicPlayer.Stream = desired;
         _musicPlayer.VolumeDb = Mathf.LinearToDb(_musicVolume);
@@ -548,21 +723,59 @@ public partial class AudioService : Node
 
         _musicPlayer.Play();
         string trackName = trackIndex < MusicTrackNames.Length ? MusicTrackNames[trackIndex] : $"Track {trackIndex}";
-        GD.Print($"[Audio] Music switched to {(inGame ? "game" : "menu")}: {trackName}");
+
+        int busIdx = AudioServer.GetBusIndex(_musicPlayer.Bus);
+        string streamPath = desired.ResourcePath;
+        string streamInfo = string.IsNullOrWhiteSpace(streamPath) ? desired.GetClass() : streamPath;
+
+        GD.Print($"[Audio][Music#{id}] Play | ok={_musicPlayer.Playing}, context={(inGame ? "game" : "menu")}, trackIndex={trackIndex}, name={trackName}, bus={_musicPlayer.Bus}(idx={busIdx}), volDb={_musicPlayer.VolumeDb:0.00}, stream={streamInfo}");
     }
 
     public void StartMenuMusic()
     {
+        GD.Print("[Audio][Music] StartMenuMusic()");
         SetInGame(false);
     }
 
     public void StartGameMusic()
     {
+        GD.Print("[Audio][Music] StartGameMusic()");
         SetInGame(true);
     }
 
     public void StopAllMusic()
     {
         _musicPlayer?.Stop();
+        GD.Print($"[Audio][Music] StopAllMusic() | playing={_musicPlayer?.Playing}");
+    }
+
+    /// <summary>
+    /// Creates and starts a silent looping audio stream to keep the audio driver active.
+    /// This prevents the driver from going idle and swallowing the first few milliseconds
+    /// of short sound effects like clicks.
+    /// </summary>
+    private void StartKeepAlive()
+    {
+        // Create a 1-second silent loop at 44100 Hz
+        const int sampleRate = 44100;
+        const int durationSeconds = 1;
+        int sampleCount = sampleRate * durationSeconds;
+        var data = new byte[sampleCount * 2]; // 16-bit mono, all zeros = silence
+
+        var silentLoop = new AudioStreamWav
+        {
+            Format = AudioStreamWav.FormatEnum.Format16Bits,
+            MixRate = sampleRate,
+            Stereo = false,
+            LoopMode = AudioStreamWav.LoopModeEnum.Forward,
+            LoopBegin = 0,
+            LoopEnd = sampleCount,
+            Data = data
+        };
+
+        _keepAlivePlayer.Stream = silentLoop;
+        _keepAlivePlayer.Play();
+
+        GD.Print("[Audio] KeepAlive: started silent loop to keep audio driver active");
     }
 }

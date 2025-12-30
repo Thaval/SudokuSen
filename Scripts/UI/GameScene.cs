@@ -80,6 +80,8 @@ public partial class GameScene : Control
         _appState = GetNode<AppState>("/root/AppState");
         _audioService = GetNode<AudioService>("/root/AudioService");
 
+        _saveService.SettingsChanged += OnSettingsChanged;
+
         // Start game music
         _audioService.StartGameMusic();
 
@@ -122,12 +124,22 @@ public partial class GameScene : Control
     {
         _themeService.ThemeChanged -= OnThemeChanged;
 
+        _saveService.SettingsChanged -= OnSettingsChanged;
+
         // Spiel speichern beim Verlassen
         if (_gameState != null && !_isGameOver)
         {
             _gameState.ElapsedSeconds = _elapsedTime;
             _appState.SaveGame();
         }
+    }
+
+    private void OnSettingsChanged()
+    {
+        if (_gameState == null) return;
+        ApplyChallengeUi();
+        UpdateGrid();
+        UpdateNumberCounts();
     }
 
     /// <summary>
@@ -151,7 +163,13 @@ public partial class GameScene : Control
         if (_gameState == null || _isGameOver || _isPaused) return;
 
         _elapsedTime += delta;
-        UpdateTimerDisplay();
+
+        // Only update display when second actually changes (avoid per-frame string allocations)
+        int currentSecond = (int)_elapsedTime;
+        if (currentSecond != _lastTimerSecond)
+        {
+            UpdateTimerDisplay();
+        }
 
         // Time Attack
         if (_gameState.ChallengeTimeAttackSeconds > 0 && _elapsedTime >= _gameState.ChallengeTimeAttackSeconds)
@@ -470,7 +488,8 @@ public partial class GameScene : Control
         int maxNumber = _gameState.GridSize; // 4 für Kids, 9 für andere
 
         // Alte Buttons entfernen (außer Notes-/Assist-Buttons, die werden am Ende wieder hinzugefügt)
-        foreach (var child in _numberPad.GetChildren().ToList())
+        // Note: QueueFree is deferred by Godot, so no ToList() needed
+        foreach (var child in _numberPad.GetChildren())
         {
             if (child != _notesButton && child != _houseAutoFillButton)
             {
@@ -1218,20 +1237,34 @@ public partial class GameScene : Control
         int size = _gameState.GridSize;
         int blockSize = _gameState.BlockSize;
 
+        // Use HashSet for deduplication (avoid LINQ Distinct allocation)
+        var seen = new HashSet<string>();
+
+        // Check row
         for (int c = 0; c < size; c++)
         {
             if (c == col) continue;
             if (_gameState.Grid[row, c].Value == number)
-                conflicts.Add(ToCellRef(row, c));
+            {
+                string cellRef = ToCellRef(row, c);
+                if (seen.Add(cellRef))
+                    conflicts.Add(cellRef);
+            }
         }
 
+        // Check column
         for (int r = 0; r < size; r++)
         {
             if (r == row) continue;
             if (_gameState.Grid[r, col].Value == number)
-                conflicts.Add(ToCellRef(r, col));
+            {
+                string cellRef = ToCellRef(r, col);
+                if (seen.Add(cellRef))
+                    conflicts.Add(cellRef);
+            }
         }
 
+        // Check block
         int br = (row / blockSize) * blockSize;
         int bc = (col / blockSize) * blockSize;
         for (int r = br; r < br + blockSize; r++)
@@ -1240,12 +1273,16 @@ public partial class GameScene : Control
             {
                 if (r == row && c == col) continue;
                 if (_gameState.Grid[r, c].Value == number)
-                    conflicts.Add(ToCellRef(r, c));
+                {
+                    string cellRef = ToCellRef(r, c);
+                    if (seen.Add(cellRef))
+                        conflicts.Add(cellRef);
+                }
             }
         }
 
         if (conflicts.Count == 0) conflicts.Add("den Sudoku-Regeln");
-        return conflicts.Distinct().ToList();
+        return conflicts;
     }
 
     private void ShowPerfectRunFailedOverlay()
@@ -1685,12 +1722,13 @@ public partial class GameScene : Control
         int size = _gameState.GridSize;
         int blockSize = _gameState.BlockSize;
 
+        // Use direct iteration instead of LINQ to avoid allocations
         IEnumerable<(int r, int c)> cells = _houseAutoFillMode switch
         {
-            HouseAutoFillMode.Row => Enumerable.Range(0, size).Select(c => (_selectedRow, c)),
-            HouseAutoFillMode.Column => Enumerable.Range(0, size).Select(r => (r, _selectedCol)),
+            HouseAutoFillMode.Row => GetRowCells(_selectedRow, size),
+            HouseAutoFillMode.Column => GetColumnCells(_selectedCol, size),
             HouseAutoFillMode.Block => GetBlockCells(_selectedRow, _selectedCol, blockSize, size),
-            _ => Enumerable.Range(0, size).Select(c => (_selectedRow, c))
+            _ => GetRowCells(_selectedRow, size)
         };
 
         foreach (var (r, c) in cells)
@@ -1708,6 +1746,18 @@ public partial class GameScene : Control
         }
 
         SaveAndUpdate();
+    }
+
+    private static IEnumerable<(int r, int c)> GetRowCells(int row, int size)
+    {
+        for (int c = 0; c < size; c++)
+            yield return (row, c);
+    }
+
+    private static IEnumerable<(int r, int c)> GetColumnCells(int col, int size)
+    {
+        for (int r = 0; r < size; r++)
+            yield return (r, col);
     }
 
     private static IEnumerable<(int r, int c)> GetBlockCells(int row, int col, int blockSize, int size)

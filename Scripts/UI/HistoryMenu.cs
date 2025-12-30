@@ -13,14 +13,18 @@ public partial class HistoryMenu : Control
 
     // Cached service references
     private ThemeService _themeService = null!;
+    private AudioService _audioService = null!;
     private SaveService _saveService = null!;
     private AppState _appState = null!;
 
     public override void _Ready()
     {
         _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _audioService = GetNode<AudioService>("/root/AudioService");
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
+
+        UiNavigationSfx.Wire(this, _audioService);
 
         _backButton = GetNode<Button>("BackButton");
         _title = GetNode<Label>("Title");
@@ -156,6 +160,7 @@ public partial class HistoryMenu : Control
 
     private void OnBackPressed()
     {
+        _audioService.PlayClick();
         _appState.GoToMainMenu();
     }
 

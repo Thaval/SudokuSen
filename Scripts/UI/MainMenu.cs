@@ -33,6 +33,8 @@ public partial class MainMenu : Control
         _appState = GetNode<AppState>("/root/AppState");
         _audioService = GetNode<AudioService>("/root/AudioService");
 
+        UiNavigationSfx.Wire(this, _audioService);
+
         // Start menu music
         _audioService.StartMenuMusic();
 

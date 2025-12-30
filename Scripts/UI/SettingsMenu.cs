@@ -11,6 +11,9 @@ public partial class SettingsMenu : Control
     private AppState _appState = null!;
     private AudioService _audioService = null!;
 
+    // Flag to prevent event cascading during LoadSettings
+    private bool _isLoadingSettings = false;
+
     private PanelContainer _panel = null!;
     private Label _title = null!;
 
@@ -62,6 +65,8 @@ public partial class SettingsMenu : Control
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
         _audioService = GetNode<AudioService>("/root/AudioService");
+
+        UiNavigationSfx.Wire(this, _audioService);
 
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("Title");
@@ -126,6 +131,8 @@ public partial class SettingsMenu : Control
 
         // Werte laden
         LoadSettings();
+
+        UpdateAudioUi();
 
         // Events - Storage path
         _storagePathEdit.TextSubmitted += OnStoragePathSubmitted;
@@ -358,6 +365,7 @@ public partial class SettingsMenu : Control
 
     private void LoadSettings()
     {
+        _isLoadingSettings = true;
 
         var settings = _saveService.Settings;
 
@@ -383,8 +391,8 @@ public partial class SettingsMenu : Control
         _musicCheck.ButtonPressed = settings.MusicEnabled;
         _musicVolumeSlider.Value = settings.MusicVolume;
         _musicVolumeValue.Text = $"{settings.MusicVolume}%";
-        _menuMusicOption.Selected = settings.MenuMusicTrack;
-        _gameMusicOption.Selected = settings.GameMusicTrack;
+        SelectOptionById(_menuMusicOption, settings.MenuMusicTrack);
+        SelectOptionById(_gameMusicOption, settings.GameMusicTrack);
 
         _smartCleanupCheck.ButtonPressed = settings.SmartNoteCleanupEnabled;
         _houseAutoFillCheck.ButtonPressed = settings.HouseAutoFillEnabled;
@@ -399,6 +407,21 @@ public partial class SettingsMenu : Control
         LoadTechniqueSettings();
 
         GD.Print($"[UI] SettingsMenu: loaded | theme={settings.ThemeIndex}, colorblind={settings.ColorblindPaletteEnabled}, sfx={settings.SoundEnabled}({settings.Volume}%), music={settings.MusicEnabled}({settings.MusicVolume}%), menuTrack={settings.MenuMusicTrack}, gameTrack={settings.GameMusicTrack}, uiScale={settings.UiScalePercent}%");
+
+        _isLoadingSettings = false;
+
+        UpdateAudioUi();
+    }
+
+    private void UpdateAudioUi()
+    {
+        bool sfxOn = _sfxCheck.ButtonPressed;
+        _sfxVolumeSlider.Editable = sfxOn;
+
+        bool musicOn = _musicCheck.ButtonPressed;
+        _musicVolumeSlider.Editable = musicOn;
+        _menuMusicOption.Disabled = !musicOn;
+        _gameMusicOption.Disabled = !musicOn;
     }
 
     private void UpdateStoragePathInfo()
@@ -538,6 +561,7 @@ public partial class SettingsMenu : Control
 
     private void OnThemeSelected(long index)
     {
+        if (!_isLoadingSettings) _audioService.PlayClick();
         GD.Print($"[UI] SettingsMenu: Theme selected = {index}");
         _saveService.Settings.ThemeIndex = (int)index;
         SaveSettings();
@@ -580,10 +604,12 @@ public partial class SettingsMenu : Control
 
     private void OnSfxToggled(bool pressed)
     {
+        if (_isLoadingSettings) return;
         GD.Print($"[UI] SettingsMenu: SFX enabled = {pressed}");
         _saveService.Settings.SoundEnabled = pressed;
         SaveSettings();
         _audioService.SoundEnabled = pressed;
+        UpdateAudioUi();
     }
 
     private void OnSfxVolumeChanged(double value)
@@ -601,10 +627,12 @@ public partial class SettingsMenu : Control
 
     private void OnMusicToggled(bool pressed)
     {
+        if (_isLoadingSettings) return;
         GD.Print($"[UI] SettingsMenu: Music enabled = {pressed}");
         _saveService.Settings.MusicEnabled = pressed;
         SaveSettings();
         _audioService.MusicEnabled = pressed;
+        UpdateAudioUi();
     }
 
     private void OnMusicVolumeChanged(double value)
@@ -620,8 +648,9 @@ public partial class SettingsMenu : Control
 
     private void OnMenuMusicSelected(long index)
     {
+        if (!_isLoadingSettings) _audioService.PlayClick();
         int trackId = _menuMusicOption.GetItemId((int)index);
-        string trackName = index < AudioService.MusicTrackNames.Length ? AudioService.MusicTrackNames[trackId] : $"Track {trackId}";
+        string trackName = trackId < AudioService.MusicTrackNames.Length ? AudioService.MusicTrackNames[trackId] : $"Track {trackId}";
         GD.Print($"[UI] SettingsMenu: Menu music track = {trackId} ({trackName})");
         _saveService.Settings.MenuMusicTrack = trackId;
         SaveSettings();
@@ -630,8 +659,9 @@ public partial class SettingsMenu : Control
 
     private void OnGameMusicSelected(long index)
     {
+        if (!_isLoadingSettings) _audioService.PlayClick();
         int trackId = _gameMusicOption.GetItemId((int)index);
-        string trackName = index < AudioService.MusicTrackNames.Length ? AudioService.MusicTrackNames[trackId] : $"Track {trackId}";
+        string trackName = trackId < AudioService.MusicTrackNames.Length ? AudioService.MusicTrackNames[trackId] : $"Track {trackId}";
         GD.Print($"[UI] SettingsMenu: Game music track = {trackId} ({trackName})");
         _saveService.Settings.GameMusicTrack = trackId;
         SaveSettings();

@@ -7,6 +7,7 @@ public partial class StatsMenu : Control
 {
     // Cached Service References
     private ThemeService _themeService = null!;
+    private AudioService _audioService = null!;
     private SaveService _saveService = null!;
     private AppState _appState = null!;
 
@@ -50,8 +51,11 @@ public partial class StatsMenu : Control
     {
         // Cache service references
         _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _audioService = GetNode<AudioService>("/root/AudioService");
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
+
+        UiNavigationSfx.Wire(this, _audioService);
 
         _backButton = GetNode<Button>("BackButton");
         _title = GetNode<Label>("Title");
@@ -413,6 +417,7 @@ public partial class StatsMenu : Control
 
     private void OnBackPressed()
     {
+        _audioService.PlayClick();
         _appState.GoToMainMenu();
     }
 

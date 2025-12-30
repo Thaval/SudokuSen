@@ -7,6 +7,9 @@ namespace MySudoku.Services;
 /// </summary>
 public partial class SaveService : Node
 {
+    [Signal]
+    public delegate void SettingsChangedEventHandler();
+
     // Settings are always stored in user:// (to bootstrap custom path)
     private const string SETTINGS_PATH = "user://settings.json";
 
@@ -17,6 +20,8 @@ public partial class SaveService : Node
     public SettingsData Settings { get; private set; } = new();
     public SudokuGameState? CurrentGame { get; private set; }
     public List<HistoryEntry> History { get; private set; } = new();
+
+    private bool _loaded = false;
 
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -61,10 +66,15 @@ public partial class SaveService : Node
         return basePath.TrimEnd('/');
     }
 
+    public override void _EnterTree()
+    {
+        // Load as early as possible so other autoloads see the correct values.
+        LoadAll();
+    }
+
     public override void _Ready()
     {
         GD.Print("[Save] SaveService ready");
-        LoadAll();
     }
 
     public void LoadAll()
@@ -74,7 +84,14 @@ public partial class SaveService : Node
         EnsureStorageDirectory();
         LoadSaveGame();
         LoadHistory();
+        _loaded = true;
         GD.Print($"[Save] LoadAll() done | storage={GetResolvedStoragePath()}");
+    }
+
+    public void EnsureLoaded()
+    {
+        if (_loaded) return;
+        LoadAll();
     }
 
     /// <summary>
@@ -107,7 +124,6 @@ public partial class SaveService : Node
                 using var file = FileAccess.Open(SETTINGS_PATH, FileAccess.ModeFlags.Read);
                 string json = file.GetAsText();
                 Settings = JsonSerializer.Deserialize<SettingsData>(json) ?? new();
-                Settings.EnsureHeatmapSizes();
 
                 GD.Print($"[Save] Settings loaded from {ProjectSettings.GlobalizePath(SETTINGS_PATH)} | theme={Settings.ThemeIndex}, colorblind={Settings.ColorblindPaletteEnabled}, sfx={Settings.SoundEnabled}({Settings.Volume}%), music={Settings.MusicEnabled}({Settings.MusicVolume}%)");
             }
@@ -119,8 +135,11 @@ public partial class SaveService : Node
         }
         else
         {
+            Settings = new();
             GD.Print($"[Save] Settings file not found at {ProjectSettings.GlobalizePath(SETTINGS_PATH)} (using defaults)");
         }
+
+        Settings.EnsureHeatmapSizes();
     }
 
     public void SaveSettings()
@@ -136,7 +155,12 @@ public partial class SaveService : Node
         catch (Exception e)
         {
             GD.PrintErr($"Fehler beim Speichern der Einstellungen: {e.Message}");
+            return;
         }
+
+        // Reload to keep Settings canonical and to ensure listeners see the latest values.
+        LoadSettings();
+        EmitSignal(SignalName.SettingsChanged);
     }
 
     #endregion
@@ -198,8 +222,12 @@ public partial class SaveService : Node
         string savePath = GetSavegamePath();
         if (FileAccess.FileExists(savePath))
         {
-            DirAccess.RemoveAbsolute(savePath);
-            GD.Print($"[Save] SaveGame deleted at {ProjectSettings.GlobalizePath(savePath)}");
+            string absolutePath = savePath.StartsWith("user://")
+                ? ProjectSettings.GlobalizePath(savePath)
+                : savePath;
+
+            DirAccess.RemoveAbsolute(absolutePath);
+            GD.Print($"[Save] SaveGame deleted at {absolutePath}");
         }
     }
 
@@ -355,10 +383,11 @@ public class SaveGameData
                 IsGiven = cellData.IsGiven,
                 Solution = cellData.Solution
             };
-            // Restore notes (handle old saves without Notes)
-            if (cellData.Notes != null)
+            // Restore notes (handle old saves without Notes or with mismatched lengths)
+            if (cellData.Notes != null && cellData.Notes.Length > 0)
             {
-                for (int i = 0; i < Math.Min(cellData.Notes.Length, cell.Notes.Length); i++)
+                int copyLength = Math.Min(cellData.Notes.Length, cell.Notes.Length);
+                for (int i = 0; i < copyLength; i++)
                 {
                     cell.Notes[i] = cellData.Notes[i];
                 }

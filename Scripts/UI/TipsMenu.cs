@@ -17,6 +17,7 @@ public partial class TipsMenu : Control
 
     // Cached service references
     private ThemeService _themeService = null!;
+    private AudioService _audioService = null!;
     private AppState _appState = null!;
 
     private int _currentTip = 0;
@@ -1005,7 +1006,10 @@ public partial class TipsMenu : Control
     public override void _Ready()
     {
         _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _audioService = GetNode<AudioService>("/root/AudioService");
         _appState = GetNode<AppState>("/root/AppState");
+
+        UiNavigationSfx.Wire(this, _audioService);
 
         _backButton = GetNode<Button>("BackButton");
         _title = GetNode<Label>("Title");
@@ -1143,6 +1147,7 @@ public partial class TipsMenu : Control
 
     private void OnBackPressed()
     {
+        _audioService.PlayClick();
         _appState.GoToMainMenu();
     }
 

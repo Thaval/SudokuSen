@@ -32,6 +32,8 @@ public partial class DifficultyMenu : Control
         _appState = GetNode<AppState>("/root/AppState");
         _audioService = GetNode<AudioService>("/root/AudioService");
 
+        UiNavigationSfx.Wire(this, _audioService);
+
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("Title");
         _description = GetNode<Label>("CenterContainer/Panel/MarginContainer/VBoxContainer/Description");

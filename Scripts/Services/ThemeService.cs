@@ -40,6 +40,8 @@ public partial class ThemeService : Node
     private int _themeIndex = 0;
     private bool _colorblindEnabled = false;
 
+    private SaveService _saveService = null!;
+
     // Light Theme
     private readonly ThemeColors _lightTheme = new ThemeColors
     {
@@ -93,12 +95,35 @@ public partial class ThemeService : Node
     public override void _Ready()
     {
         Instance = this;
-        // Theme aus Settings laden
-        var saveService = GetNode<SaveService>("/root/SaveService");
-        _themeIndex = saveService.Settings.ThemeIndex;
-        _colorblindEnabled = saveService.Settings.ColorblindPaletteEnabled;
+
+        _saveService = GetNode<SaveService>("/root/SaveService");
+        _saveService.EnsureLoaded();
+        _saveService.SettingsChanged += OnSettingsChanged;
+
+        ApplySettings(_saveService.Settings);
+    }
+
+    public override void _ExitTree()
+    {
+        if (_saveService != null)
+            _saveService.SettingsChanged -= OnSettingsChanged;
+
+        if (Instance == this)
+            Instance = null;
+    }
+
+    private void OnSettingsChanged()
+    {
+        ApplySettings(_saveService.Settings);
+    }
+
+    private void ApplySettings(SettingsData settings)
+    {
+        _themeIndex = settings.ThemeIndex;
+        _colorblindEnabled = settings.ColorblindPaletteEnabled;
         CurrentColors = BuildColors(_themeIndex, _colorblindEnabled);
-        ApplyUiScale(saveService.Settings.UiScalePercent);
+        ApplyUiScale(settings.UiScalePercent);
+        EmitSignal(SignalName.ThemeChanged, _themeIndex);
     }
 
     public void SetTheme(int index)

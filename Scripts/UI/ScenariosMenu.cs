@@ -17,6 +17,7 @@ public partial class ScenariosMenu : Control
 
     // Cached service references
     private ThemeService _themeService = null!;
+    private AudioService _audioService = null!;
     private AppState _appState = null!;
 
     // Gruppierte Techniken
@@ -30,7 +31,10 @@ public partial class ScenariosMenu : Control
     public override void _Ready()
     {
         _themeService = GetNode<ThemeService>("/root/ThemeService");
+        _audioService = GetNode<AudioService>("/root/AudioService");
         _appState = GetNode<AppState>("/root/AppState");
+
+        UiNavigationSfx.Wire(this, _audioService);
 
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _title = GetNode<Label>("Title");
@@ -123,6 +127,7 @@ public partial class ScenariosMenu : Control
 
     private void OnBackPressed()
     {
+        _audioService.PlayClick();
         _appState.GoToMainMenu();
     }
 

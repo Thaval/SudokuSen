@@ -198,6 +198,7 @@ text = "100%"
 [node name="UiScaleSlider" type="HSlider" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(150, 24)
+scrollable = false
 min_value = 75.0
 max_value = 150.0
 step = 5.0
@@ -240,6 +241,7 @@ text = "80%"
 [node name="SfxVolumeSlider" type="HSlider" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(150, 24)
+scrollable = false
 min_value = 0.0
 max_value = 100.0
 step = 5.0
@@ -273,6 +275,7 @@ text = "50%"
 [node name="MusicVolumeSlider" type="HSlider" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicVolumeRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(150, 24)
+scrollable = false
 min_value = 0.0
 max_value = 100.0
 step = 5.0
