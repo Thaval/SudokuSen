@@ -144,7 +144,7 @@ public partial class ThemeService : Node
     /// Base viewport dimensions for reference (design resolution)
     /// </summary>
     public const int BaseViewportWidth = 1280;
-    public const int BaseViewportHeight = 720;
+    public const int BaseViewportHeight = 820;
 
     /// <summary>
     /// Calculates the recommended UI scale bounds based on screen size.
@@ -166,23 +166,14 @@ public partial class ThemeService : Node
         // The limiting factor is the smaller ratio
         float limitingRatio = Math.Min(widthRatio, heightRatio);
 
-        // Minimum scale: ensure content fits even on smaller screens
-        // At 720p (our base), min should be ~75%
-        // At 1080p, we can go lower to 50%
-        int minScale = limitingRatio >= 1.5f ? 50 : (limitingRatio >= 1.0f ? 75 : 50);
+        // Fixed bounds: min 50%, max 100%
+        int minScale = 50;
+        int maxScale = 100;
 
-        // Maximum scale: prevent content from exceeding viewport
-        // Cap at 150% for 720p, allow up to 200% for 1440p+
-        int maxScale = limitingRatio >= 2.0f ? 200 : (limitingRatio >= 1.5f ? 175 : (limitingRatio >= 1.0f ? 150 : 125));
-
-        // Recommended scale based on screen DPI and size
-        // For HD (720p): 100%
-        // For FHD (1080p): 100-125%
-        // For QHD (1440p): 125-150%
-        // For 4K: 150-200%
-        int recommended = limitingRatio >= 2.0f ? 150 :
-                         (limitingRatio >= 1.5f ? 125 :
-                         (limitingRatio >= 1.0f ? 100 : 100));
+        // Recommended scale based on screen size
+        // For smaller screens: 75-100%
+        // For larger screens: 100%
+        int recommended = limitingRatio >= 1.0f ? 100 : 75;
 
         return (minScale, maxScale, recommended);
     }

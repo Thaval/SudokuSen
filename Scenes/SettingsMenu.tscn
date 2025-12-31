@@ -46,7 +46,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(520, 0)
+custom_minimum_size = Vector2(560, 600)
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -216,8 +216,8 @@ text = "100%"
 layout_mode = 2
 custom_minimum_size = Vector2(150, 24)
 scrollable = false
-min_value = 75.0
-max_value = 150.0
+min_value = 50.0
+max_value = 100.0
 step = 5.0
 value = 100.0
 

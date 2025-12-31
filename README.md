@@ -1,100 +1,100 @@
 # 🧩 SudokuSen
 
-**Ein modernes Sudoku-Spiel für Desktop – entwickelt mit Godot 4 & C#**
+**A modern Sudoku game for Desktop – built with Godot 4 & C#**
 
-SudokuSen bietet ein elegantes, anfängerfreundliches Sudoku-Erlebnis mit mehreren Schwierigkeitsgraden, intelligenten Hinweisen, die dir Lösungstechniken beibringen, und umfassenden Statistiken zur Verfolgung deines Fortschritts.
+SudokuSen offers an elegant, beginner-friendly Sudoku experience with multiple difficulty levels, intelligent hints that teach you solving techniques, and comprehensive statistics to track your progress.
 
 ---
 
 ## 🎮 Features
 
-### Spielmodi
-- **Klassisches Sudoku** – 9x9 Grid mit vier Schwierigkeitsgraden
-- **Kids Mode** – 4x4 Grid für Einsteiger
-- **Daily Sudoku** – Täglich ein neues Rätsel mit Streak-Tracking
-- **Challenge Modes** – Keine Notizen, Perfect Run, Hint-Limit, Time Attack
+### Game Modes
+- **Classic Sudoku** – 9x9 grid with four difficulty levels
+- **Kids Mode** – 4x4 grid for beginners
+- **Daily Sudoku** – A new puzzle every day with streak tracking
+- **Challenge Modes** – No notes, Perfect Run, Hint Limit, Time Attack
 
-### Intelligentes Hinweis-System
-- Schritt-für-Schritt Erklärungen
-- Unterstützung für 10+ Lösungstechniken
-- Lernmodus für Anfänger
+### Intelligent Hint System
+- Step-by-step explanations
+- Support for 10+ solving techniques
+- Learning mode for beginners
 
-### Notizen & Kandidaten
-- Manuelle Notizen
-- Auto-Kandidaten Feature
-- Intelligente Notizen-Bereinigung
-- House Auto-Fill (Zeile/Spalte/Block)
+### Notes & Candidates
+- Manual notes
+- Auto-candidates feature
+- Smart note cleanup
+- House Auto-Fill (row/column/block)
 
-### Anpassung
-- Hell/Dunkel Theme
-- Farbblind-freundliche Palette
-- UI-Skalierung
-- Konfigurierbare Soundeffekte & Musik
+### Customization
+- Light/Dark theme
+- Colorblind-friendly palette
+- UI scaling
+- Configurable sound effects & music
 
-### Statistiken & Fortschritt
-- Spielverlauf
-- Statistiken pro Schwierigkeit
-- Fehler-Heatmap
-- Technik-Progression
+### Statistics & Progress
+- Game history
+- Statistics per difficulty
+- Mistake heatmap
+- Technique progression
 
 ---
 
-## 🎮 Steuerung
+## 🎮 Controls
 
-| Aktion           | Eingabe                            |
+| Action           | Input                              |
 | ---------------- | ---------------------------------- |
-| Zelle auswählen  | Mausklick                          |
-| Zahl setzen      | 1-9 (Tastatur oder Numpad)         |
-| Zahl löschen     | Entf, Backspace, oder Radiergummi  |
-| Notizen-Modus    | N                                  |
-| Mehrfachauswahl  | Ctrl + Klick / Shift + Klick       |
-| Navigation       | Pfeiltasten                        |
-| Zurück           | ESC                                |
+| Select cell      | Mouse click                        |
+| Place number     | 1-9 (keyboard or numpad)           |
+| Delete number    | Del, Backspace, or Eraser button   |
+| Notes mode       | N                                  |
+| Multi-select     | Ctrl + Click / Shift + Click       |
+| Navigation       | Arrow keys                         |
+| Back             | ESC                                |
 
 ---
 
-## 📖 Dokumentation
+## 📖 Documentation
 
-**[📘 Vollständige Benutzeranleitung (User Guide)](Docs/Presentation/Presentation_0_0_2.md)**
+**[📘 Full User Guide](Docs/Presentation/Presentation_0_0_2.md)**
 
-Die ausführliche Dokumentation enthält:
-- Schnellstart-Anleitung
-- Alle Bildschirme erklärt
-- Hinweis-System im Detail
-- Challenge Modes
-- Tipps & Tricks
+The comprehensive documentation includes:
+- Quick start guide
+- All screens explained
+- Hint system in detail
+- Challenge modes
+- Tips & tricks
 - FAQ & Troubleshooting
 
 ---
 
 ## 📥 Download & Installation
 
-1. Lade das neueste Release von der [Releases-Seite](https://github.com/Thaval/SudokuSen/releases) herunter
-2. Entpacke das ZIP-Archiv in einen beliebigen Ordner
-3. Starte `SudokuSen.exe`
+1. Download the latest release from the [Releases page](https://github.com/Thaval/SudokuSen/releases)
+2. Extract the ZIP archive to any folder
+3. Run `SudokuSen.exe`
 
-**Keine Installation erforderlich – portabel und sofort spielbereit!**
-
----
-
-## 📄 Lizenz
-
-MIT License – Siehe [LICENSE](LICENSE) für Details.
+**No installation required – portable and ready to play!**
 
 ---
 
-## 💬 Kontakt & Feedback
+## 📄 License
 
-Hast du Fragen, Anregungen oder Kritik? Melde dich gerne!
-
-- **GitHub Issues:** [Issues erstellen](https://github.com/Thaval/SudokuSen/issues)
-- **Diskussionen:** [GitHub Discussions](https://github.com/Thaval/SudokuSen/discussions)
+MIT License – See [LICENSE](LICENSE) for details.
 
 ---
 
-## ☕ Unterstützen
+## 💬 Contact & Feedback
 
-Gefällt dir SudokuSen? Du kannst das Projekt unterstützen:
+Have questions, suggestions, or feedback? Feel free to reach out!
+
+- **GitHub Issues:** [Create an issue](https://github.com/Thaval/SudokuSen/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/Thaval/SudokuSen/discussions)
+
+---
+
+## ☕ Support
+
+Enjoying SudokuSen? You can support the project:
 
 <a href="https://www.paypal.com/donate?hosted_button_id=SKZ8MCQHADWWC">
   <img src="https://www.paypalobjects.com/en_US/DK/i/btn/btn_donateCC_LG.gif" alt="Donate with PayPal" />
@@ -104,4 +104,4 @@ Gefällt dir SudokuSen? Du kannst das Projekt unterstützen:
 
 ---
 
-*SudokuSen – Viel Spaß beim Rätseln! 🧩*
+*SudokuSen – Happy puzzling! 🧩*

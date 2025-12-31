@@ -469,29 +469,4 @@ Challenge Difficulty only affects new games. If you already have a game in progr
 
 ---
 
-## 📸 Screenshots Used
-
-| Filename | Section |
-|----------|---------|
-| `HomeScreen.png` | Quick Start, Main Screens |
-| `SelectDifficulty.png` | Difficulty Selection |
-| `9x9Ingame.png` | Playing the Game |
-| `GridControls.png` | Controls Overview |
-| `GridLabels.png` | Entering Numbers |
-| `KidsIngame.png` | Kids Mode |
-| `IngameHighlightDigitsRowsAndCols.png` | Selecting Cells |
-| `IngameAddNote.png` | Notes & Candidates |
-| `IngameShowNotes.png` | Notes & Candidates |
-| `RowColBlockNoteToggle.png` | Auto-Notes |
-| `IngameTipp1.png` | Hint System (Step 1) |
-| `IngameTipp2.png` | Hint System (Step 2) |
-| `IngameTipp3.png` | Hint System (Step 3) |
-| `IngameTipp4.png` | Hint System (Step 4) |
-| `Statistics.png` | Statistics & Progress |
-| `History.png` | Game History |
-| `Settings.png` | Settings |
-| `TipsMenu.png` | Tips & Shortcuts |
-
----
-
 *SudokuSen v0.0.2 – Happy solving! 🧩*
