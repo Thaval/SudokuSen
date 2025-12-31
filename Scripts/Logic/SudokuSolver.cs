@@ -1,4 +1,4 @@
-namespace MySudoku.Logic;
+namespace SudokuSen.Logic;
 
 /// <summary>
 /// Sudoku Solver mit Backtracking-Algorithmus

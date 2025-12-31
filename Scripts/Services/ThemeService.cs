@@ -1,4 +1,4 @@
-namespace MySudoku.Services;
+namespace SudokuSen.Services;
 
 /// <summary>
 /// Autoload: Verwaltet das UI-Theme

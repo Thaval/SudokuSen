@@ -10,14 +10,10 @@ config_version=5
 
 [application]
 
-config/name="MySudoku"
+config/name="SudokuSen"
 run/main_scene="res://Scenes/Main.tscn"
 config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
-
-[audio]
-
-buses/default_bus_layout="res://default_bus_layout.tres"
 
 [autoload]
 
@@ -35,7 +31,7 @@ window/stretch/aspect="expand"
 
 [dotnet]
 
-project/assembly_name="MySudoku"
+project/assembly_name="SudokuSen"
 
 [input]
 

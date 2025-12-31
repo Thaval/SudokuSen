@@ -1,4 +1,4 @@
-# 🧩 MySudoku
+# 🧩 SudokuSen
 
 **Ein modernes Sudoku-Spiel für Desktop – entwickelt mit Godot 4 & C#**
 
@@ -6,7 +6,7 @@
 
 ## 🏠 Willkommen
 
-MySudoku bietet ein elegantes, benutzerfreundliches Sudoku-Erlebnis mit mehreren Schwierigkeitsstufen, intelligenten Hinweisen und umfangreichen Statistiken.
+SudokuSen bietet ein elegantes, benutzerfreundliches Sudoku-Erlebnis mit mehreren Schwierigkeitsstufen, intelligenten Hinweisen und umfangreichen Statistiken.
 
 ![Homescreen](image.png)
 
@@ -103,7 +103,7 @@ Die klassische 9×9-Spielansicht mit allen wichtigen Funktionen auf einen Blick.
 
 ## ⚙️ Einstellungen
 
-Passe MySudoku an deinen Spielstil an.
+Passe SudokuSen an deinen Spielstil an.
 
 ![Settings](image-4.png)
 
@@ -163,7 +163,7 @@ Jede Technik wird mit einem visuellen Mini-Board erklärt!
 
 1. Lade die neueste Version herunter
 2. Entpacke das Archiv
-3. Starte `MySudoku.exe`
+3. Starte `SudokuSen.exe`
 
 **Keine Installation erforderlich – einfach spielen!**
 
@@ -173,6 +173,6 @@ Jede Technik wird mit einem visuellen Mini-Board erklärt!
 
 ### 🎮 Viel Spaß beim Knobeln!
 
-*MySudoku – Dein persönlicher Sudoku-Begleiter*
+*SudokuSen – Dein persönlicher Sudoku-Begleiter*
 
 </div>

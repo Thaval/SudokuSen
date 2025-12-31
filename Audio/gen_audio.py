@@ -1,6 +1,6 @@
 import os, math, wave, struct, random
 
-ROOT = r"C:\\Users\\dave\\source\\repos\\MySudoku"
+ROOT = r"C:\\Users\\dave\\source\\repos\\SudokuSen"
 AUDIO_DIR = os.path.join(ROOT, "Audio")
 os.makedirs(AUDIO_DIR, exist_ok=True)
 

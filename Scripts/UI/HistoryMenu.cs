@@ -1,4 +1,4 @@
-namespace MySudoku.UI;
+namespace SudokuSen.UI;
 
 /// <summary>
 /// Spielverlauf-Menü

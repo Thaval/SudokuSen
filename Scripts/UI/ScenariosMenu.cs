@@ -1,7 +1,7 @@
-using MySudoku.Logic;
-using MySudoku.Services;
+using SudokuSen.Logic;
+using SudokuSen.Services;
 
-namespace MySudoku.UI;
+namespace SudokuSen.UI;
 
 /// <summary>
 /// Szenarien-Menü - Wähle eine Technik zum Üben

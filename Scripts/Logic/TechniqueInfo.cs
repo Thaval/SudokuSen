@@ -1,4 +1,4 @@
-namespace MySudoku.Logic;
+namespace SudokuSen.Logic;
 
 /// <summary>
 /// Informationen über Sudoku-Lösungstechniken

@@ -1,4 +1,4 @@
-namespace MySudoku.Models;
+namespace SudokuSen.Models;
 
 /// <summary>
 /// Ein Eintrag im Spielverlauf

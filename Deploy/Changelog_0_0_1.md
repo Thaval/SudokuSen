@@ -1,10 +1,10 @@
-# MySudoku v0.0.1 Changelog
+# SudokuSen v0.0.1 Changelog
 
 **Release Date:** December 2024
 
 ## 🎉 Initial Release
 
-First public release of MySudoku - a modern Sudoku game built with Godot 4 & C#.
+First public release of SudokuSen - a modern Sudoku game built with Godot 4 & C#.
 
 ### ✨ Features
 
@@ -56,4 +56,4 @@ First public release of MySudoku - a modern Sudoku game built with Godot 4 & C#.
 
 ---
 
-*MySudoku v0.0.1 - Happy solving! 🧩*
+*SudokuSen v0.0.1 - Happy solving! 🧩*

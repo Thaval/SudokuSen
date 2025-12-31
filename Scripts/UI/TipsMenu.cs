@@ -1,4 +1,4 @@
-namespace MySudoku.UI;
+namespace SudokuSen.UI;
 
 /// <summary>
 /// Tipps und Tricks Menü mit visuellen Sudoku-Board Beispielen

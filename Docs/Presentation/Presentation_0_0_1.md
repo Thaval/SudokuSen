@@ -1,8 +1,8 @@
-# 🧩 MySudoku v0.0.1 – User Guide
+# 🧩 SudokuSen v0.0.1 – User Guide
 
 **A modern Sudoku game for Desktop – built with Godot 4 & C#**
 
-MySudoku offers an elegant, beginner-friendly Sudoku experience with multiple difficulty levels, intelligent hints that teach you solving techniques, and comprehensive statistics to track your progress. Whether you're a complete beginner or a seasoned puzzle solver, MySudoku adapts to your skill level.
+SudokuSen offers an elegant, beginner-friendly Sudoku experience with multiple difficulty levels, intelligent hints that teach you solving techniques, and comprehensive statistics to track your progress. Whether you're a complete beginner or a seasoned puzzle solver, SudokuSen adapts to your skill level.
 
 > **Release:** December 29, 2025
 
@@ -29,7 +29,7 @@ MySudoku offers an elegant, beginner-friendly Sudoku experience with multiple di
 
 Get playing in under a minute:
 
-1. **Launch MySudoku** – Double-click `MySudoku.exe`
+1. **Launch SudokuSen** – Double-click `SudokuSen.exe`
 2. **Click "Neues Spiel"** (New Game) in the main menu
 3. **Select a difficulty** – Start with "Leicht" (Easy) if you're new
 4. **Click a cell** to select it
@@ -313,7 +313,7 @@ View your complete game history including:
 
 ## ⚙️ Settings
 
-Customize MySudoku to your preferences:
+Customize SudokuSen to your preferences:
 
 ![Settings Screen](screenshots/0.0.1/Settings.png)
 
@@ -423,7 +423,7 @@ Adjust **UI-Skalierung** in Settings to scale the interface.
 
 1. Download the release archive
 2. Extract to any folder
-3. Run `MySudoku.exe`
+3. Run `SudokuSen.exe`
 
 **No installation required – portable and ready to play!**
 
@@ -454,4 +454,4 @@ Adjust **UI-Skalierung** in Settings to scale the interface.
 
 ---
 
-*MySudoku v0.0.1 – Happy solving! 🧩*
+*SudokuSen v0.0.1 – Happy solving! 🧩*

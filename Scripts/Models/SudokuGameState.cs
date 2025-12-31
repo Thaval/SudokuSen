@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace MySudoku.Models;
+namespace SudokuSen.Models;
 
 /// <summary>
 /// Schwierigkeitsgrade

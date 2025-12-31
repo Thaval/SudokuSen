@@ -1,23 +1,28 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Deploys MySudoku to a versioned output directory with executable and documentation.
+    Deploys SudokuSen to a versioned output directory with executable and documentation.
 
 .DESCRIPTION
     This script:
-    1. Reads the version from MySudoku.csproj
+    1. Reads the version from SudokuSen.csproj
     2. Verifies required files exist (Changelog, Presentation)
     3. Builds the C# project in Release mode
     4. Exports the Godot project to create the executable
     5. Creates output directory structure: /Deploy/releases/{version}/
     6. Copies the executable, README, and Changelog to the output folder
     7. Copies screenshots folder if present
+    8. Optionally creates a GitHub Release with the ZIP archive
 
 .PARAMETER GodotPath
     Path to Godot executable. If not provided, searches in PATH and common locations.
 
 .PARAMETER SkipChecks
     Skip pre-deployment checks (Changelog, Presentation verification)
+
+.PARAMETER CreateGitHubRelease
+    After deployment, create a GitHub release with the ZIP archive.
+    Requires GitHub CLI (gh) to be installed and authenticated.
 
 .EXAMPLE
     .\Deploy.ps1
@@ -28,26 +33,32 @@
     .\Deploy.ps1 -GodotPath "C:\Godot\Godot_v4.5-stable_mono_win64.exe"
 
     Uses a specific Godot executable for export
+
+.EXAMPLE
+    .\Deploy.ps1 -CreateGitHubRelease
+
+    Deploys and automatically creates a GitHub release
 #>
 
 [CmdletBinding()]
 param(
     [string]$GodotPath = "",
-    [switch]$SkipChecks
+    [switch]$SkipChecks,
+    [switch]$CreateGitHubRelease
 )
 
 # Configuration
 $DeployDir = $PSScriptRoot
 $ProjectDir = Split-Path $DeployDir -Parent
-$ProjectFile = Join-Path $ProjectDir "MySudoku.csproj"
+$ProjectFile = Join-Path $ProjectDir "SudokuSen.csproj"
 $OutputBaseDir = Join-Path $DeployDir "releases"
 $DocsDir = Join-Path $ProjectDir "Docs"
 $PresentationDir = Join-Path $DocsDir "Presentation"
 $ScreenshotsSource = Join-Path $PresentationDir "screenshots"
-$GodotExportDir = Join-Path $env:TEMP "MySudoku_Export"
+$GodotExportDir = Join-Path $env:TEMP "SudokuSen_Export"
 
 # Step 1: Read version from .csproj
-Write-Host "📋 Reading version from MySudoku.csproj..." -ForegroundColor Cyan
+Write-Host "📋 Reading version from SudokuSen.csproj..." -ForegroundColor Cyan
 
 if (-not (Test-Path $ProjectFile)) {
     Write-Error "Project file not found: $ProjectFile"
@@ -58,7 +69,7 @@ if (-not (Test-Path $ProjectFile)) {
 $version = $csproj.Project.PropertyGroup.Version
 
 if ([string]::IsNullOrWhiteSpace($version)) {
-    Write-Error "Could not find <Version> in MySudoku.csproj"
+    Write-Error "Could not find <Version> in SudokuSen.csproj"
     exit 1
 }
 
@@ -139,7 +150,7 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or (-not (Test-Path $GodotPath))) 
 # Step 4: Set up output paths
 $VersionedOutputDir = Join-Path $OutputBaseDir $version
 
-Write-Host "`n🏗️  Building MySudoku v$version..." -ForegroundColor Cyan
+Write-Host "`n🏭️  Building SudokuSen v$version..." -ForegroundColor Cyan
 
 # Step 5: Build C# project in Release mode
 Write-Host "`n⚙️  Building C# project in Release mode..." -ForegroundColor Cyan
@@ -185,7 +196,7 @@ if (-not $SkipGodotExport) {
         "--headless",
         "--export-release",
         "Windows Desktop",
-        (Join-Path $GodotExportDir "MySudoku.exe")
+        (Join-Path $GodotExportDir "SudokuSen.exe")
     )
 
     Write-Host "Running: $GodotPath $($exportArgs -join ' ')" -ForegroundColor Gray
@@ -213,7 +224,7 @@ Write-Host "✓ Directory created" -ForegroundColor Green
 # Step 8: Copy exported files
 if (-not $SkipGodotExport -and (Test-Path $GodotExportDir)) {
     Write-Host "`n📋 Copying exported application files..." -ForegroundColor Cyan
-    $exeName = "MySudoku.exe"
+    $exeName = "SudokuSen.exe"
     $exePath = Join-Path $GodotExportDir $exeName
 
     if (Test-Path $exePath) {
@@ -268,23 +279,89 @@ Write-Host "   $VersionedOutputDir" -ForegroundColor White
 
 if (-not $SkipGodotExport) {
     Write-Host "`n📋 Contents:" -ForegroundColor Cyan
-    Write-Host "   - MySudoku.exe" -ForegroundColor White
+    Write-Host "   - SudokuSen.exe" -ForegroundColor White
     Write-Host "   - README.md (User Guide)" -ForegroundColor White
     Write-Host "   - CHANGELOG.md" -ForegroundColor White
     Write-Host "   - screenshots/ (if available)" -ForegroundColor White
     Write-Host "   - All required dependencies" -ForegroundColor White
 
-    $exePath = Join-Path $VersionedOutputDir "MySudoku.exe"
+    $exePath = Join-Path $VersionedOutputDir "SudokuSen.exe"
     if (Test-Path $exePath) {
         $exeSize = (Get-Item $exePath).Length / 1MB
         Write-Host "`n📊 Executable size: $($exeSize.ToString('F2')) MB" -ForegroundColor Cyan
         Write-Host "`n🚀 Ready to distribute!" -ForegroundColor Green
-        Write-Host "   Run: $VersionedOutputDir\MySudoku.exe" -ForegroundColor Yellow
+        Write-Host "   Run: $VersionedOutputDir\SudokuSen.exe" -ForegroundColor Yellow
     }
 } else {
     Write-Host "`n⚠️  Manual Godot export required:" -ForegroundColor Yellow
     Write-Host "   1. Open project in Godot Editor" -ForegroundColor White
     Write-Host "   2. Go to Project → Export" -ForegroundColor White
-    Write-Host "   3. Export to: $VersionedOutputDir\MySudoku.exe" -ForegroundColor White
+    Write-Host "   3. Export to: $VersionedOutputDir\SudokuSen.exe" -ForegroundColor White
     Write-Host "   4. README and CHANGELOG are already in place" -ForegroundColor White
+}
+
+# Step 13: Create GitHub Release (optional)
+if ($CreateGitHubRelease) {
+    Write-Host "`n🚀 Creating GitHub Release..." -ForegroundColor Cyan
+
+    # Check if gh CLI is installed
+    $ghCmd = Get-Command gh -ErrorAction SilentlyContinue
+    if (-not $ghCmd) {
+        Write-Warning "GitHub CLI (gh) not found!"
+        Write-Host "`n📥 Install GitHub CLI:" -ForegroundColor Yellow
+        Write-Host "   winget install GitHub.cli" -ForegroundColor White
+        Write-Host "   Then run: gh auth login" -ForegroundColor White
+    } else {
+        # Create ZIP file for release
+        $zipName = "SudokuSen-v$version-windows.zip"
+        $zipPath = Join-Path $DeployDir $zipName
+
+        Write-Host "📦 Creating release archive: $zipName" -ForegroundColor Cyan
+        if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+        Compress-Archive -Path "$VersionedOutputDir\*" -DestinationPath $zipPath -Force
+        Write-Host "✓ Archive created" -ForegroundColor Green
+
+        # Create git tag if not exists
+        $tagName = "v$version"
+        $existingTag = git tag -l $tagName 2>$null
+        if (-not $existingTag) {
+            Write-Host "🏷️  Creating git tag: $tagName" -ForegroundColor Cyan
+            Push-Location $ProjectDir
+            git tag -a $tagName -m "SudokuSen $tagName"
+            git push --tags 2>$null
+            Pop-Location
+            Write-Host "✓ Tag created and pushed" -ForegroundColor Green
+        }
+
+        # Read changelog for release notes
+        $releaseNotes = ""
+        if (Test-Path $changelogPath) {
+            $releaseNotes = Get-Content $changelogPath -Raw
+        }
+
+        # Create GitHub release
+        Write-Host "📤 Publishing to GitHub..." -ForegroundColor Cyan
+        Push-Location $ProjectDir
+
+        $ghArgs = @(
+            "release", "create", $tagName,
+            $zipPath,
+            "--title", "SudokuSen $tagName",
+            "--notes-file", $changelogPath
+        )
+
+        & gh @ghArgs 2>&1 | Write-Host
+
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ GitHub Release created successfully!" -ForegroundColor Green
+            Write-Host "`n🌐 View release at: https://github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner)/releases/tag/$tagName" -ForegroundColor Cyan
+        } else {
+            Write-Warning "GitHub release creation failed. You may need to run 'gh auth login' first."
+        }
+
+        Pop-Location
+
+        # Cleanup ZIP
+        # Remove-Item $zipPath -Force  # Uncomment to auto-delete ZIP after upload
+    }
 }

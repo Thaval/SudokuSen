@@ -1,6 +1,6 @@
-# MySudoku Deployment Guide
+# SudokuSen Deployment Guide
 
-This folder contains everything needed to build and deploy MySudoku releases.
+This folder contains everything needed to build and deploy SudokuSen releases.
 
 ## 📁 Folder Structure
 
@@ -11,7 +11,7 @@ Deploy/
 ├── Changelog_X_X_X.md      # Changelog for each version
 └── releases/
     └── {version}/          # Output folders (e.g., 0.0.1, 0.0.2)
-        ├── MySudoku.exe
+        ├── SudokuSen.exe
         ├── README.md       # User guide (from Presentation)
         ├── CHANGELOG.md    # What's new
         └── screenshots/
@@ -25,7 +25,7 @@ Before running the deploy script, complete these steps **in order**:
 
 ### 1. Update Version Number
 
-Edit `MySudoku.csproj` and update the `<Version>` tag:
+Edit `SudokuSen.csproj` and update the `<Version>` tag:
 
 ```xml
 <PropertyGroup>
@@ -38,7 +38,7 @@ Edit `MySudoku.csproj` and update the `<Version>` tag:
 Create `Deploy/Changelog_X_X_X.md` (replace X_X_X with version, e.g., `0_0_2`):
 
 ```markdown
-# MySudoku v0.0.2 Changelog
+# SudokuSen v0.0.2 Changelog
 
 ## 🎉 New Features
 - Feature description
@@ -85,7 +85,7 @@ Or with a specific Godot path:
 
 | Step | Action | File Location |
 |------|--------|---------------|
-| 1 | Update version | `MySudoku.csproj` |
+| 1 | Update version | `SudokuSen.csproj` |
 | 2 | Write changelog | `Deploy/Changelog_X_X_X.md` |
 | 3 | Write presentation | `Docs/Presentation/Presentation_X_X_X.md` |
 | 4 | Add screenshots | `Docs/Presentation/screenshots/{version}/` |
@@ -136,12 +136,12 @@ Or with a specific Godot path:
 After successful deployment, find the release at:
 ```
 Deploy/releases/{version}/
-├── MySudoku.exe           # Main executable
-├── MySudoku.pck           # Game data (if separate)
-├── data_MySudoku_*/       # .NET runtime files
-├── README.md              # User guide
-├── CHANGELOG.md           # Version changes
-└── screenshots/           # Screenshots for documentation
+├── SudokuSen.exe           # Main executable
+├── SudokuSen.pck           # Game data (if separate)
+├── data_SudokuSen_*/       # .NET runtime files
+├── README.md               # User guide
+├── CHANGELOG.md            # Version changes
+└── screenshots/            # Screenshots for documentation
 ```
 
 ---

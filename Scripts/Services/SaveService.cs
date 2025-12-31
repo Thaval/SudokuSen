@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace MySudoku.Services;
+namespace SudokuSen.Services;
 
 /// <summary>
 /// Autoload: Speicherdienst für Settings, SaveGame und History

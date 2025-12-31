@@ -1,4 +1,4 @@
-namespace MySudoku.UI;
+namespace SudokuSen.UI;
 
 /// <summary>
 /// Custom Button für Sudoku-Zellen mit Unterstützung für Notizen, Kandidaten und visuelle Zustände.

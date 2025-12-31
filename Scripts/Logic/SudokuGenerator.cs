@@ -1,4 +1,4 @@
-namespace MySudoku.Logic;
+namespace SudokuSen.Logic;
 
 /// <summary>
 /// Generiert gültige Sudoku-Rätsel mit eindeutiger Lösung

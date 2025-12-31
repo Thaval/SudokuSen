@@ -1,4 +1,4 @@
-namespace MySudoku.UI;
+namespace SudokuSen.UI;
 
 /// <summary>
 /// Die Haupt-Spielszene mit dem Sudoku-Grid

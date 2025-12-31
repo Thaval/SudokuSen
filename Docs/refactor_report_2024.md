@@ -252,7 +252,7 @@ if (cellData.Notes != null && cellData.Notes.Length > 0)
 ```
 dotnet build
 Wiederherstellung abgeschlossen (0,7s)
-MySudoku net8.0 Erfolgreich (1,1s) → .godot\mono\temp\bin\Debug\MySudoku.dll
+SudokuSen net8.0 Erfolgreich (1,1s) → .godot\mono\temp\bin\Debug\SudokuSen.dll
 Erstellen von Erfolgreich in 2,2s
 ```
 ✅ All builds green

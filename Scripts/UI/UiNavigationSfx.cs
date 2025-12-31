@@ -1,7 +1,7 @@
-namespace MySudoku.UI;
+namespace SudokuSen.UI;
 
 using Godot;
-using MySudoku.Services;
+using SudokuSen.Services;
 
 /// <summary>
 /// Wires consistent UI navigation SFX (keyboard/controller focus movement).

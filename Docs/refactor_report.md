@@ -1,4 +1,4 @@
-# Refactor Report - MySudoku
+# Refactor Report - SudokuSen
 
 ## Top 10 Improvement Opportunities
 

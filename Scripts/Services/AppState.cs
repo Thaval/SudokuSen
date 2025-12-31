@@ -1,4 +1,4 @@
-namespace MySudoku.Services;
+namespace SudokuSen.Services;
 
 /// <summary>
 /// Autoload: Verwaltet den App-Zustand und die Navigation

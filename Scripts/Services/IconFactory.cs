@@ -1,4 +1,4 @@
-namespace MySudoku.Services;
+namespace SudokuSen.Services;
 
 /// <summary>
 /// Factory für programmtisch erstellte Icons

@@ -1,14 +1,14 @@
-# MySudoku - Godot 4.5 C# Sudoku Game
+# SudokuSen - Godot 4.5 C# Sudoku Game
 
 Ein vollständiges klassisches 9x9 Sudoku-Spiel, entwickelt mit Godot 4.5 und C# 10.
 
 ## 📁 Projektstruktur
 
 ```text
-MySudoku/
+SudokuSen/
 ├── project.godot              # Godot-Projektkonfiguration
-├── MySudoku.csproj           # C# Projektdatei
-├── MySudoku.sln              # Visual Studio Solution
+├── SudokuSen.csproj           # C# Projektdatei
+├── SudokuSen.sln              # Visual Studio Solution
 ├── icon.svg                  # App-Icon
 │
 ├── Scenes/                   # Godot-Szenen (.tscn)
