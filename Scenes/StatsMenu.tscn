@@ -18,6 +18,7 @@ offset_left = 16
 offset_top = 16
 offset_right = 116
 offset_bottom = 56
+tooltip_text = "Zurück zum Hauptmenü"
 text = "← Zurück"
 
 [node name="Title" type="Label" parent="."]

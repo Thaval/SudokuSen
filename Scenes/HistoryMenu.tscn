@@ -18,6 +18,7 @@ offset_left = 16
 offset_top = 16
 offset_right = 116
 offset_bottom = 56
+tooltip_text = "Zurück zum Hauptmenü"
 text = "← Zurück"
 
 [node name="Title" type="Label" parent="."]
@@ -48,15 +49,25 @@ grow_vertical = 2
 custom_minimum_size = Vector2(700, 400)
 layout_mode = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel"]
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
 layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
 
-[node name="HistoryList" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="HistoryList" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="EmptyLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/HistoryList"]
+[node name="EmptyLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/ScrollContainer/HistoryList"]
 layout_mode = 2
 text = "Noch keine Spiele gespielt."
 horizontal_alignment = 1

@@ -29,7 +29,7 @@ public partial class HistoryMenu : Control
         _backButton = GetNode<Button>("BackButton");
         _title = GetNode<Label>("Title");
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
-        _historyList = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/HistoryList");
+        _historyList = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/ScrollContainer/HistoryList");
         _emptyLabel = _historyList.GetNode<Label>("EmptyLabel");
 
         _backButton.Pressed += OnBackPressed;

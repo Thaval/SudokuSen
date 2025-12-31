@@ -81,6 +81,7 @@ theme_override_constants/separation = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
+tooltip_text = "Perfekt für Anfänger - vereinfachtes 4x4 Raster"
 text = "👶 Kids"
 
 [node name="KidsTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/KidsContainer"]
@@ -96,6 +97,7 @@ theme_override_constants/separation = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
+tooltip_text = "Grundlegende Techniken - ideal zum Einstieg ins 9x9 Sudoku"
 text = "🟢 Leicht"
 
 [node name="EasyTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/EasyContainer"]
@@ -111,6 +113,7 @@ theme_override_constants/separation = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
+tooltip_text = "Fortgeschrittene Techniken - erfordert Notizen und Paar-Erkennung"
 text = "🟠 Mittel"
 
 [node name="MediumTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/MediumContainer"]
@@ -126,6 +129,7 @@ theme_override_constants/separation = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
+tooltip_text = "Experten-Techniken - X-Wing, Swordfish und mehr"
 text = "🔴 Schwer"
 
 [node name="HardTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/HardContainer"]
