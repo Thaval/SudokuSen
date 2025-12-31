@@ -340,14 +340,14 @@ if ($CreateGitHubRelease) {
         # Create git tag if not exists locally and remotely
         $tagName = "v$version"
         Push-Location $ProjectDir
-        
+
         # Check if tag exists locally
         $existingLocalTag = git tag -l $tagName 2>$null
-        
+
         # Check if tag exists on remote
         git fetch --tags 2>$null
         $existingRemoteTag = git ls-remote --tags origin $tagName 2>$null
-        
+
         if (-not $existingLocalTag -and -not $existingRemoteTag) {
             Write-Host "🏷️  Creating git tag: $tagName" -ForegroundColor Cyan
             git tag -a $tagName -m "SudokuSen $tagName"
@@ -360,7 +360,7 @@ if ($CreateGitHubRelease) {
         } else {
             Write-Host "ℹ️  Tag $tagName already exists" -ForegroundColor Gray
         }
-        
+
         Pop-Location
 
         # Read changelog for release notes
@@ -375,7 +375,7 @@ if ($CreateGitHubRelease) {
 
         # Check if release already exists
         $existingRelease = & $ghCmd.Source release view $tagName 2>$null
-        
+
         if ($existingRelease) {
             Write-Host "ℹ️  Release $tagName already exists. Deleting and recreating..." -ForegroundColor Yellow
             & $ghCmd.Source release delete $tagName --yes 2>&1 | Out-Null

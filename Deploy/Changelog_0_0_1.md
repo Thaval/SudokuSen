@@ -1,59 +1,39 @@
-# SudokuSen v0.0.1 Changelog
+# Changelog
 
-**Release Date:** December 2024
+All notable changes to this project will be documented in this file.
 
-## 🎉 Initial Release
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-First public release of SudokuSen - a modern Sudoku game built with Godot 4 & C#.
+## [0.0.1] - 2024-12-29
 
-### ✨ Features
+### Added
 
-- **Multiple Difficulty Levels**
-  - Kids (4×4 grid)
-  - Easy, Medium, Hard (9×9 grid)
-
-- **Game Modes**
-  - Classic Sudoku
-  - Daily Sudoku with streaks
-  - Deadly Mode (3 mistakes = game over)
-  - Challenge modes (No Notes, Perfect Run, Hint Limit, Time Attack)
-
-- **Smart Hint System**
-  - Step-by-step explanations
-  - Multiple solving techniques supported
-  - Learn mode for beginners
-
-- **Notes & Candidates**
-  - Manual note-taking
-  - Auto-candidates feature
-  - Smart note cleanup
-  - House auto-fill (Row/Column/Block)
-
-- **Customization**
-  - Light/Dark themes
-  - Colorblind-friendly palette
-  - UI scaling
-  - Sound effects & music
-
-- **Progress Tracking**
-  - Game history
-  - Statistics per difficulty
-  - Mistake heatmap
-  - Technique progression
-
-### 🎨 UI/UX
-
-- Clean, modern interface
-- Keyboard & mouse support
+- Multiple difficulty levels: Kids (4×4 grid), Easy, Medium, Hard (9×9 grid)
+- Classic Sudoku game mode
+- Daily Sudoku with streak tracking
+- Deadly Mode (3 mistakes = game over)
+- Challenge modes: No Notes, Perfect Run, Hint Limit, Time Attack
+- Smart hint system with step-by-step explanations
+- Multiple solving techniques support for hints
+- Learn mode for beginners
+- Manual note-taking system
+- Auto-candidates feature
+- Smart note cleanup
+- House auto-fill (Row/Column/Block)
+- Light and Dark theme options
+- Colorblind-friendly palette
+- UI scaling options
+- Sound effects and music with volume controls
+- Game history tracking
+- Statistics per difficulty level
+- Mistake heatmap visualization
+- Technique progression tracking
+- Clean, modern user interface
+- Full keyboard and mouse support
 - Row/column/block highlighting
-- Conflict detection
-
-### 🔊 Audio
-
+- Automatic conflict detection
 - Menu and game music tracks
 - Sound effects for all interactions
-- Separate volume controls
 
----
-
-*SudokuSen v0.0.1 - Happy solving! 🧩*
+[0.0.1]: https://github.com/Thaval/SudokuSen/releases/tag/v0.0.1
