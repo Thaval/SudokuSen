@@ -63,6 +63,8 @@ public class SettingsData
     public int DailyStreakBest { get; set; } = 0;
 
     // Challenge Modes (apply to new games)
+    /// <summary>Challenge difficulty: 0=Auto, 1=Leicht, 2=Mittel, 3=Schwer</summary>
+    public int ChallengeDifficulty { get; set; } = 0; // 0 = Auto
     public bool ChallengeNoNotes { get; set; } = false;
     public bool ChallengePerfectRun { get; set; } = false;
     public int ChallengeHintLimit { get; set; } = 0; // 0 = off

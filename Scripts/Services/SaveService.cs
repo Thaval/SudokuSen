@@ -282,6 +282,69 @@ public partial class SaveService : Node
         }
     }
 
+    /// <summary>
+    /// Calculates the recommended difficulty based on player's history.
+    /// Logic: Start from Easy, only recommend harder if player has proven success.
+    /// - New players or no stats → Easy
+    /// - Good performance (≥70% win rate, ≤3 avg mistakes) → try next difficulty
+    /// - Poor performance → stay at current or go lower
+    /// </summary>
+    public Difficulty GetRecommendedDifficulty()
+    {
+        const int MinGamesForPromotion = 3;
+        const double PromotionWinRate = 0.70;
+        const double MaxAvgMistakes = 3.0;
+
+        var completed = History.Where(h => h.Status != GameStatus.InProgress).ToList();
+
+        // No history at all → start with Easy
+        if (completed.Count == 0)
+        {
+            GD.Print("[Save] GetRecommendedDifficulty: No history, recommending Easy");
+            return Difficulty.Easy;
+        }
+
+        // Check difficulties from Easy → Medium → Hard (progression path)
+        var progressionPath = new[] { Difficulty.Easy, Difficulty.Medium, Difficulty.Hard };
+        Difficulty recommended = Difficulty.Easy;
+
+        foreach (var diff in progressionPath)
+        {
+            var gamesAtDiff = completed.Where(h => h.Difficulty == diff).ToList();
+
+            // Not enough games at this difficulty → stay here
+            if (gamesAtDiff.Count < MinGamesForPromotion)
+            {
+                GD.Print($"[Save] GetRecommendedDifficulty: Not enough games at {diff} ({gamesAtDiff.Count}/{MinGamesForPromotion}), recommending {recommended}");
+                return recommended;
+            }
+
+            var wins = gamesAtDiff.Count(h => h.Status == GameStatus.Won);
+            var winRate = (double)wins / gamesAtDiff.Count;
+            var avgMistakes = gamesAtDiff.Average(h => h.Mistakes);
+
+            GD.Print($"[Save] GetRecommendedDifficulty: {diff} - {gamesAtDiff.Count} games, {winRate:P0} win rate, {avgMistakes:F1} avg mistakes");
+
+            // Good performance at this level?
+            if (winRate >= PromotionWinRate && avgMistakes <= MaxAvgMistakes)
+            {
+                // Player is doing well, can handle this difficulty
+                recommended = diff;
+                // Continue checking if they can handle the next level
+            }
+            else
+            {
+                // Struggling at this level → recommend previous level (or this one if it's Easy)
+                GD.Print($"[Save] GetRecommendedDifficulty: Struggling at {diff}, recommending {recommended}");
+                return recommended;
+            }
+        }
+
+        // Player has mastered all levels → recommend Hard
+        GD.Print($"[Save] GetRecommendedDifficulty: Mastered all levels, recommending {recommended}");
+        return recommended;
+    }
+
     #endregion
 }
 

@@ -185,12 +185,23 @@ public partial class GameScene : Control
     {
         if (_isGameOver || _gameState == null || _isPaused) return;
 
-        // Maus-Events für Drag-Select
+        // Maus-Events für Drag-Select und Background-Klick
         if (@event is InputEventMouseButton mouseButton)
         {
             if (mouseButton.ButtonIndex == MouseButton.Left)
             {
-                if (!mouseButton.Pressed)
+                if (mouseButton.Pressed)
+                {
+                    // Klick auf Hintergrund? Auswahl aufheben
+                    var mousePos = mouseButton.Position;
+                    if (!IsClickOnInteractiveElement(mousePos))
+                    {
+                        ClearAllSelection();
+                        UpdateGrid();
+                        UpdateNumberCounts();
+                    }
+                }
+                else
                 {
                     // Maus losgelassen - Drag beenden
                     _isDragging = false;
@@ -340,6 +351,47 @@ public partial class GameScene : Control
         {
             _selectedCells.Add((_selectedRow, _selectedCol));
         }
+    }
+
+    private void ClearAllSelection()
+    {
+        _selectedRow = -1;
+        _selectedCol = -1;
+        _selectedCells.Clear();
+        _highlightedNumber = 0;
+    }
+
+    private bool IsClickOnInteractiveElement(Vector2 mousePos)
+    {
+        // Check if click is on grid panel
+        if (_gridPanel != null)
+        {
+            var gridRect = _gridPanel.GetGlobalRect();
+            if (gridRect.HasPoint(mousePos)) return true;
+        }
+
+        // Check if click is on number pad
+        if (_numberPad != null)
+        {
+            var padRect = _numberPad.GetGlobalRect();
+            if (padRect.HasPoint(mousePos)) return true;
+        }
+
+        // Check if click is on any button in header (back, hint, notes, etc.)
+        if (_backButton != null && _backButton.GetGlobalRect().HasPoint(mousePos)) return true;
+        if (_hintButton != null && _hintButton.GetGlobalRect().HasPoint(mousePos)) return true;
+        if (_notesButton != null && _notesButton.GetGlobalRect().HasPoint(mousePos)) return true;
+        if (_autoCandidatesButton != null && _autoCandidatesButton.GetGlobalRect().HasPoint(mousePos)) return true;
+        if (_houseAutoFillButton != null && _houseAutoFillButton.GetGlobalRect().HasPoint(mousePos)) return true;
+
+        // Check if click is on hint overlay
+        if (_hintOverlay != null && _hintOverlay.Visible)
+        {
+            var overlayRect = _hintOverlay.GetGlobalRect();
+            if (overlayRect.HasPoint(mousePos)) return true;
+        }
+
+        return false;
     }
 
     private void TrySetNumberOnSelection(int number)

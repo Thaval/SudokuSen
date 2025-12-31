@@ -46,6 +46,7 @@ public partial class SettingsMenu : Control
     private CheckButton _smartCleanupCheck = null!;
     private CheckButton _houseAutoFillCheck = null!;
 
+    private OptionButton _challengeDifficultyOption = null!;
     private CheckButton _challengeNoNotesCheck = null!;
     private CheckButton _challengePerfectCheck = null!;
     private OptionButton _challengeHintsOption = null!;
@@ -102,6 +103,7 @@ public partial class SettingsMenu : Control
         _smartCleanupCheck = settingsContainer.GetNode<CheckButton>("SmartCleanupRow/SmartCleanupCheck");
         _houseAutoFillCheck = settingsContainer.GetNode<CheckButton>("HouseAutoFillRow/HouseAutoFillCheck");
 
+        _challengeDifficultyOption = settingsContainer.GetNode<OptionButton>("ChallengeDifficultyRow/ChallengeDifficultyOption");
         _challengeNoNotesCheck = settingsContainer.GetNode<CheckButton>("ChallengeNoNotesRow/ChallengeNoNotesCheck");
         _challengePerfectCheck = settingsContainer.GetNode<CheckButton>("ChallengePerfectRow/ChallengePerfectCheck");
         _challengeHintsOption = settingsContainer.GetNode<OptionButton>("ChallengeHintsRow/ChallengeHintsOption");
@@ -116,6 +118,12 @@ public partial class SettingsMenu : Control
         _themeOption.AddItem("Hell", 0);
         _themeOption.AddItem("Dunkel", 1);
 
+        // Challenge difficulty options
+        _challengeDifficultyOption.AddItem("Auto", 0);
+        _challengeDifficultyOption.AddItem("Leicht", 1);
+        _challengeDifficultyOption.AddItem("Mittel", 2);
+        _challengeDifficultyOption.AddItem("Schwer", 3);
+
         _challengeHintsOption.AddItem("Aus", 0);
         _challengeHintsOption.AddItem("3", 3);
         _challengeHintsOption.AddItem("5", 5);
@@ -128,6 +136,9 @@ public partial class SettingsMenu : Control
 
         // Techniken-UI erstellen
         CreateTechniqueUI();
+
+        // Configure UI scale slider with dynamic bounds
+        ConfigureUiScaleSlider();
 
         // Werte laden
         LoadSettings();
@@ -160,6 +171,7 @@ public partial class SettingsMenu : Control
         _smartCleanupCheck.Toggled += OnSmartCleanupToggled;
         _houseAutoFillCheck.Toggled += OnHouseAutoFillToggled;
 
+        _challengeDifficultyOption.ItemSelected += OnChallengeDifficultySelected;
         _challengeNoNotesCheck.Toggled += OnChallengeNoNotesToggled;
         _challengePerfectCheck.Toggled += OnChallengePerfectToggled;
         _challengeHintsOption.ItemSelected += OnChallengeHintsSelected;
@@ -397,6 +409,7 @@ public partial class SettingsMenu : Control
         _smartCleanupCheck.ButtonPressed = settings.SmartNoteCleanupEnabled;
         _houseAutoFillCheck.ButtonPressed = settings.HouseAutoFillEnabled;
 
+        SelectOptionById(_challengeDifficultyOption, settings.ChallengeDifficulty);
         _challengeNoNotesCheck.ButtonPressed = settings.ChallengeNoNotes;
         _challengePerfectCheck.ButtonPressed = settings.ChallengePerfectRun;
 
@@ -587,9 +600,31 @@ public partial class SettingsMenu : Control
         _themeService.SetColorblindPalette(pressed);
     }
 
+    /// <summary>
+    /// Configures the UI scale slider with dynamic bounds based on screen resolution.
+    /// </summary>
+    private void ConfigureUiScaleSlider()
+    {
+        var bounds = _themeService.GetUiScaleBounds();
+
+        _uiScaleSlider.MinValue = bounds.Min;
+        _uiScaleSlider.MaxValue = bounds.Max;
+        _uiScaleSlider.Step = 5;
+
+        // Add tooltip explaining the scale range
+        _uiScaleSlider.TooltipText = $"UI-Skalierung ({bounds.Min}% - {bounds.Max}%)\nEmpfohlen: {bounds.Recommended}%";
+
+        GD.Print($"[UI] SettingsMenu: UI scale bounds configured: {bounds.Min}%-{bounds.Max}% (recommended: {bounds.Recommended}%)");
+    }
+
     private void OnUiScaleChanged(double value)
     {
         int pct = (int)Math.Round(value);
+
+        // Get current bounds and clamp
+        var bounds = _themeService.GetUiScaleBounds();
+        pct = Math.Clamp(pct, bounds.Min, bounds.Max);
+
         _uiScaleValue.Text = $"{pct}%";
 
         GD.Print($"[UI] SettingsMenu: UI scale changed = {pct}%");
@@ -700,6 +735,14 @@ public partial class SettingsMenu : Control
     {
         GD.Print($"[UI] SettingsMenu: Highlight related cells toggled = {pressed}");
         _saveService.Settings.HighlightRelatedCells = pressed;
+        SaveSettings();
+    }
+
+    private void OnChallengeDifficultySelected(long index)
+    {
+        int id = _challengeDifficultyOption.GetItemId((int)index);
+        GD.Print($"[UI] SettingsMenu: Challenge difficulty = {id} (0=Auto, 1=Easy, 2=Medium, 3=Hard)");
+        _saveService.Settings.ChallengeDifficulty = id;
         SaveSettings();
     }
 

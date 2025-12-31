@@ -174,6 +174,41 @@ public partial class MainMenu : Control
     {
         GD.Print("[UI] MainMenu: Start pressed");
         _audioService.PlayClick();
+
+        var settings = _saveService.Settings;
+
+        // Check if any challenge mode is active
+        bool hasChallengeActive = settings.ChallengeNoNotes ||
+                                   settings.ChallengePerfectRun ||
+                                   settings.ChallengeHintLimit > 0 ||
+                                   settings.ChallengeTimeAttackMinutes > 0;
+
+        // If challenge mode is active and difficulty is set, skip difficulty selection
+        if (hasChallengeActive && settings.ChallengeDifficulty > 0)
+        {
+            // ChallengeDifficulty: 1=Easy, 2=Medium, 3=Hard
+            var difficulty = settings.ChallengeDifficulty switch
+            {
+                1 => Difficulty.Easy,
+                2 => Difficulty.Medium,
+                3 => Difficulty.Hard,
+                _ => Difficulty.Medium
+            };
+            GD.Print($"[UI] MainMenu: Challenge mode active, starting with difficulty {difficulty}");
+            _appState.StartNewGame(difficulty);
+            return;
+        }
+
+        // If challenge mode with Auto difficulty, use recommended difficulty
+        if (hasChallengeActive && settings.ChallengeDifficulty == 0)
+        {
+            var recommendedDifficulty = _saveService.GetRecommendedDifficulty();
+            GD.Print($"[UI] MainMenu: Challenge mode with Auto, recommended difficulty = {recommendedDifficulty}");
+            _appState.StartNewGame(recommendedDifficulty);
+            return;
+        }
+
+        // Normal flow: go to difficulty selection
         _appState.NavigateTo(AppState.SCENE_DIFFICULTY);
     }
 

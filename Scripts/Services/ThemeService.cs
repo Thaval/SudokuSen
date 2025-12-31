@@ -140,11 +140,76 @@ public partial class ThemeService : Node
         EmitSignal(SignalName.ThemeChanged, _themeIndex);
     }
 
+    /// <summary>
+    /// Base viewport dimensions for reference (design resolution)
+    /// </summary>
+    public const int BaseViewportWidth = 1280;
+    public const int BaseViewportHeight = 720;
+
+    /// <summary>
+    /// Calculates the recommended UI scale bounds based on screen size.
+    /// Returns (minScale, maxScale, recommendedScale) as percentages.
+    /// </summary>
+    public (int Min, int Max, int Recommended) GetUiScaleBounds()
+    {
+        var screenSize = DisplayServer.ScreenGetSize();
+        var windowSize = GetTree().Root.Size;
+
+        // Use the actual window size for calculations
+        int width = (int)windowSize.X;
+        int height = (int)windowSize.Y;
+
+        // Calculate scale factors based on how much screen space we have
+        float widthRatio = width / (float)BaseViewportWidth;
+        float heightRatio = height / (float)BaseViewportHeight;
+
+        // The limiting factor is the smaller ratio
+        float limitingRatio = Math.Min(widthRatio, heightRatio);
+
+        // Minimum scale: ensure content fits even on smaller screens
+        // At 720p (our base), min should be ~75%
+        // At 1080p, we can go lower to 50%
+        int minScale = limitingRatio >= 1.5f ? 50 : (limitingRatio >= 1.0f ? 75 : 50);
+
+        // Maximum scale: prevent content from exceeding viewport
+        // Cap at 150% for 720p, allow up to 200% for 1440p+
+        int maxScale = limitingRatio >= 2.0f ? 200 : (limitingRatio >= 1.5f ? 175 : (limitingRatio >= 1.0f ? 150 : 125));
+
+        // Recommended scale based on screen DPI and size
+        // For HD (720p): 100%
+        // For FHD (1080p): 100-125%
+        // For QHD (1440p): 125-150%
+        // For 4K: 150-200%
+        int recommended = limitingRatio >= 2.0f ? 150 :
+                         (limitingRatio >= 1.5f ? 125 :
+                         (limitingRatio >= 1.0f ? 100 : 100));
+
+        return (minScale, maxScale, recommended);
+    }
+
+    /// <summary>
+    /// Applies UI scaling with automatic bounds validation.
+    /// </summary>
     public void ApplyUiScale(int uiScalePercent)
     {
-        float scale = Math.Clamp(uiScalePercent / 100f, 0.75f, 1.5f);
+        var bounds = GetUiScaleBounds();
+
+        // Clamp to valid bounds
+        int clampedScale = Math.Clamp(uiScalePercent, bounds.Min, bounds.Max);
+
+        float scale = clampedScale / 100f;
         var root = GetTree().Root;
         root.ContentScaleFactor = scale;
+
+        GD.Print($"[ThemeService] UI Scale applied: {clampedScale}% (requested: {uiScalePercent}%, bounds: {bounds.Min}%-{bounds.Max}%)");
+    }
+
+    /// <summary>
+    /// Gets the current content scale factor.
+    /// </summary>
+    public float GetCurrentScale()
+    {
+        return GetTree().Root.ContentScaleFactor;
     }
 
     private ThemeColors BuildColors(int themeIndex, bool colorblind)

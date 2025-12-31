@@ -34,6 +34,7 @@ theme_override_constants/separation = 16
 [node name="BackButton" type="Button" parent="VBoxContainer/HeaderMargin/Header"]
 custom_minimum_size = Vector2(100, 40)
 layout_mode = 2
+tooltip_text = "Zurück zum Hauptmenü (Spiel wird automatisch gespeichert)"
 text = "← Menü"
 
 [node name="Spacer" type="Control" parent="VBoxContainer/HeaderMargin/Header"]
