@@ -168,6 +168,7 @@ public class SudokuGameState
             Status = Status,
             IsDaily = IsDaily,
             DailyDate = DailyDate,
+            ScenarioTechnique = ScenarioTechnique,
             ChallengeNoNotes = ChallengeNoNotes,
             ChallengePerfectRun = ChallengePerfectRun,
             ChallengeHintLimit = ChallengeHintLimit,

@@ -145,3 +145,41 @@ If future async work is needed (e.g., puzzle generation), it should:
 - ✅ No scene (.tscn) files modified
 - ✅ No public API changes
 - ✅ No save data format changes
+
+---
+
+## Refactor Session - December 2025
+
+### Overview
+Performed code quality scan per software-quality.prompt.md. Focused on LINQ allocation removal in HintService.cs (cold path but good practice for pattern consistency).
+
+### Changes Made
+
+#### Commit 11: Replace LINQ .First() with GetSingleElement helper (HintService.cs)
+- **What**: Added `GetSingleElement(HashSet<int>)` helper; replaced 5 occurrences of `remainingCands.First()`
+- **Why safe**: Count==1 always verified before call; same value returned via enumerator
+- **Metrics**: Eliminates LINQ iterator allocation per hint-finding pass
+- **Methods updated**: FindNakedPair, FindPointingPair, FindBoxLineReduction, FindXWing
+
+#### Commit 12: Replace LINQ .All() with explicit loops (HintService.cs)
+- **What**: Added `AllSameRow(List<(int,int)>)` and `AllSameCol(List<(int,int)>)` helpers
+- **Why safe**: Same predicate logic, explicit loop avoids closure allocation
+- **Metrics**: Eliminates 2 closure allocations in FindPointingPair per hint search
+
+#### Commit 13: Replace LINQ Select().ToList() with explicit loop (HintService.cs)
+- **What**: Replaced `cols.Select(c => (row, c)).ToList()` with explicit foreach + Add
+- **Why safe**: Same list contents, pre-sized for capacity
+- **Metrics**: Eliminates closure + intermediate iterator allocation in FindBoxLineReduction
+
+### Current State
+- **Build**: ✅ Green (0 errors, 0 warnings)
+- **Behavior**: ✅ Observationally equivalent
+- **Threading**: ✅ All main-thread only
+
+### Remaining Opportunities (Low Priority)
+| # | File | Issue | Notes |
+|---|------|-------|-------|
+| 1 | UiNavigationSfx.cs | Stack allocation in EnumerateDescendants | Once per scene load, negligible |
+| 2 | SettingsMenu.cs | 800+ lines, high complexity | Architecture change, defer |
+| 3 | AudioService.cs | String interpolation in logs | Only affects debug overhead |
+

@@ -6,19 +6,23 @@
 .DESCRIPTION
     This script:
     1. Reads the version from MySudoku.csproj
-    2. Builds the C# project in Release mode
-    3. Exports the Godot project to create the executable
-    4. Creates output directory structure: /output/{version}/
-    5. Copies the executable and README to the output folder
-    6. Copies screenshots folder if present
+    2. Verifies required files exist (Changelog, Presentation)
+    3. Builds the C# project in Release mode
+    4. Exports the Godot project to create the executable
+    5. Creates output directory structure: /Deploy/releases/{version}/
+    6. Copies the executable, README, and Changelog to the output folder
+    7. Copies screenshots folder if present
 
 .PARAMETER GodotPath
     Path to Godot executable. If not provided, searches in PATH and common locations.
 
+.PARAMETER SkipChecks
+    Skip pre-deployment checks (Changelog, Presentation verification)
+
 .EXAMPLE
     .\Deploy.ps1
 
-    Deploys the current version (e.g., 0.0.1) to .\output\0.0.1\
+    Deploys the current version (e.g., 0.0.2) to .\releases\0.0.2\
 
 .EXAMPLE
     .\Deploy.ps1 -GodotPath "C:\Godot\Godot_v4.5-stable_mono_win64.exe"
@@ -28,20 +32,22 @@
 
 [CmdletBinding()]
 param(
-    [string]$GodotPath = ""
+    [string]$GodotPath = "",
+    [switch]$SkipChecks
 )
 
 # Configuration
-$ProjectFile = "MySudoku.csproj"
-$ProjectDir = $PSScriptRoot
-# Output folder is at project root/release
-$OutputBaseDir = Join-Path $ProjectDir "release"
-$PresentationSource = Join-Path $ProjectDir "Docs\Presentation"
-$ScreenshotsSource = Join-Path $ProjectDir "Docs\Presentation\screenshots"
+$DeployDir = $PSScriptRoot
+$ProjectDir = Split-Path $DeployDir -Parent
+$ProjectFile = Join-Path $ProjectDir "MySudoku.csproj"
+$OutputBaseDir = Join-Path $DeployDir "releases"
+$DocsDir = Join-Path $ProjectDir "Docs"
+$PresentationDir = Join-Path $DocsDir "Presentation"
+$ScreenshotsSource = Join-Path $PresentationDir "screenshots"
 $GodotExportDir = Join-Path $env:TEMP "MySudoku_Export"
 
 # Step 1: Read version from .csproj
-Write-Host "📋 Reading version from $ProjectFile..." -ForegroundColor Cyan
+Write-Host "📋 Reading version from MySudoku.csproj..." -ForegroundColor Cyan
 
 if (-not (Test-Path $ProjectFile)) {
     Write-Error "Project file not found: $ProjectFile"
@@ -52,13 +58,45 @@ if (-not (Test-Path $ProjectFile)) {
 $version = $csproj.Project.PropertyGroup.Version
 
 if ([string]::IsNullOrWhiteSpace($version)) {
-    Write-Error "Could not find <Version> in $ProjectFile"
+    Write-Error "Could not find <Version> in MySudoku.csproj"
     exit 1
 }
 
 Write-Host "✓ Version detected: $version" -ForegroundColor Green
 
-# Step 2: Find Godot executable
+# Step 2: Verify required files exist
+$versionUnderscore = $version.Replace('.', '_')
+$changelogPath = Join-Path $DeployDir "Changelog_$versionUnderscore.md"
+$presentationPath = Join-Path $PresentationDir "Presentation_$versionUnderscore.md"
+
+if (-not $SkipChecks) {
+    Write-Host "`n🔍 Verifying required files..." -ForegroundColor Cyan
+
+    $missingFiles = @()
+
+    if (-not (Test-Path $changelogPath)) {
+        $missingFiles += "Changelog_$versionUnderscore.md (in Deploy folder)"
+    }
+
+    if (-not (Test-Path $presentationPath)) {
+        $missingFiles += "Presentation_$versionUnderscore.md (in Docs/Presentation folder)"
+    }
+
+    if ($missingFiles.Count -gt 0) {
+        Write-Error "Missing required files for version $version!"
+        Write-Host "`n❌ Missing files:" -ForegroundColor Red
+        foreach ($file in $missingFiles) {
+            Write-Host "   - $file" -ForegroundColor Yellow
+        }
+        Write-Host "`n📝 Please create these files before deploying." -ForegroundColor Yellow
+        Write-Host "   See Deploy/README.md for the deployment checklist." -ForegroundColor Yellow
+        exit 1
+    }
+
+    Write-Host "✓ All required files found" -ForegroundColor Green
+}
+
+# Step 3: Find Godot executable
 Write-Host "`n🔍 Locating Godot executable..." -ForegroundColor Cyan
 
 if ([string]::IsNullOrWhiteSpace($GodotPath)) {
@@ -71,6 +109,8 @@ if ([string]::IsNullOrWhiteSpace($GodotPath)) {
     # Try common locations
     if ([string]::IsNullOrWhiteSpace($GodotPath)) {
         $commonPaths = @(
+            "$env:USERPROFILE\Downloads\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64.exe",
+            "C:\Godot\Godot_v4.5.1-stable_mono_win64.exe",
             "C:\Godot\Godot_v4.5-stable_mono_win64.exe",
             "C:\Program Files\Godot\Godot.exe",
             "$env:LOCALAPPDATA\Godot\Godot.exe"
@@ -96,22 +136,25 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or (-not (Test-Path $GodotPath))) 
     $SkipGodotExport = $false
 }
 
-# Step 3: Set up output paths
+# Step 4: Set up output paths
 $VersionedOutputDir = Join-Path $OutputBaseDir $version
 
 Write-Host "`n🏗️  Building MySudoku v$version..." -ForegroundColor Cyan
 
-# Step 4: Build C# project in Release mode
+# Step 5: Build C# project in Release mode
 Write-Host "`n⚙️  Building C# project in Release mode..." -ForegroundColor Cyan
+Push-Location $ProjectDir
 $buildOutput = dotnet build --configuration Release 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Build failed!"
     Write-Host $buildOutput -ForegroundColor Red
+    Pop-Location
     exit 1
 }
+Pop-Location
 Write-Host "✓ C# build successful" -ForegroundColor Green
 
-# Step 5: Export using Godot (if available)
+# Step 6: Export using Godot (if available)
 if (-not $SkipGodotExport) {
     Write-Host "`n📦 Exporting Godot project..." -ForegroundColor Cyan
 
@@ -137,6 +180,7 @@ if (-not $SkipGodotExport) {
     New-Item -ItemType Directory -Path $GodotExportDir -Force | Out-Null
 
     # Export the project (Windows Desktop)
+    Push-Location $ProjectDir
     $exportArgs = @(
         "--headless",
         "--export-release",
@@ -146,6 +190,7 @@ if (-not $SkipGodotExport) {
 
     Write-Host "Running: $GodotPath $($exportArgs -join ' ')" -ForegroundColor Gray
     & $GodotPath $exportArgs 2>&1 | Write-Host
+    Pop-Location
 
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "Godot export failed or export preset not found"
@@ -156,7 +201,7 @@ if (-not $SkipGodotExport) {
     }
 }
 
-# Step 6: Create versioned output directory
+# Step 7: Create versioned output directory
 Write-Host "`n📁 Creating output directory: $VersionedOutputDir" -ForegroundColor Cyan
 if (Test-Path $VersionedOutputDir) {
     Write-Host "Removing existing output folder..." -ForegroundColor Yellow
@@ -165,7 +210,7 @@ if (Test-Path $VersionedOutputDir) {
 New-Item -ItemType Directory -Path $VersionedOutputDir -Force | Out-Null
 Write-Host "✓ Directory created" -ForegroundColor Green
 
-# Step 7: Copy exported files
+# Step 8: Copy exported files
 if (-not $SkipGodotExport -and (Test-Path $GodotExportDir)) {
     Write-Host "`n📋 Copying exported application files..." -ForegroundColor Cyan
     $exeName = "MySudoku.exe"
@@ -181,32 +226,42 @@ if (-not $SkipGodotExport -and (Test-Path $GodotExportDir)) {
     }
 }
 
-# Step 8: Copy README (Presentation)
-Write-Host "`n📄 Copying README..." -ForegroundColor Cyan
-$readmeSource = Join-Path $PresentationSource "Presentation_$($version.Replace('.', '_')).md"
+# Step 9: Copy README (Presentation)
+Write-Host "`n📄 Copying README (Presentation)..." -ForegroundColor Cyan
 $readmeDest = Join-Path $VersionedOutputDir "README.md"
 
-if (Test-Path $readmeSource) {
-    Copy-Item $readmeSource $readmeDest -Force
-    Write-Host "✓ README copied: $(Split-Path $readmeSource -Leaf) → README.md" -ForegroundColor Green
+if (Test-Path $presentationPath) {
+    Copy-Item $presentationPath $readmeDest -Force
+    Write-Host "✓ README copied: Presentation_$versionUnderscore.md → README.md" -ForegroundColor Green
 } else {
-    Write-Warning "README not found: $readmeSource"
+    Write-Warning "Presentation not found: $presentationPath"
 }
 
-# Step 9: Copy screenshots folder
+# Step 10: Copy Changelog
+Write-Host "`n📝 Copying Changelog..." -ForegroundColor Cyan
+$changelogDest = Join-Path $VersionedOutputDir "CHANGELOG.md"
+
+if (Test-Path $changelogPath) {
+    Copy-Item $changelogPath $changelogDest -Force
+    Write-Host "✓ Changelog copied: Changelog_$versionUnderscore.md → CHANGELOG.md" -ForegroundColor Green
+} else {
+    Write-Warning "Changelog not found: $changelogPath"
+}
+
+# Step 11: Copy screenshots folder
 Write-Host "`n🖼️  Copying screenshots..." -ForegroundColor Cyan
 $screenshotsVersioned = Join-Path $ScreenshotsSource $version
-$screenshotsDest = Join-Path $VersionedOutputDir "screenshots\$version"
+$screenshotsDest = Join-Path $VersionedOutputDir "screenshots"
 
 if (Test-Path $screenshotsVersioned) {
-    New-Item -ItemType Directory -Path (Split-Path $screenshotsDest -Parent) -Force | Out-Null
-    Copy-Item $screenshotsVersioned $screenshotsDest -Recurse -Force
-    Write-Host "✓ Screenshots copied: $version folder" -ForegroundColor Green
+    New-Item -ItemType Directory -Path $screenshotsDest -Force | Out-Null
+    Copy-Item "$screenshotsVersioned\*" $screenshotsDest -Recurse -Force
+    Write-Host "✓ Screenshots copied" -ForegroundColor Green
 } else {
     Write-Warning "Screenshots not found: $screenshotsVersioned"
 }
 
-# Step 10: Summary
+# Step 12: Summary
 Write-Host "`n✅ Deployment complete!" -ForegroundColor Green
 Write-Host "`n📦 Package location:" -ForegroundColor Cyan
 Write-Host "   $VersionedOutputDir" -ForegroundColor White
@@ -215,6 +270,7 @@ if (-not $SkipGodotExport) {
     Write-Host "`n📋 Contents:" -ForegroundColor Cyan
     Write-Host "   - MySudoku.exe" -ForegroundColor White
     Write-Host "   - README.md (User Guide)" -ForegroundColor White
+    Write-Host "   - CHANGELOG.md" -ForegroundColor White
     Write-Host "   - screenshots/ (if available)" -ForegroundColor White
     Write-Host "   - All required dependencies" -ForegroundColor White
 
@@ -230,5 +286,5 @@ if (-not $SkipGodotExport) {
     Write-Host "   1. Open project in Godot Editor" -ForegroundColor White
     Write-Host "   2. Go to Project → Export" -ForegroundColor White
     Write-Host "   3. Export to: $VersionedOutputDir\MySudoku.exe" -ForegroundColor White
-    Write-Host "   4. README and screenshots are already in place" -ForegroundColor White
+    Write-Host "   4. README and CHANGELOG are already in place" -ForegroundColor White
 }

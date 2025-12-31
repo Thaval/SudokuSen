@@ -258,10 +258,10 @@ public class SettingsData
             ChallengeTimeAttackMinutes = ChallengeTimeAttackMinutes,
             TechniqueHintShownCounts = new Dictionary<string, int>(TechniqueHintShownCounts),
             TechniqueHintAppliedCounts = new Dictionary<string, int>(TechniqueHintAppliedCounts),
-            TechniquesKids = TechniquesKids != null ? new List<string>(TechniquesKids) : null,
-            TechniquesEasy = TechniquesEasy != null ? new List<string>(TechniquesEasy) : null,
-            TechniquesMedium = TechniquesMedium != null ? new List<string>(TechniquesMedium) : null,
-            TechniquesHard = TechniquesHard != null ? new List<string>(TechniquesHard) : null,
+            TechniquesKids = TechniquesKids is { } kids ? new List<string>(kids) : null,
+            TechniquesEasy = TechniquesEasy is { } easy ? new List<string>(easy) : null,
+            TechniquesMedium = TechniquesMedium is { } medium ? new List<string>(medium) : null,
+            TechniquesHard = TechniquesHard is { } hard ? new List<string>(hard) : null,
             MistakeHeatmap9 = new List<int>(MistakeHeatmap9),
             MistakeHeatmap4 = new List<int>(MistakeHeatmap4)
         };

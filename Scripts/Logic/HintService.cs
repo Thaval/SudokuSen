@@ -20,6 +20,45 @@ public static class HintService
     }
 
     /// <summary>
+    /// Gets the single element from a HashSet that has exactly one element.
+    /// Avoids LINQ .First() allocation. Caller must ensure Count == 1.
+    /// </summary>
+    private static int GetSingleElement(HashSet<int> set)
+    {
+        using var enumerator = set.GetEnumerator();
+        enumerator.MoveNext();
+        return enumerator.Current;
+    }
+
+    /// <summary>
+    /// Checks if all positions share the same row. Avoids LINQ closure allocation.
+    /// </summary>
+    private static bool AllSameRow(List<(int row, int col)> positions)
+    {
+        if (positions.Count == 0) return true;
+        int firstRow = positions[0].row;
+        for (int i = 1; i < positions.Count; i++)
+        {
+            if (positions[i].row != firstRow) return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if all positions share the same column. Avoids LINQ closure allocation.
+    /// </summary>
+    private static bool AllSameCol(List<(int row, int col)> positions)
+    {
+        if (positions.Count == 0) return true;
+        int firstCol = positions[0].col;
+        for (int i = 1; i < positions.Count; i++)
+        {
+            if (positions[i].col != firstCol) return false;
+        }
+        return true;
+    }
+
+    /// <summary>
     /// Findet einen Hinweis für das aktuelle Spielfeld
     /// </summary>
     public static Hint? FindHint(SudokuGameState gameState)
@@ -281,7 +320,7 @@ public static class HintService
 
                                     if (remainingCands.Count == 1)
                                     {
-                                        int value = remainingCands.First();
+                                        int value = GetSingleElement(remainingCands);
                                         var relatedCells = new List<(int, int)>
                                         {
                                             (row, pairCells[i].col),
@@ -340,7 +379,7 @@ public static class HintService
                     if (positions.Count >= 2 && positions.Count <= 3)
                     {
                         // Prüfe ob alle in derselben Zeile
-                        if (positions.All(p => p.row == positions[0].row))
+                        if (AllSameRow(positions))
                         {
                             int targetRow = positions[0].row;
 
@@ -354,7 +393,7 @@ public static class HintService
 
                                     if (remainingCands.Count == 1)
                                     {
-                                        int value = remainingCands.First();
+                                        int value = GetSingleElement(remainingCands);
                                         return new Hint
                                         {
                                             Row = targetRow,
@@ -371,7 +410,7 @@ public static class HintService
                         }
 
                         // Prüfe ob alle in derselben Spalte
-                        if (positions.All(p => p.col == positions[0].col))
+                        if (AllSameCol(positions))
                         {
                             int targetCol = positions[0].col;
 
@@ -384,7 +423,7 @@ public static class HintService
 
                                     if (remainingCands.Count == 1)
                                     {
-                                        int value = remainingCands.First();
+                                        int value = GetSingleElement(remainingCands);
                                         return new Hint
                                         {
                                             Row = row,
@@ -447,8 +486,13 @@ public static class HintService
 
                                     if (remainingCands.Count == 1)
                                     {
-                                        int value = remainingCands.First();
-                                        var relatedCells = cols.Select(c => (row, c)).ToList();
+                                        int value = GetSingleElement(remainingCands);
+                                        // Build relatedCells without LINQ to avoid closure allocation
+                                        var relatedCells = new List<(int, int)>(cols.Count);
+                                        foreach (int colIdx in cols)
+                                        {
+                                            relatedCells.Add((row, colIdx));
+                                        }
 
                                         return new Hint
                                         {
@@ -523,7 +567,7 @@ public static class HintService
 
                                     if (remainingCands.Count == 1)
                                     {
-                                        int value = remainingCands.First();
+                                        int value = GetSingleElement(remainingCands);
                                         var relatedCells = new List<(int, int)>
                                         {
                                             (rowPairs[i].row, col1),
