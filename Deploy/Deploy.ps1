@@ -313,7 +313,7 @@ if ($CreateGitHubRelease) {
             "C:\Program Files (x86)\GitHub CLI\gh.exe",
             "$env:LOCALAPPDATA\Programs\GitHub CLI\gh.exe"
         )
-        
+
         foreach ($path in $commonPaths) {
             if (Test-Path $path) {
                 $ghCmd = @{ Source = $path }
@@ -321,7 +321,7 @@ if ($CreateGitHubRelease) {
             }
         }
     }
-    
+
     if (-not $ghCmd) {
         Write-Warning "GitHub CLI (gh) not found!"
         Write-Host "`n📥 Install GitHub CLI:" -ForegroundColor Yellow
@@ -337,17 +337,31 @@ if ($CreateGitHubRelease) {
         Compress-Archive -Path "$VersionedOutputDir\*" -DestinationPath $zipPath -Force
         Write-Host "✓ Archive created" -ForegroundColor Green
 
-        # Create git tag if not exists
+        # Create git tag if not exists locally and remotely
         $tagName = "v$version"
-        $existingTag = git tag -l $tagName 2>$null
-        if (-not $existingTag) {
+        Push-Location $ProjectDir
+        
+        # Check if tag exists locally
+        $existingLocalTag = git tag -l $tagName 2>$null
+        
+        # Check if tag exists on remote
+        git fetch --tags 2>$null
+        $existingRemoteTag = git ls-remote --tags origin $tagName 2>$null
+        
+        if (-not $existingLocalTag -and -not $existingRemoteTag) {
             Write-Host "🏷️  Creating git tag: $tagName" -ForegroundColor Cyan
-            Push-Location $ProjectDir
             git tag -a $tagName -m "SudokuSen $tagName"
-            git push --tags 2>$null
-            Pop-Location
+            git push origin $tagName 2>&1 | Out-Null
             Write-Host "✓ Tag created and pushed" -ForegroundColor Green
+        } elseif ($existingLocalTag -and -not $existingRemoteTag) {
+            Write-Host "🏷️  Pushing existing tag: $tagName" -ForegroundColor Cyan
+            git push origin $tagName 2>&1 | Out-Null
+            Write-Host "✓ Tag pushed" -ForegroundColor Green
+        } else {
+            Write-Host "ℹ️  Tag $tagName already exists" -ForegroundColor Gray
         }
+        
+        Pop-Location
 
         # Read changelog for release notes
         $releaseNotes = ""
@@ -358,6 +372,14 @@ if ($CreateGitHubRelease) {
         # Create GitHub release
         Write-Host "📤 Publishing to GitHub..." -ForegroundColor Cyan
         Push-Location $ProjectDir
+
+        # Check if release already exists
+        $existingRelease = & $ghCmd.Source release view $tagName 2>$null
+        
+        if ($existingRelease) {
+            Write-Host "ℹ️  Release $tagName already exists. Deleting and recreating..." -ForegroundColor Yellow
+            & $ghCmd.Source release delete $tagName --yes 2>&1 | Out-Null
+        }
 
         $ghArgs = @(
             "release", "create", $tagName,
@@ -372,7 +394,7 @@ if ($CreateGitHubRelease) {
             Write-Host "✓ GitHub Release created successfully!" -ForegroundColor Green
             Write-Host "`n🌐 View release at: https://github.com/$(& $ghCmd.Source repo view --json nameWithOwner -q .nameWithOwner)/releases/tag/$tagName" -ForegroundColor Cyan
         } else {
-            Write-Warning "GitHub release creation failed. You may need to run 'gh auth login' first."
+            Write-Warning "GitHub release creation failed. Check the output above for details."
         }
 
         Pop-Location
