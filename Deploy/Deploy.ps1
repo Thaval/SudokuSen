@@ -304,8 +304,24 @@ if (-not $SkipGodotExport) {
 if ($CreateGitHubRelease) {
     Write-Host "`n🚀 Creating GitHub Release..." -ForegroundColor Cyan
 
-    # Check if gh CLI is installed
+    # Check if gh CLI is installed (check PATH and common locations)
     $ghCmd = Get-Command gh -ErrorAction SilentlyContinue
+    if (-not $ghCmd) {
+        # Check common installation locations
+        $commonPaths = @(
+            "C:\Program Files\GitHub CLI\gh.exe",
+            "C:\Program Files (x86)\GitHub CLI\gh.exe",
+            "$env:LOCALAPPDATA\Programs\GitHub CLI\gh.exe"
+        )
+        
+        foreach ($path in $commonPaths) {
+            if (Test-Path $path) {
+                $ghCmd = @{ Source = $path }
+                break
+            }
+        }
+    }
+    
     if (-not $ghCmd) {
         Write-Warning "GitHub CLI (gh) not found!"
         Write-Host "`n📥 Install GitHub CLI:" -ForegroundColor Yellow
@@ -350,11 +366,11 @@ if ($CreateGitHubRelease) {
             "--notes-file", $changelogPath
         )
 
-        & gh @ghArgs 2>&1 | Write-Host
+        & $ghCmd.Source @ghArgs 2>&1 | Write-Host
 
         if ($LASTEXITCODE -eq 0) {
             Write-Host "✓ GitHub Release created successfully!" -ForegroundColor Green
-            Write-Host "`n🌐 View release at: https://github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner)/releases/tag/$tagName" -ForegroundColor Cyan
+            Write-Host "`n🌐 View release at: https://github.com/$(& $ghCmd.Source repo view --json nameWithOwner -q .nameWithOwner)/releases/tag/$tagName" -ForegroundColor Cyan
         } else {
             Write-Warning "GitHub release creation failed. You may need to run 'gh auth login' first."
         }
