@@ -440,6 +440,13 @@ public class SaveGameData
 
         foreach (var cellData in Cells)
         {
+            // Bounds validation to prevent crash on corrupted save files
+            if (cellData.Row < 0 || cellData.Row >= 9 || cellData.Col < 0 || cellData.Col >= 9)
+            {
+                GD.PrintErr($"[SaveService] Invalid cell coordinates in save file: Row={cellData.Row}, Col={cellData.Col}");
+                continue;
+            }
+
             var cell = new SudokuCell
             {
                 Value = cellData.Value,

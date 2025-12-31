@@ -35,6 +35,18 @@ public class HistoryEntry
     /// <summary>Daily-Datum (yyyy-MM-dd) wenn IsDaily</summary>
     public string? DailyDate { get; set; }
 
+    /// <summary>War es ein Tutorial?</summary>
+    public bool IsTutorial { get; set; }
+
+    /// <summary>Tutorial-ID wenn IsTutorial</summary>
+    public string? TutorialId { get; set; }
+
+    /// <summary>War es ein Szenario/Übungspuzzle?</summary>
+    public bool IsScenario { get; set; }
+
+    /// <summary>Technik-ID wenn IsScenario</summary>
+    public string? ScenarioTechnique { get; set; }
+
     /// <summary>
     /// Erstellt einen HistoryEntry aus einem GameState
     /// </summary>
@@ -50,7 +62,11 @@ public class HistoryEntry
             Status = finalStatus,
             WasDeadlyMode = state.IsDeadlyMode,
             IsDaily = state.IsDaily,
-            DailyDate = state.DailyDate
+            DailyDate = state.DailyDate,
+            IsTutorial = state.IsTutorial,
+            TutorialId = state.TutorialId,
+            IsScenario = state.IsScenario || !string.IsNullOrEmpty(state.ScenarioTechnique),
+            ScenarioTechnique = state.ScenarioTechnique
         };
     }
 

@@ -24,7 +24,7 @@ theme_override_constants/separation = 8
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 16
+theme_override_constants/margin_right = 40
 theme_override_constants/margin_bottom = 0
 
 [node name="Header" type="HBoxContainer" parent="VBoxContainer/HeaderMargin"]
@@ -78,18 +78,17 @@ theme_override_constants/separation = 0
 custom_minimum_size = Vector2(24, 20)
 layout_mode = 2
 
-[node name="ColLabels" type="HBoxContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper/ColLabelsContainer"]
+[node name="ColLabels" type="Control" parent="VBoxContainer/GridCenterContainer/GridWrapper/ColLabelsContainer"]
+custom_minimum_size = Vector2(450, 20)
 layout_mode = 2
-theme_override_constants/separation = 0
 
 [node name="GridRowContainer" type="HBoxContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="RowLabels" type="VBoxContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer"]
-custom_minimum_size = Vector2(24, 0)
+[node name="RowLabels" type="Control" parent="VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer"]
+custom_minimum_size = Vector2(24, 450)
 layout_mode = 2
-theme_override_constants/separation = 0
 
 [node name="GridPanel" type="PanelContainer" parent="VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer"]
 custom_minimum_size = Vector2(450, 450)

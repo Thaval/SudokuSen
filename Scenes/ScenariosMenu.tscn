@@ -62,8 +62,7 @@ theme_override_constants/separation = 12
 
 [node name="Description" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-text = "Wähle eine Technik zum Üben.
-Du bekommst ein Puzzle, das diese Technik erfordert."
+text = "Starte ein interaktives Tutorial oder übe spezifische Techniken."
 horizontal_alignment = 1
 autowrap_mode = 2
 

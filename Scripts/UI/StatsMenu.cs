@@ -44,6 +44,9 @@ public partial class StatsMenu : Control
     // Techniques
     private RichTextLabel _techniquesSummary = null!;
 
+    // Scenarios
+    private RichTextLabel _scenarioSummary = null!;
+
     // Heatmap
     private CenterContainer _heatmapContainer = null!;
 
@@ -92,6 +95,9 @@ public partial class StatsMenu : Control
         var techniquesSection = statsContainer.GetNode<VBoxContainer>("TechniquesSection");
         _techniquesSummary = techniquesSection.GetNode<RichTextLabel>("TechniquesSummary");
 
+        var scenarioSection = statsContainer.GetNode<VBoxContainer>("ScenarioSection");
+        _scenarioSummary = scenarioSection.GetNode<RichTextLabel>("ScenarioSummary");
+
         var heatmapSection = statsContainer.GetNode<VBoxContainer>("HeatmapSection");
         _heatmapContainer = heatmapSection.GetNode<CenterContainer>("HeatmapContainer");
 
@@ -122,10 +128,14 @@ public partial class StatsMenu : Control
         var history = _saveService.History;
         var settings = _saveService.Settings;
 
-        // Nur abgeschlossene Spiele
-        var completed = history.Where(h => h.Status != GameStatus.InProgress).ToList();
+        // Nur abgeschlossene Spiele, OHNE Tutorials und Szenarien für Hauptstatistiken
+        var completed = history.Where(h => h.Status != GameStatus.InProgress && !h.IsTutorial && !h.IsScenario).ToList();
         var wins = completed.Where(h => h.Status == GameStatus.Won).ToList();
         var losses = completed.Where(h => h.Status == GameStatus.Lost).ToList();
+
+        // Szenarien separat für Szenario-Statistiken
+        var scenarioCompleted = history.Where(h => h.Status != GameStatus.InProgress && h.IsScenario).ToList();
+        var scenarioWins = scenarioCompleted.Where(h => h.Status == GameStatus.Won).ToList();
 
         // Übersicht mit Icons
         _totalGames.Text = $"🎮  Spiele gesamt: {completed.Count}";
@@ -171,6 +181,9 @@ public partial class StatsMenu : Control
 
         // Techniques
         _techniquesSummary.Text = BuildTechniqueSummary(settings);
+
+        // Scenarios
+        _scenarioSummary.Text = BuildScenarioSummary(scenarioCompleted, scenarioWins);
 
         // Heatmap
         RenderHeatmap(settings);
@@ -335,6 +348,61 @@ public partial class StatsMenu : Control
         return sb.ToString();
     }
 
+    private static string BuildScenarioSummary(List<HistoryEntry> scenarioCompleted, List<HistoryEntry> scenarioWins)
+    {
+        if (scenarioCompleted.Count == 0)
+        {
+            return "[i]Noch keine Szenarien gespielt.[/i]\n\nSpiele 🎯 Übungs-Szenarien im Szenarien-Menü!";
+        }
+
+        var sb = new System.Text.StringBuilder();
+
+        // Overall stats
+        double winRate = scenarioCompleted.Count > 0 ? (double)scenarioWins.Count / scenarioCompleted.Count * 100 : 0;
+        sb.Append($"[b]📊 Übersicht:[/b]\n");
+        sb.Append($"   Gespielt: {scenarioCompleted.Count}   Gewonnen: {scenarioWins.Count}   ({winRate:F0}%)\n\n");
+
+        // Group by technique
+        var byTechnique = scenarioCompleted
+            .Where(s => !string.IsNullOrEmpty(s.ScenarioTechnique))
+            .GroupBy(s => s.ScenarioTechnique!)
+            .OrderByDescending(g => g.Count())
+            .Take(8)
+            .ToList();
+
+        if (byTechnique.Count > 0)
+        {
+            sb.Append("[b]🎯 Pro Technik:[/b]\n\n");
+            foreach (var group in byTechnique)
+            {
+                int total = group.Count();
+                int won = group.Count(e => e.Status == GameStatus.Won);
+                double rate = total > 0 ? (double)won / total * 100 : 0;
+                string bar = GetProgressBar(rate);
+
+                // Get best time for won scenarios
+                var wonEntries = group.Where(e => e.Status == GameStatus.Won).ToList();
+                string bestTimeStr = wonEntries.Count > 0
+                    ? FormatTimeStatic(wonEntries.Min(e => e.DurationSeconds))
+                    : "--:--";
+
+                sb.Append($"• [b]{group.Key}[/b]\n");
+                sb.Append($"   {won}/{total} gewonnen ({rate:F0}%)  ⏱️ Beste: {bestTimeStr}\n");
+                sb.Append($"   {bar}\n\n");
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    private static string FormatTimeStatic(double seconds)
+    {
+        var ts = TimeSpan.FromSeconds(seconds);
+        if (ts.Hours > 0)
+            return $"{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        return $"{ts.Minutes:D2}:{ts.Seconds:D2}";
+    }
+
     private static string GetProgressBar(double percent)
     {
         int filled = (int)(percent / 10);
@@ -445,6 +513,7 @@ public partial class StatsMenu : Control
 
         _dailyRecent.AddThemeColorOverride("default_color", colors.TextPrimary);
         _techniquesSummary.AddThemeColorOverride("default_color", colors.TextPrimary);
+        _scenarioSummary.AddThemeColorOverride("default_color", colors.TextPrimary);
     }
 
     private void ApplyLabelTheme(ThemeService.ThemeColors colors)

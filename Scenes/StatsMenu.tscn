@@ -209,6 +209,24 @@ text = ""
 [node name="HSeparator5" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
+[node name="ScenarioSection" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ScenarioTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/ScenarioSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🎯 Übungs-Szenarien"
+
+[node name="ScenarioSummary" type="RichTextLabel" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/ScenarioSection"]
+layout_mode = 2
+fit_content = true
+bbcode_enabled = true
+text = ""
+
+[node name="HSeparator6" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
 [node name="HeatmapSection" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 12

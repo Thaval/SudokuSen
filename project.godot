@@ -21,6 +21,7 @@ SaveService="*res://Scripts/Services/SaveService.cs"
 AppState="*res://Scripts/Services/AppState.cs"
 ThemeService="*res://Scripts/Services/ThemeService.cs"
 AudioService="*res://Scripts/Services/AudioService.cs"
+TutorialService="*res://Scripts/Services/TutorialService.cs"
 
 [display]
 

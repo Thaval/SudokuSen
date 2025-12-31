@@ -10,6 +10,7 @@ public partial class GameScene : Control
     private SaveService _saveService = null!;
     private AppState _appState = null!;
     private AudioService _audioService = null!;
+    private TutorialService? _tutorialService;
 
     // UI-Elemente
     private Button _backButton = null!;
@@ -24,6 +25,9 @@ public partial class GameScene : Control
     private GridContainer _gridContainer = null!;
     private HBoxContainer _numberPad = null!;
     private Control _overlayContainer = null!;
+
+    // Tutorial overlay
+    private TutorialOverlay? _tutorialOverlay;
 
     // Axis Labels
     private Label[] _colLabels = new Label[9]; // A-I (or A-D for Kids)
@@ -79,6 +83,7 @@ public partial class GameScene : Control
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
         _audioService = GetNode<AudioService>("/root/AudioService");
+        _tutorialService = GetNodeOrNull<TutorialService>("/root/TutorialService");
 
         _saveService.SettingsChanged += OnSettingsChanged;
 
@@ -118,6 +123,9 @@ public partial class GameScene : Control
 
         // Spiel laden
         LoadGame();
+
+        // Tutorial overlay erstellen (nach LoadGame, damit Grid existiert)
+        SetupTutorialOverlay();
     }
 
     public override void _ExitTree()
@@ -126,8 +134,8 @@ public partial class GameScene : Control
 
         _saveService.SettingsChanged -= OnSettingsChanged;
 
-        // Spiel speichern beim Verlassen
-        if (_gameState != null && !_isGameOver)
+        // Spiel speichern beim Verlassen (aber nicht Tutorials/Szenarien)
+        if (_gameState != null && !_isGameOver && !_gameState.IsTutorial && !_gameState.IsScenario)
         {
             _gameState.ElapsedSeconds = _elapsedTime;
             _appState.SaveGame();
@@ -148,7 +156,9 @@ public partial class GameScene : Control
     private void ApplyButtonStyle(Button button, bool includeDisabled = true)
     {
         var colors = _themeService.CurrentColors;
-        button.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        var normalStyle = _themeService.CreateButtonStyleBox();
+        button.AddThemeStyleboxOverride("normal", normalStyle);
+        button.AddThemeStyleboxOverride("focus", normalStyle); // Prevent white border on click
         button.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
         button.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
         if (includeDisabled)
@@ -398,6 +408,13 @@ public partial class GameScene : Control
     {
         if (_gameState == null || _isGameOver) return;
 
+        // During tutorials, block grid input unless specifically waiting for it
+        if (_tutorialService != null && !_tutorialService.IsGridInputAllowed)
+        {
+            GD.Print("[Game] Number input blocked during tutorial");
+            return;
+        }
+
         // Notes mode: apply to all selected cells
         if (_isNotesMode)
         {
@@ -434,18 +451,39 @@ public partial class GameScene : Control
                 // Grid safety (Kids mode etc.)
                 if (idx < 0 || idx >= 9) return;
 
-                // Multi-select: set note to true (idempotent). Single-select keeps toggle behavior.
+                // Multi-select: smart toggle - if ALL have the note, remove it; otherwise add it
                 if (_selectedCells.Count > 1)
                 {
+                    // First check if all selected cells have this note
+                    bool allHaveNote = true;
                     foreach (var (row, col) in _selectedCells)
                     {
                         var cell = _gameState.Grid[row, col];
                         if (cell.IsGiven) continue;
                         if (cell.Value != 0) continue;
                         if (idx >= cell.Notes.Length) continue;
-                        cell.Notes[idx] = true;
+                        if (!cell.Notes[idx])
+                        {
+                            allHaveNote = false;
+                            break;
+                        }
                     }
+
+                    // If all have the note, remove it from all; otherwise add to all
+                    bool setTo = !allHaveNote;
+                    foreach (var (row, col) in _selectedCells)
+                    {
+                        var cell = _gameState.Grid[row, col];
+                        if (cell.IsGiven) continue;
+                        if (cell.Value != 0) continue;
+                        if (idx >= cell.Notes.Length) continue;
+                        cell.Notes[idx] = setTo;
+                    }
+                    _audioService.PlayNotePlaceOrRemove(setTo);
                     SaveAndUpdate();
+
+                    // Tutorial notification for multi-select note toggle
+                    NotifyTutorialMultiSelect(number);
                     return;
                 }
             }
@@ -602,15 +640,14 @@ public partial class GameScene : Control
     {
         var colors = _themeService.CurrentColors;
 
-        // Spalten-Labels (A-I) oben - erstelle alle 9, verstecke je nach GridSize
-        var colLabelsContainer = GetNode<HBoxContainer>("VBoxContainer/GridCenterContainer/GridWrapper/ColLabelsContainer/ColLabels");
+        // Spalten-Labels (A-I) oben - use Control for absolute positioning
+        var colLabelsContainer = GetNode<Control>("VBoxContainer/GridCenterContainer/GridWrapper/ColLabelsContainer/ColLabels");
         string[] colNames = { "A", "B", "C", "D", "E", "F", "G", "H", "I" };
 
         for (int i = 0; i < 9; i++)
         {
             var label = new Label();
             label.Text = colNames[i];
-            label.CustomMinimumSize = new Vector2(50, 20);
             label.HorizontalAlignment = HorizontalAlignment.Center;
             label.VerticalAlignment = VerticalAlignment.Center;
             label.AddThemeFontSizeOverride("font_size", 14);
@@ -619,14 +656,13 @@ public partial class GameScene : Control
             colLabelsContainer.AddChild(label);
         }
 
-        // Zeilen-Labels (1-9) links - erstelle alle 9, verstecke je nach GridSize
-        var rowLabelsContainer = GetNode<VBoxContainer>("VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer/RowLabels");
+        // Zeilen-Labels (1-9) links - use Control for absolute positioning
+        var rowLabelsContainer = GetNode<Control>("VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer/RowLabels");
 
         for (int i = 0; i < 9; i++)
         {
             var label = new Label();
             label.Text = (i + 1).ToString();
-            label.CustomMinimumSize = new Vector2(24, 50);
             label.HorizontalAlignment = HorizontalAlignment.Center;
             label.VerticalAlignment = VerticalAlignment.Center;
             label.AddThemeFontSizeOverride("font_size", 14);
@@ -641,26 +677,56 @@ public partial class GameScene : Control
         if (_gameState == null) return;
 
         int gridSize = _gameState.GridSize;
-        int cellSize = gridSize == 4 ? 110 : 50; // Größere Zellen für Kids (passend zu Grid)
 
-        // Spalten-Labels anpassen
+        // Hide labels for cells beyond grid size
         for (int i = 0; i < 9; i++)
         {
             if (_colLabels[i] != null)
-            {
                 _colLabels[i].Visible = i < gridSize;
-                _colLabels[i].CustomMinimumSize = new Vector2(cellSize, 20);
-            }
+            if (_rowLabels[i] != null)
+                _rowLabels[i].Visible = i < gridSize;
         }
 
-        // Zeilen-Labels anpassen
-        for (int i = 0; i < 9; i++)
+        // Position labels after frame so cells are laid out
+        CallDeferred(nameof(PositionAxisLabels));
+    }
+
+    private void PositionAxisLabels()
+    {
+        if (_gameState == null || _cellButtons == null) return;
+
+        int gridSize = _gameState.GridSize;
+        var colLabelsContainer = GetNode<Control>("VBoxContainer/GridCenterContainer/GridWrapper/ColLabelsContainer/ColLabels");
+        var rowLabelsContainer = GetNode<Control>("VBoxContainer/GridCenterContainer/GridWrapper/GridRowContainer/RowLabels");
+
+        // Position column labels (A-I) centered above each cell
+        for (int col = 0; col < gridSize; col++)
         {
-            if (_rowLabels[i] != null)
-            {
-                _rowLabels[i].Visible = i < gridSize;
-                _rowLabels[i].CustomMinimumSize = new Vector2(24, cellSize);
-            }
+            if (_colLabels[col] == null) continue;
+
+            var cell = _cellButtons[0, col];
+            var cellLocalPos = cell.Position; // Position relative to GridContainer
+            var cellSize = cell.Size;
+
+            // Calculate position relative to ColLabels container
+            // Cell is inside GridPanel which has 4px padding
+            float x = 4 + cellLocalPos.X + (cellSize.X / 2) - (_colLabels[col].Size.X / 2);
+            _colLabels[col].Position = new Vector2(x, 0);
+        }
+
+        // Position row labels (1-9) centered beside each cell
+        for (int row = 0; row < gridSize; row++)
+        {
+            if (_rowLabels[row] == null) continue;
+
+            var cell = _cellButtons[row, 0];
+            var cellLocalPos = cell.Position;
+            var cellSize = cell.Size;
+
+            // Calculate position relative to RowLabels container
+            // Cell is inside GridPanel which has 4px padding
+            float y = 4 + cellLocalPos.Y + (cellSize.Y / 2) - (_rowLabels[row].Size.Y / 2);
+            _rowLabels[row].Position = new Vector2(0, y);
         }
     }
 
@@ -807,6 +873,87 @@ public partial class GameScene : Control
         }
         _mistakesLabel.Text = text;
     }
+
+    #region Tutorial Support
+
+    private void SetupTutorialOverlay()
+    {
+        if (_tutorialService == null) return;
+
+        // Create and add overlay
+        _tutorialOverlay = new TutorialOverlay();
+        _overlayContainer.AddChild(_tutorialOverlay);
+
+        // Provide UI element references
+        _tutorialOverlay.GridContainer = _gridContainer;
+        _tutorialOverlay.NumberPad = _numberPad;
+        _tutorialOverlay.BackButton = _backButton;
+        _tutorialOverlay.TimerLabel = _timerLabel;
+        _tutorialOverlay.MistakesLabel = _mistakesLabel;
+        _tutorialOverlay.DifficultyLabel = _difficultyLabel;
+        _tutorialOverlay.NotesToggle = _notesButton;
+        _tutorialOverlay.HintButton = _hintButton;
+        _tutorialOverlay.AutoNotesButton = _autoCandidatesButton;
+        _tutorialOverlay.EraseButton = _numberButtons[0];
+        _tutorialOverlay.HouseAutoFillButton = _houseAutoFillButton;
+
+        // Provide callback to get cell rectangles
+        _tutorialOverlay.GetCellRect = GetCellGlobalRect;
+
+        // Provide axis label references
+        _tutorialOverlay.ColLabels = _colLabels;
+        _tutorialOverlay.RowLabels = _rowLabels;
+
+        // Start tutorial if this is a tutorial game
+        if (_gameState?.IsTutorial == true && !string.IsNullOrEmpty(_gameState.TutorialId))
+        {
+            GD.Print($"[GameScene] Starting tutorial: {_gameState.TutorialId}");
+            // Capture tutorialId to avoid race condition (gameState could change)
+            var tutorialId = _gameState.TutorialId;
+            // Delay start slightly to ensure UI is fully ready
+            GetTree().CreateTimer(0.3).Timeout += () =>
+            {
+                // Check if we're still on this scene and tutorial service is available
+                if (IsInsideTree() && _tutorialService != null)
+                {
+                    _tutorialService.StartTutorial(tutorialId);
+                }
+            };
+        }
+    }
+
+    /// <summary>
+    /// Returns the global rectangle for a cell at the given row and column.
+    /// Used by TutorialOverlay to draw highlights and arrows.
+    /// </summary>
+    private Rect2 GetCellGlobalRect(int row, int col)
+    {
+        if (_cellButtons == null || _gameState == null) return new Rect2();
+
+        int gridSize = _gameState.GridSize;
+        if (row < 0 || row >= gridSize || col < 0 || col >= gridSize) return new Rect2();
+
+        var cellButton = _cellButtons[row, col];
+        return new Rect2(cellButton.GlobalPosition, cellButton.Size);
+    }
+
+    /// <summary>
+    /// Notifies the tutorial overlay when a user action occurs (for WaitForAction steps).
+    /// </summary>
+    private void NotifyTutorialAction(ExpectedAction action, (int Row, int Col)? cell = null, int? number = null)
+    {
+        _tutorialOverlay?.NotifyUserAction(action, cell, number);
+    }
+
+    /// <summary>
+    /// Notifies the tutorial overlay when multiple cells are selected.
+    /// </summary>
+    private void NotifyTutorialMultiSelect(int? number = null)
+    {
+        _tutorialOverlay?.NotifyMultiSelectAction(_selectedCells, number);
+    }
+
+    #endregion
 
     private void UpdateGrid()
     {
@@ -958,6 +1105,13 @@ public partial class GameScene : Control
     {
         if (_isGameOver || _gameState == null) return;
 
+        // During tutorials, block grid input unless specifically waiting for it
+        if (_tutorialService != null && !_tutorialService.IsGridInputAllowed)
+        {
+            GD.Print("[Game] Grid input blocked during tutorial");
+            return;
+        }
+
         _audioService.PlayCellSelect();
 
         var cell = _gameState.Grid[row, col];
@@ -1031,10 +1185,22 @@ public partial class GameScene : Control
 
         UpdateGrid();
         UpdateNumberCounts(); // Highlight im Numpad aktualisieren
+
+        // Tutorial notification
+        NotifyTutorialAction(ExpectedAction.SelectCell, (row, col));
+
+        // Multi-select notification for tutorial
+        if (_selectedCells.Count > 1)
+        {
+            NotifyTutorialMultiSelect();
+        }
     }
 
     private void OnCellHovered(int row, int col)
     {
+        // During tutorials, block grid input unless specifically waiting for it
+        if (_tutorialService != null && !_tutorialService.IsGridInputAllowed) return;
+
         // Drag-Auswahl: Wenn Maus gedrückt und über andere Zelle
         if (_isDragging && _dragStart.HasValue && Input.IsMouseButtonPressed(MouseButton.Left))
         {
@@ -1104,6 +1270,9 @@ public partial class GameScene : Control
             GD.Print($"[Game] Note {number} {(wasSet ? "removed" : "added")} at {ToCellRef(_selectedRow, _selectedCol)}");
             _audioService.PlayNotePlaceOrRemove(!wasSet);
             SaveAndUpdate();
+
+            // Tutorial notification for note toggle
+            NotifyTutorialAction(ExpectedAction.ToggleNote, (_selectedRow, _selectedCol), number);
             return;
         }
 
@@ -1118,6 +1287,9 @@ public partial class GameScene : Control
             _highlightedNumber = 0;
             _audioService.PlayNumberRemove();
             SaveAndUpdate();
+
+            // Tutorial notification for erase
+            NotifyTutorialAction(ExpectedAction.EraseCell, (_selectedRow, _selectedCol));
             return;
         }
 
@@ -1166,6 +1338,10 @@ public partial class GameScene : Control
                 // Game still ongoing - show tutor for feedback
                 MaybeShowTutorOverlay(number);
             }
+
+            // Tutorial notification for wrong number (also matches EnterAnyNumber)
+            NotifyTutorialAction(ExpectedAction.EnterWrongNumber, (_selectedRow, _selectedCol), number);
+            NotifyTutorialAction(ExpectedAction.EnterAnyNumber, (_selectedRow, _selectedCol), number);
         }
         else
         {
@@ -1176,6 +1352,10 @@ public partial class GameScene : Control
             _highlightedNumber = number;
 
             MaybeSmartCleanupNotesAfterPlacement(_selectedRow, _selectedCol, number);
+
+            // Tutorial notification for correct number (also matches EnterAnyNumber)
+            NotifyTutorialAction(ExpectedAction.EnterCorrectNumber, (_selectedRow, _selectedCol), number);
+            NotifyTutorialAction(ExpectedAction.EnterAnyNumber, (_selectedRow, _selectedCol), number);
 
             // Technique tracking: applied?
             if (_lastHintTracking.HasValue)
@@ -1260,6 +1440,9 @@ public partial class GameScene : Control
     {
         if (_gameState == null) return;
         if (!_saveService.Settings.LearnModeEnabled) return;
+
+        // Don't show tutor during tutorials - the tutorial has its own explanations
+        if (_gameState.IsTutorial) return;
 
         var cell = _gameState.Grid[_selectedRow, _selectedCol];
         string cellRef = ToCellRef(_selectedRow, _selectedCol);
@@ -1848,6 +2031,9 @@ public partial class GameScene : Control
         _isNotesMode = !_isNotesMode;
         GD.Print($"[Game] Notes mode toggled = {_isNotesMode}");
         UpdateNotesButtonAppearance();
+
+        // Tutorial notification
+        NotifyTutorialAction(ExpectedAction.ToggleNotesMode);
     }
 
     private void UpdateAutoCandidatesButtonAppearance()
@@ -1879,21 +2065,22 @@ public partial class GameScene : Control
             // Aktiv - Accent-Farbe mit verstärktem Stil für Touch-Geräte
             var activeStyle = _themeService.CreateButtonStyleBox();
             activeStyle.BgColor = colors.Accent;
-            activeStyle.BorderColor = colors.Accent.Lightened(0.3f);
-            activeStyle.SetBorderWidthAll(3);
+            activeStyle.BorderColor = colors.Accent.Lightened(0.2f);
+            activeStyle.SetBorderWidthAll(2);
             _notesButton.AddThemeStyleboxOverride("normal", activeStyle);
+            _notesButton.AddThemeStyleboxOverride("focus", activeStyle); // Prevent white border on click
 
             // Auch hover/pressed für konsistente Touch-Erfahrung
             var hoverStyle = _themeService.CreateButtonStyleBox();
             hoverStyle.BgColor = colors.Accent.Lightened(0.1f);
-            hoverStyle.BorderColor = colors.Accent.Lightened(0.4f);
-            hoverStyle.SetBorderWidthAll(3);
+            hoverStyle.BorderColor = colors.Accent.Lightened(0.3f);
+            hoverStyle.SetBorderWidthAll(2);
             _notesButton.AddThemeStyleboxOverride("hover", hoverStyle);
 
             var pressedStyle = _themeService.CreateButtonStyleBox();
             pressedStyle.BgColor = colors.Accent.Darkened(0.1f);
             pressedStyle.BorderColor = colors.Accent;
-            pressedStyle.SetBorderWidthAll(3);
+            pressedStyle.SetBorderWidthAll(2);
             _notesButton.AddThemeStyleboxOverride("pressed", pressedStyle);
 
             _notesButton.AddThemeColorOverride("font_color", colors.Background);
@@ -1901,7 +2088,9 @@ public partial class GameScene : Control
         else
         {
             // Inaktiv - Normal
-            _notesButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+            var normalStyle = _themeService.CreateButtonStyleBox();
+            _notesButton.AddThemeStyleboxOverride("normal", normalStyle);
+            _notesButton.AddThemeStyleboxOverride("focus", normalStyle); // Prevent white border on click
             _notesButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
             _notesButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
             _notesButton.AddThemeColorOverride("font_color", colors.TextPrimary);
@@ -1911,6 +2100,9 @@ public partial class GameScene : Control
     private void OnHintButtonPressed()
     {
         if (_gameState == null || _isGameOver) return;
+
+        // Tutorial notification for hint button click
+        NotifyTutorialAction(ExpectedAction.ClickButton);
 
         // Hints sind nur für 9x9 verfügbar
         if (_gameState.GridSize != 9)

@@ -126,9 +126,16 @@ public partial class HistoryMenu : Control
         infoVBox.SizeFlagsHorizontal = Control.SizeFlags.Expand;
         hbox.AddChild(infoVBox);
 
-        // Datum + Schwierigkeit
+        // Datum + Schwierigkeit + Tutorial/Scenario badge
         var dateLabel = new Label();
-        dateLabel.Text = $"{entry.StartTime:dd.MM.yyyy HH:mm} - {entry.GetDifficultyText()}";
+        string badge = "";
+        if (entry.IsTutorial)
+            badge = " 📚 Tutorial";
+        else if (entry.IsScenario)
+            badge = $" 🎯 {entry.ScenarioTechnique ?? "Szenario"}";
+        else if (entry.IsDaily)
+            badge = " 📅 Daily";
+        dateLabel.Text = $"{entry.StartTime:dd.MM.yyyy HH:mm} - {entry.GetDifficultyText()}{badge}";
         dateLabel.AddThemeColorOverride("font_color", colors.TextPrimary);
         infoVBox.AddChild(dateLabel);
 

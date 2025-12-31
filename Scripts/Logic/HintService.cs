@@ -63,6 +63,13 @@ public static class HintService
     /// </summary>
     public static Hint? FindHint(SudokuGameState gameState)
     {
+        // Hints are only supported for 9x9 grids
+        if (gameState.GridSize != 9)
+        {
+            GD.Print($"[HintService] Hints not supported for {gameState.GridSize}x{gameState.GridSize} grids");
+            return null;
+        }
+
         // Versuche verschiedene Techniken in aufsteigender Schwierigkeit
 
         // 1. Naked Single - Eine Zelle hat nur eine mögliche Zahl

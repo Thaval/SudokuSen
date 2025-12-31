@@ -59,7 +59,12 @@ public class SudokuGameState
     // Meta
     public bool IsDaily { get; set; } = false;
     public string? DailyDate { get; set; } // yyyy-MM-dd
+    public bool IsScenario { get; set; } = false;
     public string? ScenarioTechnique { get; set; } // Technik-ID für Szenario-Spiele
+
+    // Tutorial
+    public bool IsTutorial { get; set; } = false;
+    public string? TutorialId { get; set; }
 
     // Challenge Modes (snapshot at game start)
     public bool ChallengeNoNotes { get; set; } = false;
@@ -168,7 +173,10 @@ public class SudokuGameState
             Status = Status,
             IsDaily = IsDaily,
             DailyDate = DailyDate,
+            IsScenario = IsScenario,
             ScenarioTechnique = ScenarioTechnique,
+            IsTutorial = IsTutorial,
+            TutorialId = TutorialId,
             ChallengeNoNotes = ChallengeNoNotes,
             ChallengePerfectRun = ChallengePerfectRun,
             ChallengeHintLimit = ChallengeHintLimit,

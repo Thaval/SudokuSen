@@ -1,10 +1,11 @@
 using SudokuSen.Logic;
+using SudokuSen.Models;
 using SudokuSen.Services;
 
 namespace SudokuSen.UI;
 
 /// <summary>
-/// Szenarien-Menü - Wähle eine Technik zum Üben
+/// Szenarien-Menü - Wähle eine Technik zum Üben oder starte ein Tutorial
 /// </summary>
 public partial class ScenariosMenu : Control
 {
@@ -19,6 +20,7 @@ public partial class ScenariosMenu : Control
     private ThemeService _themeService = null!;
     private AudioService _audioService = null!;
     private AppState _appState = null!;
+    private TutorialService? _tutorialService;
 
     // Gruppierte Techniken
     private static readonly (string Category, string[] TechniqueIds)[] TechniqueGroups = new[]
@@ -33,6 +35,7 @@ public partial class ScenariosMenu : Control
         _themeService = GetNode<ThemeService>("/root/ThemeService");
         _audioService = GetNode<AudioService>("/root/AudioService");
         _appState = GetNode<AppState>("/root/AppState");
+        _tutorialService = GetNodeOrNull<TutorialService>("/root/TutorialService");
 
         UiNavigationSfx.Wire(this, _audioService);
 
@@ -69,6 +72,32 @@ public partial class ScenariosMenu : Control
     {
         var colors = _themeService.CurrentColors;
 
+        // === TUTORIALS SECTION ===
+        CreateTutorialsSection(colors);
+
+        // Separator after tutorials
+        var tutorialSep = new HSeparator();
+        tutorialSep.CustomMinimumSize = new Vector2(0, 24);
+        _techniquesContainer.AddChild(tutorialSep);
+
+        // === TECHNIQUE SCENARIOS HEADER ===
+        var scenariosTitle = new Label();
+        scenariosTitle.Text = "🎯 Technik-Szenarien";
+        scenariosTitle.AddThemeFontSizeOverride("font_size", 18);
+        scenariosTitle.AddThemeColorOverride("font_color", colors.TextSecondary);
+        _techniquesContainer.AddChild(scenariosTitle);
+
+        var scenariosSubtitle = new Label();
+        scenariosSubtitle.Text = "Übe spezifische Lösungstechniken mit passenden Puzzles";
+        scenariosSubtitle.AddThemeFontSizeOverride("font_size", 14);
+        scenariosSubtitle.AddThemeColorOverride("font_color", colors.TextSecondary);
+        _techniquesContainer.AddChild(scenariosSubtitle);
+
+        var headerSpacer = new Control();
+        headerSpacer.CustomMinimumSize = new Vector2(0, 12);
+        _techniquesContainer.AddChild(headerSpacer);
+
+        // === TECHNIQUE SCENARIOS ===
         foreach (var (category, techniqueIds) in TechniqueGroups)
         {
             // Kategorie-Header
@@ -123,6 +152,77 @@ public partial class ScenariosMenu : Control
         GD.Print($"Starting scenario for technique: {technique.Name}");
 
         _appState.StartScenarioGame(techniqueId);
+    }
+
+    private void CreateTutorialsSection(ThemeService.ThemeColors colors)
+    {
+        // Tutorials header
+        var tutorialTitle = new Label();
+        tutorialTitle.Text = "📚 Tutorials";
+        tutorialTitle.AddThemeFontSizeOverride("font_size", 20);
+        tutorialTitle.AddThemeColorOverride("font_color", colors.Accent);
+        _techniquesContainer.AddChild(tutorialTitle);
+
+        // Subtitle description
+        var tutorialSubtitle = new Label();
+        tutorialSubtitle.Text = "Interaktive Anleitungen mit animierten Hinweisen";
+        tutorialSubtitle.AddThemeFontSizeOverride("font_size", 14);
+        tutorialSubtitle.AddThemeColorOverride("font_color", colors.TextSecondary);
+        _techniquesContainer.AddChild(tutorialSubtitle);
+
+        // Spacer
+        var spacer = new Control();
+        spacer.CustomMinimumSize = new Vector2(0, 8);
+        _techniquesContainer.AddChild(spacer);
+
+        // Define tutorials inline (matches TutorialService definitions)
+        var tutorials = new[]
+        {
+            (Id: "getting_started", Name: "Erste Schritte", Description: "Lerne die Benutzeroberfläche, Steuerung und Notizen kennen.", Difficulty: TutorialDifficulty.Easy, Minutes: 6),
+            (Id: "basic_techniques", Name: "Grundtechniken", Description: "Naked Single, Hidden Single und mehr.", Difficulty: TutorialDifficulty.Medium, Minutes: 8),
+            (Id: "advanced_features", Name: "Erweiterte Funktionen", Description: "Auto-Notes, Mehrfachauswahl, R/C/B und Shortcuts.", Difficulty: TutorialDifficulty.Medium, Minutes: 10),
+            (Id: "advanced_techniques", Name: "Fortgeschrittene Techniken", Description: "Pairs, Pointing, Box/Line, X-Wing und mehr.", Difficulty: TutorialDifficulty.Hard, Minutes: 15),
+            (Id: "challenge_modes", Name: "Challenge-Modi", Description: "Deadly Mode, Statistiken und persönliche Bestzeiten.", Difficulty: TutorialDifficulty.Hard, Minutes: 8),
+        };
+
+        foreach (var tutorial in tutorials)
+        {
+            var button = new Button();
+            button.Name = $"BtnTutorial_{tutorial.Id}";
+
+            // Emoji based on difficulty
+            string difficultyEmoji = tutorial.Difficulty switch
+            {
+                TutorialDifficulty.Easy => "🟢",
+                TutorialDifficulty.Medium => "🟠",
+                TutorialDifficulty.Hard => "🔴",
+                _ => "📖"
+            };
+
+            button.Text = $"{difficultyEmoji} {tutorial.Name}";
+            button.TooltipText = $"{tutorial.Description}\n\n⏱️ Ca. {tutorial.Minutes} Minuten";
+            button.CustomMinimumSize = new Vector2(0, 44);
+            button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+
+            // Button-Style
+            button.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+            button.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+            button.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
+            button.AddThemeColorOverride("font_color", colors.TextPrimary);
+
+            var capturedTutorialId = tutorial.Id;
+            button.Pressed += () => OnTutorialSelected(capturedTutorialId);
+
+            _techniquesContainer.AddChild(button);
+        }
+    }
+
+    private void OnTutorialSelected(string tutorialId)
+    {
+        GD.Print($"[ScenariosMenu] Starting tutorial: {tutorialId}");
+
+        // Start tutorial game
+        _appState.StartTutorialGame(tutorialId);
     }
 
     private void OnBackPressed()

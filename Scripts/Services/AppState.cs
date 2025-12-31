@@ -119,14 +119,114 @@ public partial class AppState : Node
         // Generiere Puzzle mit Fokus auf diese Technik
         CurrentGame = Logic.SudokuGenerator.GenerateForTechnique(techniqueId, difficulty);
         CurrentGame.IsDeadlyMode = saveService.Settings.DeadlyModeEnabled;
+        CurrentGame.IsScenario = true;
         CurrentGame.ScenarioTechnique = techniqueId;
         ApplyChallengeSettings(CurrentGame, saveService.Settings);
         IsNewGame = true;
 
-        saveService.SaveCurrentGame(CurrentGame);
+        // Don't save scenario games to regular save slot
+        // saveService.SaveCurrentGame(CurrentGame);
 
         EmitSignal(SignalName.GameStarted);
         NavigateTo(SCENE_GAME);
+    }
+
+    /// <summary>
+    /// Startet ein Tutorial-Spiel
+    /// </summary>
+    public void StartTutorialGame(string tutorialId)
+    {
+        var saveService = GetNode<SaveService>("/root/SaveService");
+        var tutorialService = GetNodeOrNull<TutorialService>("/root/TutorialService");
+
+        if (tutorialService == null)
+        {
+            GD.PrintErr("[AppState] TutorialService not found!");
+            return;
+        }
+
+        var tutorial = tutorialService.GetTutorial(tutorialId);
+        if (tutorial == null)
+        {
+            GD.PrintErr($"[AppState] Tutorial not found: {tutorialId}");
+            return;
+        }
+
+        // Create a simple puzzle for the tutorial
+        // For "getting_started", use an almost-complete puzzle
+        CurrentGame = CreateTutorialPuzzle(tutorialId);
+        CurrentGame.IsDeadlyMode = false; // Never deadly mode in tutorials
+        CurrentGame.IsTutorial = true;
+        CurrentGame.TutorialId = tutorialId;
+        IsNewGame = true;
+
+        // Don't save tutorial games to regular save slot
+        // saveService.SaveCurrentGame(CurrentGame);
+
+        EmitSignal(SignalName.GameStarted);
+        NavigateTo(SCENE_GAME);
+
+        // Start the tutorial after scene loads
+        CallDeferred(nameof(StartTutorialDelayed), tutorialId);
+    }
+
+    private void StartTutorialDelayed(string tutorialId)
+    {
+        var tutorialService = GetNodeOrNull<TutorialService>("/root/TutorialService");
+        tutorialService?.StartTutorial(tutorialId);
+    }
+
+    private Models.SudokuGameState CreateTutorialPuzzle(string tutorialId)
+    {
+        // Create pre-defined puzzles for tutorials
+        var state = new Models.SudokuGameState
+        {
+            Difficulty = Difficulty.Easy,
+            StartTime = DateTime.Now
+        };
+
+        // Initialize with a nearly-complete puzzle for "getting_started"
+        // This is a valid Sudoku solution with only a few cells empty
+        int[,] solution = new int[,]
+        {
+            { 5, 3, 4, 6, 7, 8, 9, 1, 2 },
+            { 6, 7, 2, 1, 9, 5, 3, 4, 8 },
+            { 1, 9, 8, 3, 4, 2, 5, 6, 7 },
+            { 8, 5, 9, 7, 6, 1, 4, 2, 3 },
+            { 4, 2, 6, 8, 5, 3, 7, 9, 1 },
+            { 7, 1, 3, 9, 2, 4, 8, 5, 6 },
+            { 9, 6, 1, 5, 3, 7, 2, 8, 4 },
+            { 2, 8, 7, 4, 1, 9, 6, 3, 5 },
+            { 3, 4, 5, 2, 8, 6, 1, 7, 9 }
+        };
+
+        // Cells to leave empty for tutorial (row, col)
+        var emptyCells = tutorialId switch
+        {
+            "getting_started" => new[] { (4, 4), (0, 2), (2, 6), (6, 1), (8, 8) }, // 5 cells
+            "basic_techniques" => new[] { (4, 4), (0, 2), (2, 6), (6, 1), (8, 8) }, // Same as getting_started for technique practice
+            "notes_tutorial" => new[] { (0, 0), (0, 1), (1, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5) },
+            _ => new[] { (4, 4), (0, 0), (8, 8) }
+        };
+
+        var emptySet = new HashSet<(int, int)>(emptyCells);
+
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                bool isEmpty = emptySet.Contains((r, c));
+                state.Grid[r, c] = new Models.SudokuCell
+                {
+                    Value = isEmpty ? 0 : solution[r, c],
+                    Solution = solution[r, c],
+                    IsGiven = !isEmpty,
+                    Notes = new bool[9]
+                };
+            }
+        }
+
+        return state;
     }
 
     /// <summary>
@@ -191,6 +291,13 @@ public partial class AppState : Node
     public void SaveGame()
     {
         if (CurrentGame == null) return;
+
+        // Don't save tutorial or scenario games
+        if (CurrentGame.IsTutorial || CurrentGame.IsScenario)
+        {
+            GD.Print("[AppState] Skipping save for tutorial/scenario game");
+            return;
+        }
 
         var saveService = GetNode<SaveService>("/root/SaveService");
         saveService.SaveCurrentGame(CurrentGame);

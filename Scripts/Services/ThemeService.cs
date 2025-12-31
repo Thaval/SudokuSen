@@ -89,7 +89,7 @@ public partial class ThemeService : Node
         ButtonHover = new Color("3d3d3d"),
         ButtonPressed = new Color("4d4d4d"),
         ButtonDisabled = new Color("1a1a1a"),
-        Accent = new Color("64b5f6")
+        Accent = new Color("1e88e5") // Darker blue for better toggle visibility
     };
 
     public override void _Ready()
