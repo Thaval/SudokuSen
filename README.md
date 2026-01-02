@@ -55,7 +55,7 @@ SudokuSen offers an elegant, beginner-friendly Sudoku experience with multiple d
 
 ## 📖 Documentation
 
-**[📘 Full User Guide](Docs/Presentation/Presentation_0_0_2.md)**
+**[📘 Full User Guide](Docs/Presentation/Presentation.md)**
 
 The comprehensive documentation includes:
 - Quick start guide
