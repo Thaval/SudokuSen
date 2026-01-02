@@ -379,7 +379,61 @@ public partial class SudokuCellButton : Button
         AddThemeColorOverride("font_pressed_color", textColor);
         AddThemeColorOverride("font_disabled_color", textColor);
 
-        // Schriftgröße: größer für Kids-Modus
-        AddThemeFontSizeOverride("font_size", _gridSize == 4 ? 36 : 24);
+        // Responsive font size based on cell size
+        int fontSize = CalculateResponsiveFontSize();
+        AddThemeFontSizeOverride("font_size", fontSize);
+
+        // Update notes font size as well
+        UpdateNotesFontSize();
+    }
+
+    private int CalculateResponsiveFontSize()
+    {
+        // Base font size on actual cell size
+        float cellSize = CustomMinimumSize.X;
+        if (cellSize <= 0) cellSize = Size.X;
+        if (cellSize <= 0) cellSize = _gridSize == 4 ? 110 : 48; // Default fallback
+
+        // Scale font size proportionally to cell size
+        // For 9x9: 48px cell = 24pt font, scale proportionally
+        // For 4x4: 110px cell = 36pt font, scale proportionally
+        int baseFontSize = _gridSize == 4 ? 36 : 24;
+        float baseCellSize = _gridSize == 4 ? 110f : 48f;
+
+        int fontSize = (int)(baseFontSize * (cellSize / baseCellSize));
+
+        // Clamp to reasonable bounds
+        if (_gridSize == 4)
+        {
+            return Math.Clamp(fontSize, 24, 48);
+        }
+        else
+        {
+            return Math.Clamp(fontSize, 16, 32);
+        }
+    }
+
+    private void UpdateNotesFontSize()
+    {
+        if (_notesGrid == null) return;
+
+        // Scale notes font size based on cell size
+        float cellSize = CustomMinimumSize.X;
+        if (cellSize <= 0) cellSize = Size.X;
+        if (cellSize <= 0) cellSize = _gridSize == 4 ? 110 : 48;
+
+        int baseFontSize = _gridSize == 4 ? 14 : 10;
+        float baseCellSize = _gridSize == 4 ? 110f : 48f;
+
+        int fontSize = (int)(baseFontSize * (cellSize / baseCellSize));
+        fontSize = Math.Clamp(fontSize, 8, 18);
+
+        for (int i = 0; i < _gridSize; i++)
+        {
+            if (_noteLabels[i] != null)
+            {
+                _noteLabels[i].AddThemeFontSizeOverride("font_size", fontSize);
+            }
+        }
     }
 }

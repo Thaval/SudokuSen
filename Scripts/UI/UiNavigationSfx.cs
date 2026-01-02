@@ -18,12 +18,22 @@ public static class UiNavigationSfx
     {
         if (root == null || audioService == null) return;
 
+        // Store the tree reference immediately - it might not be available later.
+        var tree = root.GetTree();
+        if (tree == null) return;
+
         // Defer wiring until after the first frame so initial auto-focus doesn't trigger clicks.
-        root.GetTree().ProcessFrame += WireOnce;
+        tree.ProcessFrame += WireOnce;
 
         void WireOnce()
         {
-            root.GetTree().ProcessFrame -= WireOnce;
+            // Guard against disposed objects during testing or rapid scene changes.
+            // Check both tree and root validity BEFORE any property access.
+            if (!GodotObject.IsInstanceValid(tree)) return;
+
+            tree.ProcessFrame -= WireOnce;
+
+            if (!GodotObject.IsInstanceValid(root) || !root.IsInsideTree()) return;
             WireInternal(root, audioService);
         }
     }

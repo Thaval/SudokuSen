@@ -2,7 +2,7 @@
 
 ## 🎨 Menü-Icons für bessere Übersicht
 
-![Menu Icons](screenshots/menu_icons.png)
+![Home Screen with Menu Icons](screenshots/0.0.5/HomeScreen.png)
 
 ### Alle Menüeinträge haben jetzt Icons!
 
@@ -31,7 +31,7 @@ Der Lösungspfad-Button rechts oben funktioniert jetzt als Toggle:
 
 ### Klickbare Lösungsschritte
 
-![Solution Path Details](screenshots/solution_path_details.png)
+![In-Game Replay with Solution Path](screenshots/0.0.5/IngameReplay.png)
 
 Statt Hover-Tooltips gibt es jetzt ein **Detail-Panel**:
 - Klicke auf einen Lösungsschritt
@@ -65,6 +65,28 @@ Die neuen Erklärungen zeigen **warum** eine Zahl nur an einer Stelle möglich i
 | Zeile B | B1 | B2 | B3 | ... | | | | | |
 | ... | | | | | | | | | |
 | Zeile I | I1 | I2 | I3 | I4 | I5 | I6 | I7 | I8 | I9 |
+
+---
+
+## 📜 Weitere Screenshots
+
+### Spielhistorie
+
+![Game History](screenshots/0.0.5/GameHistory.png)
+
+### Szenarien & Tutorials
+
+![Scenarios - Tutorials](screenshots/0.0.5/ScenariosTutorials.png)
+
+![Scenarios - Techniques Easy](screenshots/0.0.5/ScenariosTechniquesEasy.png)
+
+### Vorgefertigte Puzzles
+
+![Pre-Built Puzzles](screenshots/0.0.5/PreBuiltPuzzles.png)
+
+### Einstellungen
+
+![Settings](screenshots/0.0.5/Settings.png)
 
 ---
 

@@ -156,6 +156,9 @@ public partial class GameScene : Control
         _themeService.ThemeChanged += OnThemeChanged;
         _localizationService.LanguageChanged += OnLanguageChanged;
 
+        // Connect to viewport size changes for responsive UI
+        GetTree().Root.SizeChanged += OnViewportSizeChanged;
+
         // Spiel laden
         LoadGame();
 
@@ -167,6 +170,10 @@ public partial class GameScene : Control
     {
         _themeService.ThemeChanged -= OnThemeChanged;
         _localizationService.LanguageChanged -= OnLanguageChanged;
+
+        // Disconnect viewport size change handler
+        if (GetTree()?.Root != null)
+            GetTree().Root.SizeChanged -= OnViewportSizeChanged;
 
         _saveService.SettingsChanged -= OnSettingsChanged;
 
@@ -2406,13 +2413,6 @@ public partial class GameScene : Control
             _overlayContainer.AddChild(overlay);
         }
 
-        // Position to the right of the grid
-        var gridRect = _gridPanel.GetGlobalRect();
-        _solutionPathOverlay.Position = new Vector2(
-            gridRect.End.X + 20,  // 20px gap to the right of the grid
-            gridRect.Position.Y   // Align top with grid
-        );
-
         // Populate selector items
         if (_solutionPathSelector != null && _solutionPathVariants != null)
         {
@@ -2436,6 +2436,9 @@ public partial class GameScene : Control
 
         RenderSolutionPath();
         _solutionPathOverlay.Visible = true;
+
+        // Position responsively after making visible (deferred to ensure size is calculated)
+        CallDeferred(nameof(RepositionSolutionPathOverlay));
     }
 
     private void CloseSolutionPathOverlay()
@@ -2654,15 +2657,136 @@ public partial class GameScene : Control
     {
         if (_solutionPathDetailPanel == null || !_solutionPathDetailPanel.Visible) return;
 
+        var viewportSize = GetViewportRect().Size;
         var gridRect = _gridPanel.GetGlobalRect();
-        var backRect = _backButton.GetGlobalRect();
-        float desiredLeft = backRect.Position.X;
-        float maxLeft = gridRect.Position.X - _solutionPathDetailPanel.Size.X - 16;
-        float left = Mathf.Min(desiredLeft, maxLeft);
-        _solutionPathDetailPanel.Position = new Vector2(
-            Mathf.Max(8, left),
-            gridRect.Position.Y
-        );
+        var overlaySize = _solutionPathDetailPanel.Size;
+
+        // Try to position to the left of the grid
+        float leftOfGrid = gridRect.Position.X - overlaySize.X - 16;
+
+        float x;
+        if (leftOfGrid >= 8)
+        {
+            x = leftOfGrid;
+        }
+        else
+        {
+            // Not enough room on the left, position at left edge with margin
+            x = 8;
+        }
+
+        // Vertical positioning: align with grid top, but ensure it's within viewport
+        float y = gridRect.Position.Y;
+        if (y + overlaySize.Y > viewportSize.Y - 8)
+        {
+            y = Mathf.Max(8, viewportSize.Y - overlaySize.Y - 8);
+        }
+
+        _solutionPathDetailPanel.Position = new Vector2(x, y);
+    }
+
+    /// <summary>
+    /// Repositions the solution path overlay to stay within viewport bounds.
+    /// Called when the overlay is shown and when viewport size changes.
+    /// </summary>
+    private void RepositionSolutionPathOverlay()
+    {
+        if (_solutionPathOverlay == null || !_solutionPathOverlay.Visible) return;
+
+        var viewportSize = GetViewportRect().Size;
+        var gridRect = _gridPanel.GetGlobalRect();
+        var overlaySize = _solutionPathOverlay.Size;
+
+        // Try to position to the right of the grid
+        float rightOfGrid = gridRect.End.X + 20;
+        float leftOfGrid = gridRect.Position.X - overlaySize.X - 20;
+
+        // Check if there's enough room on the right
+        float x;
+        if (rightOfGrid + overlaySize.X <= viewportSize.X - 8)
+        {
+            // Enough room on the right
+            x = rightOfGrid;
+        }
+        else if (leftOfGrid >= 8)
+        {
+            // Try left of grid
+            x = leftOfGrid;
+        }
+        else
+        {
+            // Not enough room on either side, center in viewport
+            x = Mathf.Max(8, (viewportSize.X - overlaySize.X) / 2);
+        }
+
+        // Vertical positioning: align with grid top, but ensure it's within viewport
+        float y = gridRect.Position.Y;
+        if (y + overlaySize.Y > viewportSize.Y - 8)
+        {
+            y = Mathf.Max(8, viewportSize.Y - overlaySize.Y - 8);
+        }
+
+        _solutionPathOverlay.Position = new Vector2(x, y);
+
+        // Also reposition detail panel if visible
+        RepositionSolutionPathDetailPanel();
+    }
+
+    /// <summary>
+    /// Called when the viewport size changes. Repositions overlays to stay within bounds.
+    /// </summary>
+    private void OnViewportSizeChanged()
+    {
+        // Use CallDeferred to ensure layout is updated before repositioning
+        CallDeferred(nameof(RepositionAllOverlays));
+    }
+
+    /// <summary>
+    /// Repositions all visible overlays after viewport resize.
+    /// </summary>
+    private void RepositionAllOverlays()
+    {
+        RepositionSolutionPathOverlay();
+        RepositionHintOverlay();
+    }
+
+    /// <summary>
+    /// Repositions the hint overlay to stay within viewport bounds.
+    /// </summary>
+    private void RepositionHintOverlay()
+    {
+        if (_hintOverlay == null || !_hintOverlay.Visible) return;
+
+        var viewportSize = GetViewportRect().Size;
+        var gridRect = _gridPanel.GetGlobalRect();
+        var overlaySize = _hintOverlay.Size;
+
+        // Try to position to the left of the grid
+        float leftOfGrid = gridRect.Position.X - overlaySize.X - 20;
+        float rightOfGrid = gridRect.End.X + 20;
+
+        float x;
+        if (leftOfGrid >= 8)
+        {
+            x = leftOfGrid;
+        }
+        else if (rightOfGrid + overlaySize.X <= viewportSize.X - 8)
+        {
+            x = rightOfGrid;
+        }
+        else
+        {
+            x = Mathf.Max(8, (viewportSize.X - overlaySize.X) / 2);
+        }
+
+        // Vertical positioning
+        float y = gridRect.Position.Y;
+        if (y + overlaySize.Y > viewportSize.Y - 8)
+        {
+            y = Mathf.Max(8, viewportSize.Y - overlaySize.Y - 8);
+        }
+
+        _hintOverlay.Position = new Vector2(x, y);
     }
 
     private string BuildSolutionPathTooltip(SolutionPathService.SolutionPathStep step)
