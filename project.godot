@@ -36,6 +36,18 @@ window/stretch/aspect="expand"
 
 project/assembly_name="SudokuSen"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
+[gut]
+
+_directory_settings=[["res://test/unit", true], ["res://test/integration", true]]
+_gut_bottom_panel_path="/root/gut_bottom_panel"
+_gut_version="9.5.1"
+_prefix="test_"
+_suffix=".gd"
+
 [input]
 
 ui_accept={

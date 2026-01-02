@@ -52,19 +52,19 @@ func _to_solver_format(grid: Array) -> Array:
 
 class TestValidation:
 	extends GutTest
-	
+
 	func test_valid_solved_grid_is_valid():
 		# A correctly solved Sudoku should be valid
 		var grid = _to_solver_format(VALID_SOLVED_GRID)
 		# TODO: Call SudokuSolver.IsValidPlacement or similar validation
 		assert_true(true, "Placeholder - implement when SudokuSolver is accessible")
-	
+
 	func test_duplicate_in_row_is_invalid():
 		# A grid with duplicate in row should be invalid
 		var grid = _to_solver_format(INVALID_GRID_DUPLICATE_ROW)
 		# TODO: Call validation method
 		assert_true(true, "Placeholder - implement when SudokuSolver is accessible")
-	
+
 	func _to_solver_format(grid: Array) -> Array:
 		var result = []
 		for row in grid:
@@ -77,13 +77,13 @@ class TestValidation:
 
 class TestSolving:
 	extends GutTest
-	
+
 	func test_solve_puzzle_with_one_empty():
 		# A puzzle with only one empty cell should be easily solvable
 		# The first cell should be filled with 5
 		# TODO: Implement actual test when SudokuSolver is accessible from GDScript
 		assert_true(true, "Placeholder - implement when SudokuSolver is accessible")
-	
+
 	func test_empty_grid_has_solution():
 		# An empty grid should have at least one valid solution
 		# TODO: Implement actual test
@@ -92,12 +92,12 @@ class TestSolving:
 
 class TestCandidates:
 	extends GutTest
-	
+
 	func test_candidates_for_empty_cell():
 		# Test that candidates are correctly calculated for an empty cell
 		# TODO: Implement when accessible
 		assert_true(true, "Placeholder - implement when SudokuSolver is accessible")
-	
+
 	func test_no_candidates_for_filled_cell():
 		# A filled cell should have no candidates
 		# TODO: Implement when accessible
