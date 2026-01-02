@@ -79,7 +79,7 @@ The comprehensive documentation includes:
 
 ## 📄 License
 
-MIT License – See [LICENSE](LICENSE) for details.
+Personal Use License – Free for personal, non-commercial use. No redistribution or deployment allowed. See [LICENSE](LICENSE) for details.
 
 ---
 

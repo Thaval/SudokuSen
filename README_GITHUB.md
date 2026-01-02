@@ -3,7 +3,7 @@
 **A modern Sudoku game built with Godot 4.5 & C#**
 
 [![Release](https://img.shields.io/github/v/release/YOUR_USERNAME/SudokuSen?style=flat-square)](https://github.com/YOUR_USERNAME/SudokuSen/releases)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-Personal%20Use-orange?style=flat-square)](LICENSE)
 [![Godot](https://img.shields.io/badge/Godot-4.5-blue?style=flat-square&logo=godot-engine)](https://godotengine.org/)
 
 ![SudokuSen Screenshot](Docs/Presentation/screenshots/0.0.1/HomeScreen.png)
@@ -108,7 +108,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📜 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under a **Personal Use License** – free for personal, non-commercial use. No redistribution or deployment allowed. See the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
