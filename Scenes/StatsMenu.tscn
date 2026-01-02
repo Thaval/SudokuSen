@@ -18,8 +18,8 @@ offset_left = 16
 offset_top = 16
 offset_right = 116
 offset_bottom = 56
-tooltip_text = "Zurück zum Hauptmenü"
-text = "← Zurück"
+tooltip_text = ""
+text = ""
 
 [node name="Title" type="Label" parent="."]
 layout_mode = 1
@@ -32,7 +32,7 @@ offset_right = 200
 offset_bottom = 56
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 28
-text = "Statistik"
+text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -72,22 +72,22 @@ theme_override_constants/separation = 12
 [node name="OverviewTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "📈 Übersicht"
+text = ""
 
 [node name="TotalGames" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
-text = "Spiele gesamt: 0"
+text = ""
 
 [node name="WinsLosses" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
-text = "Gewonnen: 0 | Verloren: 0"
+text = ""
 
 [node name="WinRateContainer" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection"]
 layout_mode = 2
 
 [node name="WinRateLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection/WinRateContainer"]
 layout_mode = 2
-text = "Gewinnrate: 0%"
+text = ""
 
 [node name="WinRateBar" type="ProgressBar" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OverviewSection/WinRateContainer"]
 custom_minimum_size = Vector2(200, 20)
@@ -105,31 +105,35 @@ theme_override_constants/separation = 12
 [node name="TimeTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "⏱️ Zeiten"
+text = ""
 
 [node name="BestTime" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
-text = "Beste Zeit: --:--"
+text = ""
 
 [node name="WorstTime" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
-text = "Längste Zeit: --:--"
+text = ""
 
 [node name="AvgTimeKids" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
-text = "Ø Kids: --:--"
+text = ""
 
 [node name="AvgTimeEasy" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
-text = "Ø Leicht: --:--"
+text = ""
 
 [node name="AvgTimeMedium" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
-text = "Ø Mittel: --:--"
+text = ""
 
 [node name="AvgTimeHard" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
 layout_mode = 2
-text = "Ø Schwer: --:--"
+text = ""
+
+[node name="AvgTimeInsane" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TimeSection"]
+layout_mode = 2
+text = ""
 
 [node name="HSeparator2" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -141,23 +145,27 @@ theme_override_constants/separation = 12
 [node name="MistakesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "⚠️ Fehler"
+text = ""
 
 [node name="AvgMistakesKids" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
-text = "Ø Kids: -"
+text = ""
 
 [node name="AvgMistakesEasy" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
-text = "Ø Leicht: -"
+text = ""
 
 [node name="AvgMistakesMedium" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
-text = "Ø Mittel: -"
+text = ""
 
 [node name="AvgMistakesHard" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
 layout_mode = 2
-text = "Ø Schwer: -"
+text = ""
+
+[node name="AvgMistakesInsane" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/MistakesSection"]
+layout_mode = 2
+text = ""
 
 [node name="HSeparator3" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -169,15 +177,15 @@ theme_override_constants/separation = 12
 [node name="DailyTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "📅 Daily Challenge"
+text = ""
 
 [node name="DailyStreak" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
 layout_mode = 2
-text = "Streak: 0"
+text = ""
 
 [node name="DailyToday" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
 layout_mode = 2
-text = "Heute: offen"
+text = ""
 
 [node name="DailyRecent" type="RichTextLabel" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/DailySection"]
 layout_mode = 2
@@ -198,7 +206,7 @@ theme_override_constants/separation = 12
 [node name="TechniquesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TechniquesSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "🧠 Techniken"
+text = ""
 
 [node name="TechniquesSummary" type="RichTextLabel" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/TechniquesSection"]
 layout_mode = 2
@@ -216,7 +224,7 @@ theme_override_constants/separation = 12
 [node name="ScenarioTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/ScenarioSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "🎯 Übungs-Szenarien"
+text = ""
 
 [node name="ScenarioSummary" type="RichTextLabel" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/ScenarioSection"]
 layout_mode = 2
@@ -234,7 +242,7 @@ theme_override_constants/separation = 12
 [node name="HeatmapTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HeatmapSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "🔥 Fehler-Heatmap"
+text = ""
 
 [node name="HeatmapContainer" type="CenterContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HeatmapSection"]
 layout_mode = 2

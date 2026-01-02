@@ -22,6 +22,8 @@ public partial class SudokuCellButton : Button
     private bool _isRelated;
     private bool _isFlashingError;
     private double _flashTimer;
+    private bool _isHistoryEntry;
+    private bool _isHistoryCurrent;
 
     // Grid-Konfiguration (dynamisch für Kids vs. Standard)
     private int _gridSize = 9;
@@ -244,6 +246,20 @@ public partial class SudokuCellButton : Button
         UpdateAppearance();
     }
 
+    public void SetHistoryEntry(bool historyEntry)
+    {
+        if (_isHistoryEntry == historyEntry) return;
+        _isHistoryEntry = historyEntry;
+        UpdateAppearance();
+    }
+
+    public void SetHistoryCurrent(bool historyCurrent)
+    {
+        if (_isHistoryCurrent == historyCurrent) return;
+        _isHistoryCurrent = historyCurrent;
+        UpdateAppearance();
+    }
+
     public void FlashError()
     {
         _isFlashingError = true;
@@ -321,19 +337,47 @@ public partial class SudokuCellButton : Button
             style.BorderColor = blockBorderColor;
         }
 
+        // History replay highlighting
+        if (_isHistoryCurrent)
+        {
+            // Orange background for current step cell
+            style.BgColor = new Color("ff9800").Lerp(colors.CellBackground, 0.5f);
+            style.BorderColor = new Color("ff9800");
+            style.BorderWidthTop = Math.Max(style.BorderWidthTop, 3);
+            style.BorderWidthBottom = Math.Max(style.BorderWidthBottom, 3);
+            style.BorderWidthLeft = Math.Max(style.BorderWidthLeft, 3);
+            style.BorderWidthRight = Math.Max(style.BorderWidthRight, 3);
+        }
+        else if (_isHistoryEntry)
+        {
+            // Blue tint for all replayed entries
+            style.BgColor = colors.Accent.Lerp(colors.CellBackground, 0.6f);
+        }
+
         AddThemeStyleboxOverride("normal", style);
         AddThemeStyleboxOverride("hover", style);
         AddThemeStyleboxOverride("pressed", style);
         AddThemeStyleboxOverride("focus", style);
+        AddThemeStyleboxOverride("disabled", style);
 
         // Textfarbe basierend auf Zustand
         Color textColor = _isFlashingError ? colors.TextError
             : _isGiven ? colors.TextGiven
             : colors.TextUser;
 
+        if (_isHistoryCurrent)
+        {
+            textColor = new Color("ff9800"); // Orange for current step
+        }
+        else if (_isHistoryEntry && !_isGiven)
+        {
+            textColor = colors.Accent; // Blue for all replayed entries
+        }
+
         AddThemeColorOverride("font_color", textColor);
         AddThemeColorOverride("font_hover_color", textColor);
         AddThemeColorOverride("font_pressed_color", textColor);
+        AddThemeColorOverride("font_disabled_color", textColor);
 
         // Schriftgröße: größer für Kids-Modus
         AddThemeFontSizeOverride("font_size", _gridSize == 4 ? 36 : 24);

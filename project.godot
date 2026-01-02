@@ -11,8 +11,9 @@ config_version=5
 [application]
 
 config/name="SudokuSen"
-run/main_scene="res://Scenes/Main.tscn"
+run/main_scene="res://Scenes/Loading.tscn"
 config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
+boot_splash/show_image=false
 config/icon="res://icon.svg"
 
 [autoload]
@@ -22,6 +23,7 @@ AppState="*res://Scripts/Services/AppState.cs"
 ThemeService="*res://Scripts/Services/ThemeService.cs"
 AudioService="*res://Scripts/Services/AudioService.cs"
 TutorialService="*res://Scripts/Services/TutorialService.cs"
+LocalizationService="*res://Scripts/Services/LocalizationService.cs"
 
 [display]
 

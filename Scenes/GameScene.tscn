@@ -34,8 +34,8 @@ theme_override_constants/separation = 16
 [node name="BackButton" type="Button" parent="VBoxContainer/HeaderMargin/Header"]
 custom_minimum_size = Vector2(100, 40)
 layout_mode = 2
-tooltip_text = "Zurück zum Hauptmenü (Spiel wird automatisch gespeichert)"
-text = "← Menü"
+tooltip_text = ""
+text = ""
 
 [node name="Spacer" type="Control" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
@@ -43,7 +43,7 @@ size_flags_horizontal = 3
 
 [node name="DifficultyLabel" type="Label" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
-text = "Schwierigkeit: Mittel"
+text = ""
 
 [node name="Spacer2" type="Control" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
@@ -60,7 +60,7 @@ size_flags_horizontal = 3
 
 [node name="MistakesLabel" type="Label" parent="VBoxContainer/HeaderMargin/Header"]
 layout_mode = 2
-text = "Fehler: 0"
+text = ""
 
 [node name="GridCenterContainer" type="CenterContainer" parent="VBoxContainer"]
 layout_mode = 2

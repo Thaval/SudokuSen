@@ -46,6 +46,12 @@ public partial class Main : Control
         LoadScene(scenePath);
     }
 
+    // Called directly by AppState to guarantee scene switches even if the signal connection is missing
+    public void LoadSceneDirect(string scenePath)
+    {
+        LoadScene(scenePath);
+    }
+
     private void OnThemeChanged(int themeIndex)
     {
         ApplyTheme();

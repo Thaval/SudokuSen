@@ -218,10 +218,11 @@ public static class SudokuGenerator
     {
         return difficulty switch
         {
-            Difficulty.Kids => 8,     // ~8 Givens in 4x4 (16 cells - 8 = 8 givens)
-            Difficulty.Easy => 35,    // ~46 Givens
-            Difficulty.Medium => 45,  // ~36 Givens
-            Difficulty.Hard => 55,    // ~26 Givens
+            Difficulty.Kids => 8,         // ~8 Givens in 4x4 (16 cells - 8 = 8 givens)
+            Difficulty.Easy => 35,        // ~46 Givens
+            Difficulty.Medium => 45,      // ~36 Givens
+            Difficulty.Hard => 55,        // ~26 Givens
+            Difficulty.Insane => 60,  // ~21 Givens (minimale Hinweise!)
             _ => 40
         };
     }

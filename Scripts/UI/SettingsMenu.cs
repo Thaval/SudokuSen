@@ -10,6 +10,7 @@ public partial class SettingsMenu : Control
     private SaveService _saveService = null!;
     private AppState _appState = null!;
     private AudioService _audioService = null!;
+    private LocalizationService _localizationService = null!;
 
     // Flag to prevent event cascading during LoadSettings
     private bool _isLoadingSettings = false;
@@ -23,6 +24,7 @@ public partial class SettingsMenu : Control
     private Label _storagePathInfo = null!;
     private FileDialog? _fileDialog;
 
+    private OptionButton _languageOption = null!;
     private OptionButton _themeOption = null!;
     private CheckButton _deadlyCheck = null!;
     private CheckButton _hideCheck = null!;
@@ -32,6 +34,9 @@ public partial class SettingsMenu : Control
     private CheckButton _colorblindCheck = null!;
     private HSlider _uiScaleSlider = null!;
     private Label _uiScaleValue = null!;
+
+    // Puzzles
+    private OptionButton _puzzlesModeOption = null!;
 
     // Audio
     private CheckButton _sfxCheck = null!;
@@ -66,6 +71,9 @@ public partial class SettingsMenu : Control
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
         _audioService = GetNode<AudioService>("/root/AudioService");
+        _localizationService = GetNode<LocalizationService>("/root/LocalizationService");
+
+        _saveService.EnsureLoaded();
 
         UiNavigationSfx.Wire(this, _audioService);
 
@@ -79,6 +87,7 @@ public partial class SettingsMenu : Control
         _storagePathBrowse = settingsContainer.GetNode<Button>("StoragePathRow/StoragePathBrowse");
         _storagePathInfo = settingsContainer.GetNode<Label>("StoragePathInfo");
 
+        _languageOption = settingsContainer.GetNode<OptionButton>("LanguageRow/LanguageOption");
         _themeOption = settingsContainer.GetNode<OptionButton>("ThemeRow/ThemeOption");
         _deadlyCheck = settingsContainer.GetNode<CheckButton>("DeadlyRow/DeadlyCheck");
         _hideCheck = settingsContainer.GetNode<CheckButton>("HideRow/HideCheck");
@@ -88,6 +97,9 @@ public partial class SettingsMenu : Control
         _colorblindCheck = settingsContainer.GetNode<CheckButton>("ColorblindRow/ColorblindCheck");
         _uiScaleSlider = settingsContainer.GetNode<HSlider>("UiScaleRow/UiScaleSlider");
         _uiScaleValue = settingsContainer.GetNode<Label>("UiScaleRow/UiScaleValue");
+
+        // Puzzles
+        _puzzlesModeOption = settingsContainer.GetNode<OptionButton>("PuzzlesModeRow/PuzzlesModeOption");
 
         // Audio
         _sfxCheck = settingsContainer.GetNode<CheckButton>("SfxRow/SfxCheck");
@@ -114,41 +126,58 @@ public partial class SettingsMenu : Control
 
         _backButton = GetNode<Button>("BackButton");
 
-        // Theme-Optionen
-        _themeOption.AddItem("Hell", 0);
-        _themeOption.AddItem("Dunkel", 1);
-
-        // Challenge difficulty options
-        _challengeDifficultyOption.AddItem("Auto", 0);
-        _challengeDifficultyOption.AddItem("Leicht", 1);
-        _challengeDifficultyOption.AddItem("Mittel", 2);
-        _challengeDifficultyOption.AddItem("Schwer", 3);
-
-        _challengeHintsOption.AddItem("Aus", 0);
-        _challengeHintsOption.AddItem("3", 3);
-        _challengeHintsOption.AddItem("5", 5);
-        _challengeHintsOption.AddItem("10", 10);
-
-        _challengeTimeOption.AddItem("Aus", 0);
-        _challengeTimeOption.AddItem("10 min", 10);
-        _challengeTimeOption.AddItem("15 min", 15);
-        _challengeTimeOption.AddItem("20 min", 20);
-
         // Techniken-UI erstellen
         CreateTechniqueUI();
 
         // Configure UI scale slider with dynamic bounds
         ConfigureUiScaleSlider();
 
+        // Wire back button EARLY to ensure it's always functional
+        _backButton.Pressed += OnBackPressed;
+        _backButton.Disabled = false;
+        _backButton.MouseFilter = MouseFilterEnum.Stop;
+        // Apply theme to back button immediately
+        var colors = _themeService.CurrentColors;
+        _backButton.AddThemeStyleboxOverride("normal", _themeService.CreateButtonStyleBox());
+        _backButton.AddThemeStyleboxOverride("hover", _themeService.CreateButtonStyleBox(hover: true));
+        _backButton.AddThemeStyleboxOverride("pressed", _themeService.CreateButtonStyleBox(pressed: true));
+        _backButton.AddThemeColorOverride("font_color", colors.TextPrimary);
+
+        // Initial localization (populates option buttons and labels) before loading settings
+        GD.Print("[UI] SettingsMenu: About to ApplyLocalization...");
+        try
+        {
+            ApplyLocalization();
+            GD.Print("[UI] SettingsMenu: ApplyLocalization done");
+        }
+        catch (Exception ex)
+        {
+            GD.PrintErr($"[UI] SettingsMenu: ApplyLocalization FAILED: {ex.Message}\n{ex.StackTrace}");
+        }
+
         // Werte laden
-        LoadSettings();
+        GD.Print("[UI] SettingsMenu: About to LoadSettings...");
+        try
+        {
+            LoadSettings();
+            GD.Print("[UI] SettingsMenu: LoadSettings done");
+        }
+        catch (Exception ex)
+        {
+            GD.PrintErr($"[UI] SettingsMenu: LoadSettings FAILED: {ex.Message}\n{ex.StackTrace}");
+        }
 
         UpdateAudioUi();
+
+        GD.Print("[UI] SettingsMenu: Ready complete (events wired, settings loaded)");
 
         // Events - Storage path
         _storagePathEdit.TextSubmitted += OnStoragePathSubmitted;
         _storagePathEdit.FocusExited += OnStoragePathFocusExited;
         _storagePathBrowse.Pressed += OnStoragePathBrowsePressed;
+
+        // Events - Language
+        _languageOption.ItemSelected += OnLanguageSelected;
 
         // Events - Theme & Display
         _themeOption.ItemSelected += OnThemeSelected;
@@ -159,6 +188,9 @@ public partial class SettingsMenu : Control
         _learnCheck.Toggled += OnLearnToggled;
         _colorblindCheck.Toggled += OnColorblindToggled;
         _uiScaleSlider.ValueChanged += OnUiScaleChanged;
+
+        // Events - Puzzles
+        _puzzlesModeOption.ItemSelected += OnPuzzlesModeSelected;
 
         // Events - Audio
         _sfxCheck.Toggled += OnSfxToggled;
@@ -179,10 +211,10 @@ public partial class SettingsMenu : Control
 
         _resetTechniquesButton.Pressed += OnResetTechniquesPressed;
 
-        _backButton.Pressed += OnBackPressed;
-
         ApplyTheme();
         _themeService.ThemeChanged += OnThemeChanged;
+
+        _localizationService.LanguageChanged += OnLanguageChanged;
     }
 
     private void CreateMusicTrackOptions(VBoxContainer settingsContainer)
@@ -195,7 +227,7 @@ public partial class SettingsMenu : Control
         var menuMusicRow = new HBoxContainer();
         menuMusicRow.Name = "MenuMusicRow";
         var menuMusicLabel = new Label();
-        menuMusicLabel.Text = "Menü-Musik";
+        menuMusicLabel.Name = "MenuMusicLabel";
         menuMusicLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         menuMusicRow.AddChild(menuMusicLabel);
 
@@ -213,7 +245,7 @@ public partial class SettingsMenu : Control
         var gameMusicRow = new HBoxContainer();
         gameMusicRow.Name = "GameMusicRow";
         var gameMusicLabel = new Label();
-        gameMusicLabel.Text = "Spiel-Musik";
+        gameMusicLabel.Name = "GameMusicLabel";
         gameMusicLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         gameMusicRow.AddChild(gameMusicLabel);
 
@@ -230,22 +262,19 @@ public partial class SettingsMenu : Control
 
     private void CreateTechniqueUI()
     {
-        var difficulties = new[] { Difficulty.Easy, Difficulty.Medium, Difficulty.Hard };
-        var difficultyNames = new Dictionary<Difficulty, string>
-        {
-            { Difficulty.Easy, "🟢 Leicht" },
-            { Difficulty.Medium, "🟠 Mittel" },
-            { Difficulty.Hard, "🔴 Schwer" }
-        };
+        var difficulties = new[] { Difficulty.Easy, Difficulty.Medium, Difficulty.Hard, Difficulty.Insane };
         var difficultyColors = new Dictionary<Difficulty, Color>
         {
             { Difficulty.Easy, new Color("4caf50") },
             { Difficulty.Medium, new Color("ff9800") },
-            { Difficulty.Hard, new Color("f44336") }
+            { Difficulty.Hard, new Color("f44336") },
+            { Difficulty.Insane, new Color("9c27b0") }
         };
 
         foreach (var difficulty in difficulties)
         {
+            var defaultTechniques = TechniqueInfo.GetDefaultTechniques(difficulty);
+
             // Container für diese Schwierigkeit
             var diffContainer = new VBoxContainer();
             diffContainer.Name = $"Diff{difficulty}Container";
@@ -254,7 +283,7 @@ public partial class SettingsMenu : Control
             var headerContainer = new HBoxContainer();
             var headerButton = new Button();
             headerButton.Name = $"Header{difficulty}";
-            headerButton.Text = $"▼ {difficultyNames[difficulty]}";
+            headerButton.Text = $"▼ {_localizationService.GetDifficultyDisplay(difficulty)}";
             headerButton.Flat = true;
             headerButton.Alignment = HorizontalAlignment.Left;
             headerButton.SizeFlagsHorizontal = SizeFlags.ExpandFill;
@@ -297,9 +326,8 @@ public partial class SettingsMenu : Control
             headerButton.Pressed += () =>
             {
                 marginContainer.Visible = !marginContainer.Visible;
-                headerButton.Text = marginContainer.Visible
-                    ? $"▼ {difficultyNames[difficulty]}"
-                    : $"▶ {difficultyNames[difficulty]}";
+                string arrow = marginContainer.Visible ? "▼" : "▶";
+                headerButton.Text = $"{arrow} {_localizationService.GetDifficultyDisplay(difficulty)}";
             };
 
             // Checkbox-Dictionary für diese Schwierigkeit
@@ -312,7 +340,7 @@ public partial class SettingsMenu : Control
                     continue;
 
                 // Zeige Techniken die für diese Schwierigkeit oder niedriger sind
-                bool isRelevant = TechniqueInfo.DefaultTechniquesPerDifficulty.GetValueOrDefault(difficulty, new HashSet<string>()).Contains(techId);
+                bool isRelevant = defaultTechniques.Contains(techId);
                 // Oder Techniken die potenziell aktiviert werden könnten
                 bool isPossible = tech.DifficultyLevel <= (int)difficulty + 1;
 
@@ -322,8 +350,12 @@ public partial class SettingsMenu : Control
 
                 var checkButton = new CheckButton();
                 checkButton.Name = $"Tech{difficulty}{techId}";
-                checkButton.Text = tech.Name;
-                checkButton.TooltipText = $"{tech.Description}\n\nSchwierigkeit: {GetLevelName(tech.DifficultyLevel)}";
+                checkButton.Text = _localizationService.GetTechniqueName(techId);
+                checkButton.TooltipText = _localizationService.Get(
+                    "settings.technique.tooltip",
+                    _localizationService.GetTechniqueDescription(techId),
+                    GetLevelName(tech.DifficultyLevel)
+                );
                 checkButton.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
                 // Farbige Markierung je nach Technik-Level
@@ -349,21 +381,21 @@ public partial class SettingsMenu : Control
         }
     }
 
-    private static string GetLevelName(int level)
+    private string GetLevelName(int level)
     {
         return level switch
         {
-            1 => "Leicht",
-            2 => "Mittel",
-            3 => "Schwer",
-            _ => "Unbekannt"
+            1 => _localizationService.Get("settings.technique.level.easy"),
+            2 => _localizationService.Get("settings.technique.level.medium"),
+            3 => _localizationService.Get("settings.technique.level.hard"),
+            _ => _localizationService.Get("common.unknown")
         };
     }
 
     public override void _ExitTree()
     {
-
         _themeService.ThemeChanged -= OnThemeChanged;
+        _localizationService.LanguageChanged -= OnLanguageChanged;
     }
 
     public override void _Input(InputEvent @event)
@@ -378,12 +410,16 @@ public partial class SettingsMenu : Control
     private void LoadSettings()
     {
         _isLoadingSettings = true;
+        GD.Print($"[UI] SettingsMenu.LoadSettings: Starting - Settings.LanguageIndex={_saveService.Settings.LanguageIndex}, ThemeIndex={_saveService.Settings.ThemeIndex}");
 
         var settings = _saveService.Settings;
 
         // Storage path
         _storagePathEdit.Text = settings.CustomStoragePath;
         UpdateStoragePathInfo();
+
+        // Language
+        _languageOption.Selected = settings.LanguageIndex;
 
         _themeOption.Selected = settings.ThemeIndex;
         _deadlyCheck.ButtonPressed = settings.DeadlyModeEnabled;
@@ -395,6 +431,9 @@ public partial class SettingsMenu : Control
 
         _uiScaleSlider.Value = settings.UiScalePercent;
         _uiScaleValue.Text = $"{settings.UiScalePercent}%";
+
+        // Puzzles
+        SelectOptionById(_puzzlesModeOption, (int)settings.PuzzlesMode);
 
         // Audio
         _sfxCheck.ButtonPressed = settings.SoundEnabled;
@@ -423,6 +462,8 @@ public partial class SettingsMenu : Control
 
         _isLoadingSettings = false;
 
+        GD.Print($"[UI] SettingsMenu: post-load | langItems={_languageOption.ItemCount}, themeItems={_themeOption.ItemCount}, langSelected={_languageOption.Selected}, themeSelected={_themeOption.Selected}");
+
         UpdateAudioUi();
     }
 
@@ -439,9 +480,8 @@ public partial class SettingsMenu : Control
 
     private void UpdateStoragePathInfo()
     {
-
         string resolvedPath = _saveService.GetResolvedStoragePath();
-        _storagePathInfo.Text = $"📂 {resolvedPath}";
+        _storagePathInfo.Text = _localizationService.Get("settings.storage.info", resolvedPath);
     }
 
     private void LoadTechniqueSettings()
@@ -451,8 +491,7 @@ public partial class SettingsMenu : Control
 
         foreach (var difficulty in _techniqueCheckboxes.Keys)
         {
-            var enabledTechniques = settings.GetTechniquesForDifficulty(difficulty)
-                ?? TechniqueInfo.DefaultTechniquesPerDifficulty.GetValueOrDefault(difficulty, new HashSet<string>());
+            var enabledTechniques = TechniqueInfo.GetConfiguredTechniques(settings, difficulty);
 
             foreach (var (techId, checkbox) in _techniqueCheckboxes[difficulty])
             {
@@ -473,8 +512,7 @@ public partial class SettingsMenu : Control
         var settings = _saveService.Settings;
 
         // Aktuelle Techniken für diese Schwierigkeit holen (oder Standard)
-        var currentTechniques = settings.GetTechniquesForDifficulty(difficulty)
-            ?? new HashSet<string>(TechniqueInfo.DefaultTechniquesPerDifficulty.GetValueOrDefault(difficulty, new HashSet<string>()));
+        var currentTechniques = TechniqueInfo.GetConfiguredTechniques(settings, difficulty);
 
         if (pressed)
             currentTechniques.Add(techId);
@@ -507,6 +545,7 @@ public partial class SettingsMenu : Control
 
     private void ApplyStoragePath(string path)
     {
+        GD.Print($"[UI] SettingsMenu: ApplyStoragePath path='{path}'");
 
         string cleanPath = path.Trim();
 
@@ -523,7 +562,7 @@ public partial class SettingsMenu : Control
                 if (err != Error.Ok)
                 {
                     // Show error - path is invalid
-                    _storagePathInfo.Text = "❌ Ungültiger Pfad - konnte nicht erstellt werden";
+                    _storagePathInfo.Text = _localizationService.Get("settings.storage.invalid");
                     _storagePathEdit.Text = _saveService.Settings.CustomStoragePath;
                     return;
                 }
@@ -531,6 +570,7 @@ public partial class SettingsMenu : Control
         }
 
         _saveService.Settings.CustomStoragePath = cleanPath;
+        GD.Print($"[UI] SettingsMenu: Storage path set to '{cleanPath}', saving + reloading");
         SaveSettings();
 
         // Reload data from new location
@@ -546,7 +586,7 @@ public partial class SettingsMenu : Control
             {
                 FileMode = FileDialog.FileModeEnum.OpenDir,
                 Access = FileDialog.AccessEnum.Filesystem,
-                Title = "Speicherort auswählen",
+                Title = _localizationService.Get("settings.storage.select_title"),
                 Size = new Vector2I(600, 400)
             };
             _fileDialog.DirSelected += OnStoragePathSelected;
@@ -572,15 +612,38 @@ public partial class SettingsMenu : Control
 
     #endregion
 
+    private void OnLanguageSelected(long index)
+    {
+        GD.Print($"[UI] SettingsMenu: Language selected = {index}, selectedIdx={_languageOption.Selected}, items={_languageOption.ItemCount}, _isLoadingSettings={_isLoadingSettings}");
+        if (_isLoadingSettings) return; // Don't save during loading
+
+        _audioService.PlayClick();
+        GD.Print($"[UI] SettingsMenu: Before SetLanguage - Settings.LanguageIndex={_saveService.Settings.LanguageIndex}");
+        _localizationService.SetLanguage((int)index);
+        GD.Print($"[UI] SettingsMenu: After SetLanguage - Settings.LanguageIndex={_saveService.Settings.LanguageIndex}");
+        // Refresh immediately so the settings screen updates in-place
+        ApplyLocalization();
+    }
+
     private void OnThemeSelected(long index)
     {
-        if (!_isLoadingSettings) _audioService.PlayClick();
-        GD.Print($"[UI] SettingsMenu: Theme selected = {index}");
-        _saveService.Settings.ThemeIndex = (int)index;
-        SaveSettings();
+        GD.Print($"[UI] SettingsMenu: Theme selected = {index}, selectedIdx={_themeOption.Selected}, items={_themeOption.ItemCount}, _isLoadingSettings={_isLoadingSettings}");
+        if (_isLoadingSettings) return; // Don't save during loading
 
+        _audioService.PlayClick();
+        GD.Print($"[UI] SettingsMenu: Before save - Settings.ThemeIndex={_saveService.Settings.ThemeIndex}");
+        _saveService.Settings.ThemeIndex = (int)index;
+        GD.Print($"[UI] SettingsMenu: After assignment - Settings.ThemeIndex={_saveService.Settings.ThemeIndex}");
+        SaveSettings();
+        GD.Print($"[UI] SettingsMenu: After save - Settings.ThemeIndex={_saveService.Settings.ThemeIndex}");
 
         _themeService.SetTheme((int)index);
+    }
+
+    private void OnLanguageChanged(int languageIndex)
+    {
+        GD.Print($"[UI] SettingsMenu: LanguageChanged signal received, applying localization (langIndex={languageIndex})");
+        ApplyLocalization();
     }
 
     private void OnLearnToggled(bool pressed)
@@ -600,9 +663,6 @@ public partial class SettingsMenu : Control
         _themeService.SetColorblindPalette(pressed);
     }
 
-    /// <summary>
-    /// Configures the UI scale slider with dynamic bounds based on screen resolution.
-    /// </summary>
     private void ConfigureUiScaleSlider()
     {
         var bounds = _themeService.GetUiScaleBounds();
@@ -611,8 +671,8 @@ public partial class SettingsMenu : Control
         _uiScaleSlider.MaxValue = bounds.Max;
         _uiScaleSlider.Step = 5;
 
-        // Add tooltip explaining the scale range
-        _uiScaleSlider.TooltipText = $"UI-Skalierung ({bounds.Min}% - {bounds.Max}%)\nEmpfohlen: {bounds.Recommended}%";
+        // Localized tooltip explaining the scale range
+        _uiScaleSlider.TooltipText = _localizationService.Get("settings.ui_scale.tooltip", bounds.Min, bounds.Max, bounds.Recommended);
 
         GD.Print($"[UI] SettingsMenu: UI scale bounds configured: {bounds.Min}%-{bounds.Max}% (recommended: {bounds.Recommended}%)");
     }
@@ -635,6 +695,15 @@ public partial class SettingsMenu : Control
 
 
         _themeService.ApplyUiScale(pct);
+    }
+
+    private void OnPuzzlesModeSelected(long index)
+    {
+        if (_isLoadingSettings) return;
+        int modeId = _puzzlesModeOption.GetItemId((int)index);
+        GD.Print($"[UI] SettingsMenu: Puzzles mode selected = {modeId}");
+        _saveService.Settings.PuzzlesMode = (SettingsData.PuzzleSourceMode)modeId;
+        SaveSettings();
     }
 
     private void OnSfxToggled(bool pressed)
@@ -795,7 +864,6 @@ public partial class SettingsMenu : Control
 
     private void OnBackPressed()
     {
-        GD.Print("[UI] SettingsMenu: Back pressed");
         _audioService.PlayClick();
         _appState.GoToMainMenu();
     }
@@ -803,6 +871,238 @@ public partial class SettingsMenu : Control
     private void OnThemeChanged(int themeIndex)
     {
         ApplyTheme();
+    }
+
+    private void ApplyLocalization()
+    {
+        var loc = _localizationService;
+        var settings = _saveService.Settings;
+        string basePath = "CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer";
+
+        // Title & navigation
+        _title.Text = loc.Get("settings.title");
+        _backButton.Text = loc.Get("menu.back");
+        _backButton.TooltipText = loc.Get("settings.back.tooltip");
+
+        // Storage
+        GetNode<Label>($"{basePath}/StorageTitle").Text = loc.Get("settings.storage.title");
+        var storageRow = GetNode<HBoxContainer>($"{basePath}/StoragePathRow");
+        storageRow.TooltipText = loc.Get("settings.storage.tooltip");
+        GetNode<Label>($"{basePath}/StoragePathRow/StoragePathLabel").Text = loc.Get("settings.storage.path");
+        _storagePathEdit.PlaceholderText = loc.Get("settings.storage.placeholder");
+        _storagePathEdit.TooltipText = loc.Get("settings.storage.tooltip");
+        _storagePathBrowse.TooltipText = loc.Get("settings.storage.browse.tooltip");
+        _storagePathInfo.Text = loc.Get("settings.storage.info", _saveService.GetResolvedStoragePath());
+
+        // Appearance
+        GetNode<Label>($"{basePath}/AppearanceTitle").Text = loc.Get("settings.appearance.title");
+        var languageRow = GetNode<HBoxContainer>($"{basePath}/LanguageRow");
+        languageRow.TooltipText = loc.Get("settings.language.tooltip");
+        GetNode<Label>($"{basePath}/LanguageRow/LanguageLabel").Text = loc.Get("settings.language.label");
+
+        var themeRow = GetNode<HBoxContainer>($"{basePath}/ThemeRow");
+        themeRow.TooltipText = loc.Get("settings.theme.tooltip");
+        GetNode<Label>($"{basePath}/ThemeRow/ThemeLabel").Text = loc.Get("settings.theme");
+
+        var deadlyRow = GetNode<HBoxContainer>($"{basePath}/DeadlyRow");
+        deadlyRow.TooltipText = loc.Get("settings.deadly_mode.tooltip");
+        GetNode<Label>($"{basePath}/DeadlyRow/DeadlyLabel").Text = loc.Get("settings.deadly_mode");
+
+        var hideRow = GetNode<HBoxContainer>($"{basePath}/HideRow");
+        hideRow.TooltipText = loc.Get("settings.hide_completed.tooltip");
+        GetNode<Label>($"{basePath}/HideRow/HideLabel").Text = loc.Get("settings.hide_completed");
+
+        var highlightRow = GetNode<HBoxContainer>($"{basePath}/HighlightRow");
+        highlightRow.TooltipText = loc.Get("settings.highlight_cells.tooltip");
+        GetNode<Label>($"{basePath}/HighlightRow/HighlightLabel").Text = loc.Get("settings.highlight_cells");
+
+        var learnRow = GetNode<HBoxContainer>($"{basePath}/LearnRow");
+        learnRow.TooltipText = loc.Get("settings.learn_mode.tooltip");
+        GetNode<Label>($"{basePath}/LearnRow/LearnLabel").Text = loc.Get("settings.learn_mode");
+
+        var colorblindRow = GetNode<HBoxContainer>($"{basePath}/ColorblindRow");
+        colorblindRow.TooltipText = loc.Get("settings.colorblind.tooltip");
+        GetNode<Label>($"{basePath}/ColorblindRow/ColorblindLabel").Text = loc.Get("settings.colorblind");
+
+        var uiScaleRow = GetNode<HBoxContainer>($"{basePath}/UiScaleRow");
+        var bounds = _themeService.GetUiScaleBounds();
+        uiScaleRow.TooltipText = loc.Get("settings.ui_scale.tooltip", bounds.Min, bounds.Max, bounds.Recommended);
+        GetNode<Label>($"{basePath}/UiScaleRow/UiScaleLabel").Text = loc.Get("settings.ui_scale.label");
+        _uiScaleSlider.TooltipText = uiScaleRow.TooltipText;
+
+        // Puzzles
+        GetNode<Label>($"{basePath}/PuzzlesTitle").Text = loc.Get("settings.puzzles.title");
+        var puzzlesModeRow = GetNode<HBoxContainer>($"{basePath}/PuzzlesModeRow");
+        puzzlesModeRow.TooltipText = loc.Get("settings.puzzles.mode.tooltip");
+        GetNode<Label>($"{basePath}/PuzzlesModeRow/PuzzlesModeLabel").Text = loc.Get("settings.puzzles.mode");
+
+        // Audio
+        GetNode<Label>($"{basePath}/AudioTitle").Text = loc.Get("settings.sound");
+
+        var sfxRow = GetNode<HBoxContainer>($"{basePath}/SfxRow");
+        sfxRow.TooltipText = loc.Get("settings.sound.effects.tooltip");
+        GetNode<Label>($"{basePath}/SfxRow/SfxLabel").Text = loc.Get("settings.sound.effects");
+
+        var sfxVolumeRow = GetNode<HBoxContainer>($"{basePath}/SfxVolumeRow");
+        sfxVolumeRow.TooltipText = loc.Get("settings.sound.volume.tooltip");
+        GetNode<Label>($"{basePath}/SfxVolumeRow/SfxVolumeLabel").Text = loc.Get("settings.sound.volume");
+
+        var musicRow = GetNode<HBoxContainer>($"{basePath}/MusicRow");
+        musicRow.TooltipText = loc.Get("settings.music.tooltip");
+        GetNode<Label>($"{basePath}/MusicRow/MusicLabel").Text = loc.Get("settings.music");
+
+        var musicVolumeRow = GetNode<HBoxContainer>($"{basePath}/MusicVolumeRow");
+        musicVolumeRow.TooltipText = loc.Get("settings.music.volume.tooltip");
+        GetNode<Label>($"{basePath}/MusicVolumeRow/MusicVolumeLabel").Text = loc.Get("settings.music.volume");
+
+        GetNode<Label>($"{basePath}/MenuMusicRow/MenuMusicLabel").Text = loc.Get("settings.music.menu");
+        GetNode<Label>($"{basePath}/GameMusicRow/GameMusicLabel").Text = loc.Get("settings.music.game");
+
+        // Notes assistant
+        GetNode<Label>($"{basePath}/NotesAssistTitle").Text = loc.Get("settings.notes.title");
+
+        var smartRow = GetNode<HBoxContainer>($"{basePath}/SmartCleanupRow");
+        smartRow.TooltipText = loc.Get("settings.notes.smart_cleanup.tooltip");
+        GetNode<Label>($"{basePath}/SmartCleanupRow/SmartCleanupLabel").Text = loc.Get("settings.notes.smart_cleanup");
+
+        var houseRow = GetNode<HBoxContainer>($"{basePath}/HouseAutoFillRow");
+        houseRow.TooltipText = loc.Get("settings.notes.house_autofill.tooltip");
+        GetNode<Label>($"{basePath}/HouseAutoFillRow/HouseAutoFillLabel").Text = loc.Get("settings.notes.house_autofill");
+
+        // Challenge settings
+        GetNode<Label>($"{basePath}/ChallengeTitle").Text = loc.Get("settings.challenge.title");
+
+        var challengeDiffRow = GetNode<HBoxContainer>($"{basePath}/ChallengeDifficultyRow");
+        challengeDiffRow.TooltipText = loc.Get("settings.challenge.difficulty.tooltip");
+        GetNode<Label>($"{basePath}/ChallengeDifficultyRow/ChallengeDifficultyLabel").Text = loc.Get("settings.challenge.difficulty");
+
+        var challengeNoNotesRow = GetNode<HBoxContainer>($"{basePath}/ChallengeNoNotesRow");
+        challengeNoNotesRow.TooltipText = loc.Get("settings.challenge.no_notes.tooltip");
+        GetNode<Label>($"{basePath}/ChallengeNoNotesRow/ChallengeNoNotesLabel").Text = loc.Get("settings.challenge.no_notes");
+
+        var challengePerfectRow = GetNode<HBoxContainer>($"{basePath}/ChallengePerfectRow");
+        challengePerfectRow.TooltipText = loc.Get("settings.challenge.perfect.tooltip");
+        GetNode<Label>($"{basePath}/ChallengePerfectRow/ChallengePerfectLabel").Text = loc.Get("settings.challenge.perfect");
+
+        var challengeHintsRow = GetNode<HBoxContainer>($"{basePath}/ChallengeHintsRow");
+        challengeHintsRow.TooltipText = loc.Get("settings.challenge.hints.tooltip");
+        GetNode<Label>($"{basePath}/ChallengeHintsRow/ChallengeHintsLabel").Text = loc.Get("settings.challenge.hints");
+
+        var challengeTimeRow = GetNode<HBoxContainer>($"{basePath}/ChallengeTimeRow");
+        challengeTimeRow.TooltipText = loc.Get("settings.challenge.time.tooltip");
+        GetNode<Label>($"{basePath}/ChallengeTimeRow/ChallengeTimeLabel").Text = loc.Get("settings.challenge.time");
+
+        // Techniques
+        GetNode<Label>($"{basePath}/TechniquesTitle").Text = loc.Get("settings.techniques.title");
+        GetNode<Label>($"{basePath}/TechniquesDescription").Text = loc.Get("settings.techniques.description");
+        _resetTechniquesButton.Text = loc.Get("settings.techniques.reset");
+        _resetTechniquesButton.TooltipText = loc.Get("settings.techniques.reset.tooltip");
+
+        // Option buttons - use loading flag to prevent event cascades
+        bool wasLoading = _isLoadingSettings;
+        _isLoadingSettings = true;
+        PopulateOptionButtons(settings);
+        _isLoadingSettings = wasLoading;
+
+        // Technique headers
+        UpdateTechniqueHeaders();
+    }
+
+    private void PopulateOptionButtons(SettingsData settings)
+    {
+        var languageItems = new List<(string text, int id)>
+        {
+            (_localizationService.Get("settings.language.german"), (int)Language.German),
+            (_localizationService.Get("settings.language.english"), (int)Language.English)
+        };
+        PopulateOptionButton(_languageOption, languageItems, settings.LanguageIndex);
+
+        var themeItems = new List<(string text, int id)>
+        {
+            (_localizationService.Get("settings.theme.light"), 0),
+            (_localizationService.Get("settings.theme.dark"), 1)
+        };
+        PopulateOptionButton(_themeOption, themeItems, settings.ThemeIndex);
+
+        // Puzzles mode
+        var puzzlesModeItems = new List<(string text, int id)>
+        {
+            (_localizationService.Get("settings.puzzles.mode.both"), 0),
+            (_localizationService.Get("settings.puzzles.mode.prebuilt"), 1),
+            (_localizationService.Get("settings.puzzles.mode.dynamic"), 2)
+        };
+        PopulateOptionButton(_puzzlesModeOption, puzzlesModeItems, (int)settings.PuzzlesMode);
+
+        var challengeDifficultyItems = new List<(string text, int id)>
+        {
+            (_localizationService.Get("settings.challenge.auto"), 0),
+            (_localizationService.Get("settings.challenge.easy"), 1),
+            (_localizationService.Get("settings.challenge.medium"), 2),
+            (_localizationService.Get("settings.challenge.hard"), 3)
+        };
+        PopulateOptionButton(_challengeDifficultyOption, challengeDifficultyItems, settings.ChallengeDifficulty);
+
+        var hintsItems = new List<(string text, int id)>
+        {
+            (_localizationService.Get("settings.common.off"), 0),
+            ("3", 3),
+            ("5", 5),
+            ("10", 10)
+        };
+        PopulateOptionButton(_challengeHintsOption, hintsItems, settings.ChallengeHintLimit);
+
+        var timeItems = new List<(string text, int id)>
+        {
+            (_localizationService.Get("settings.common.off"), 0),
+            (_localizationService.Get("settings.time.minutes", 10), 10),
+            (_localizationService.Get("settings.time.minutes", 15), 15),
+            (_localizationService.Get("settings.time.minutes", 20), 20)
+        };
+        PopulateOptionButton(_challengeTimeOption, timeItems, settings.ChallengeTimeAttackMinutes);
+    }
+
+    private static void PopulateOptionButton(OptionButton option, IEnumerable<(string text, int id)> items, int selectedId)
+    {
+        option.Clear();
+        int selectedIndex = 0;
+        int idx = 0;
+        foreach (var (text, id) in items)
+        {
+            option.AddItem(text, id);
+            if (id == selectedId)
+            {
+                selectedIndex = idx;
+            }
+            idx++;
+        }
+
+        if (option.ItemCount > 0)
+        {
+            option.Select(selectedIndex);
+        }
+    }
+
+    private void UpdateTechniqueHeaders()
+    {
+        // Guard against being called before technique UI is created
+        if (_techniqueCheckboxes == null || _techniqueCheckboxes.Count == 0)
+            return;
+
+        foreach (var difficulty in _techniqueCheckboxes.Keys)
+        {
+            var diffContainer = _techniquesContainer?.GetNodeOrNull<VBoxContainer>($"Diff{difficulty}Container");
+            if (diffContainer == null) continue;
+
+            var headerButton = diffContainer.GetNodeOrNull<Button>($"Header{difficulty}");
+            if (headerButton == null) continue;
+
+            // Second child is the margin container that holds checkboxes
+            var marginContainer = diffContainer.GetChild(1) as MarginContainer;
+            bool expanded = marginContainer == null || marginContainer.Visible;
+            string arrow = expanded ? "▼" : "▶";
+            string diffText = _localizationService.GetDifficultyDisplay(difficulty);
+            headerButton.Text = $"{arrow} {diffText}";
+        }
     }
 
     private void ApplyTheme()

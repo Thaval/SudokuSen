@@ -114,6 +114,7 @@ public partial class ThemeService : Node
 
     private void OnSettingsChanged()
     {
+        GD.Print("[ThemeService] SettingsChanged received -> reapplying theme/colorblind/ui scale");
         ApplySettings(_saveService.Settings);
     }
 
@@ -123,6 +124,7 @@ public partial class ThemeService : Node
         _colorblindEnabled = settings.ColorblindPaletteEnabled;
         CurrentColors = BuildColors(_themeIndex, _colorblindEnabled);
         ApplyUiScale(settings.UiScalePercent);
+        GD.Print($"[ThemeService] Applied settings | theme={_themeIndex}, colorblind={_colorblindEnabled}, uiScale={settings.UiScalePercent}%");
         EmitSignal(SignalName.ThemeChanged, _themeIndex);
     }
 

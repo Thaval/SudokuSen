@@ -85,6 +85,8 @@ public partial class SaveService : Node
         LoadSaveGame();
         LoadHistory();
         _loaded = true;
+        GD.Print("[Save] LoadAll() emitting SettingsChanged after initial load");
+        EmitSignal(SignalName.SettingsChanged);
         GD.Print($"[Save] LoadAll() done | storage={GetResolvedStoragePath()}");
     }
 
@@ -140,6 +142,7 @@ public partial class SaveService : Node
         }
 
         Settings.EnsureHeatmapSizes();
+        GD.Print($"[Save] LoadSettings() completed | theme={Settings.ThemeIndex}, lang={Settings.LanguageIndex}, colorblind={Settings.ColorblindPaletteEnabled}, uiScale={Settings.UiScalePercent}%");
     }
 
     public void SaveSettings()
@@ -160,6 +163,7 @@ public partial class SaveService : Node
 
         // Reload to keep Settings canonical and to ensure listeners see the latest values.
         LoadSettings();
+        GD.Print("[Save] SaveSettings() emitting SettingsChanged after reload");
         EmitSignal(SignalName.SettingsChanged);
     }
 
@@ -304,8 +308,8 @@ public partial class SaveService : Node
             return Difficulty.Easy;
         }
 
-        // Check difficulties from Easy → Medium → Hard (progression path)
-        var progressionPath = new[] { Difficulty.Easy, Difficulty.Medium, Difficulty.Hard };
+        // Check difficulties from Easy → Medium → Hard → Insane (progression path)
+        var progressionPath = new[] { Difficulty.Easy, Difficulty.Medium, Difficulty.Hard, Difficulty.Insane };
         Difficulty recommended = Difficulty.Easy;
 
         foreach (var diff in progressionPath)

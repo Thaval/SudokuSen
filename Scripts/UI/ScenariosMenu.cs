@@ -20,21 +20,15 @@ public partial class ScenariosMenu : Control
     private ThemeService _themeService = null!;
     private AudioService _audioService = null!;
     private AppState _appState = null!;
+    private LocalizationService _localizationService = null!;
     private TutorialService? _tutorialService;
-
-    // Gruppierte Techniken
-    private static readonly (string Category, string[] TechniqueIds)[] TechniqueGroups = new[]
-    {
-        ("🟢 Leicht", new[] { "NakedSingle", "HiddenSingleRow", "HiddenSingleCol", "HiddenSingleBlock" }),
-        ("🟠 Mittel", new[] { "NakedPair", "NakedTriple", "HiddenPair", "PointingPair", "BoxLineReduction" }),
-        ("🔴 Schwer", new[] { "XWing", "Swordfish", "XYWing", "Skyscraper", "SimpleColoring" })
-    };
 
     public override void _Ready()
     {
         _themeService = GetNode<ThemeService>("/root/ThemeService");
         _audioService = GetNode<AudioService>("/root/AudioService");
         _appState = GetNode<AppState>("/root/AppState");
+        _localizationService = GetNode<LocalizationService>("/root/LocalizationService");
         _tutorialService = GetNodeOrNull<TutorialService>("/root/TutorialService");
 
         UiNavigationSfx.Wire(this, _audioService);
@@ -50,13 +44,16 @@ public partial class ScenariosMenu : Control
 
         CreateTechniqueButtons();
         ApplyTheme();
+        ApplyLocalization();
 
         _themeService.ThemeChanged += OnThemeChanged;
+        _localizationService.LanguageChanged += OnLanguageChanged;
     }
 
     public override void _ExitTree()
     {
         _themeService.ThemeChanged -= OnThemeChanged;
+        _localizationService.LanguageChanged -= OnLanguageChanged;
     }
 
     public override void _Input(InputEvent @event)
@@ -82,13 +79,13 @@ public partial class ScenariosMenu : Control
 
         // === TECHNIQUE SCENARIOS HEADER ===
         var scenariosTitle = new Label();
-        scenariosTitle.Text = "🎯 Technik-Szenarien";
+        scenariosTitle.Text = _localizationService.Get("scenarios.techniques.title");
         scenariosTitle.AddThemeFontSizeOverride("font_size", 18);
         scenariosTitle.AddThemeColorOverride("font_color", colors.TextSecondary);
         _techniquesContainer.AddChild(scenariosTitle);
 
         var scenariosSubtitle = new Label();
-        scenariosSubtitle.Text = "Übe spezifische Lösungstechniken mit passenden Puzzles";
+        scenariosSubtitle.Text = _localizationService.Get("scenarios.techniques.desc");
         scenariosSubtitle.AddThemeFontSizeOverride("font_size", 14);
         scenariosSubtitle.AddThemeColorOverride("font_color", colors.TextSecondary);
         _techniquesContainer.AddChild(scenariosSubtitle);
@@ -98,11 +95,11 @@ public partial class ScenariosMenu : Control
         _techniquesContainer.AddChild(headerSpacer);
 
         // === TECHNIQUE SCENARIOS ===
-        foreach (var (category, techniqueIds) in TechniqueGroups)
+        foreach (var group in TechniqueInfo.PracticeGroups)
         {
             // Kategorie-Header
             var categoryLabel = new Label();
-            categoryLabel.Text = category;
+            categoryLabel.Text = _localizationService.Get(group.CategoryKey);
             categoryLabel.AddThemeFontSizeOverride("font_size", 20);
             categoryLabel.AddThemeColorOverride("font_color", colors.Accent);
             _techniquesContainer.AddChild(categoryLabel);
@@ -113,15 +110,17 @@ public partial class ScenariosMenu : Control
             _techniquesContainer.AddChild(spacer);
 
             // Technik-Buttons
-            foreach (var techId in techniqueIds)
+            foreach (var techId in group.TechniqueIds)
             {
                 if (!TechniqueInfo.Techniques.TryGetValue(techId, out var technique))
                     continue;
 
                 var button = new Button();
                 button.Name = $"Btn{techId}";
-                button.Text = $"🎯 {technique.Name}";
-                button.TooltipText = $"{technique.Description}\n\nKlicke um ein Puzzle zu starten, das diese Technik erfordert.";
+                var techName = _localizationService.GetTechniqueName(techId);
+                var techDesc = _localizationService.GetTechniqueDescription(techId);
+                button.Text = $"🎯 {techName}";
+                button.TooltipText = _localizationService.Get("scenarios.technique.tooltip", techDesc);
                 button.CustomMinimumSize = new Vector2(0, 44);
                 button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
@@ -158,14 +157,14 @@ public partial class ScenariosMenu : Control
     {
         // Tutorials header
         var tutorialTitle = new Label();
-        tutorialTitle.Text = "📚 Tutorials";
+        tutorialTitle.Text = _localizationService.Get("scenarios.tutorials.title");
         tutorialTitle.AddThemeFontSizeOverride("font_size", 20);
         tutorialTitle.AddThemeColorOverride("font_color", colors.Accent);
         _techniquesContainer.AddChild(tutorialTitle);
 
         // Subtitle description
         var tutorialSubtitle = new Label();
-        tutorialSubtitle.Text = "Interaktive Anleitungen mit animierten Hinweisen";
+        tutorialSubtitle.Text = _localizationService.Get("scenarios.tutorials.desc");
         tutorialSubtitle.AddThemeFontSizeOverride("font_size", 14);
         tutorialSubtitle.AddThemeColorOverride("font_color", colors.TextSecondary);
         _techniquesContainer.AddChild(tutorialSubtitle);
@@ -178,11 +177,11 @@ public partial class ScenariosMenu : Control
         // Define tutorials inline (matches TutorialService definitions)
         var tutorials = new[]
         {
-            (Id: "getting_started", Name: "Erste Schritte", Description: "Lerne die Benutzeroberfläche, Steuerung und Notizen kennen.", Difficulty: TutorialDifficulty.Easy, Minutes: 6),
-            (Id: "basic_techniques", Name: "Grundtechniken", Description: "Naked Single, Hidden Single und mehr.", Difficulty: TutorialDifficulty.Medium, Minutes: 8),
-            (Id: "advanced_features", Name: "Erweiterte Funktionen", Description: "Auto-Notes, Mehrfachauswahl, R/C/B und Shortcuts.", Difficulty: TutorialDifficulty.Medium, Minutes: 10),
-            (Id: "advanced_techniques", Name: "Fortgeschrittene Techniken", Description: "Pairs, Pointing, Box/Line, X-Wing und mehr.", Difficulty: TutorialDifficulty.Hard, Minutes: 15),
-            (Id: "challenge_modes", Name: "Challenge-Modi", Description: "Deadly Mode, Statistiken und persönliche Bestzeiten.", Difficulty: TutorialDifficulty.Hard, Minutes: 8),
+            (Id: "getting_started", NameKey: "tutorial.getting_started", DescKey: "tutorial.getting_started.desc", Difficulty: TutorialDifficulty.Easy, Minutes: 6),
+            (Id: "basic_techniques", NameKey: "tutorial.basic_techniques", DescKey: "tutorial.basic_techniques.desc", Difficulty: TutorialDifficulty.Medium, Minutes: 8),
+            (Id: "advanced_features", NameKey: "tutorial.advanced_features", DescKey: "tutorial.advanced_features.desc", Difficulty: TutorialDifficulty.Medium, Minutes: 10),
+            (Id: "advanced_techniques", NameKey: "tutorial.advanced_techniques", DescKey: "tutorial.advanced_techniques.desc", Difficulty: TutorialDifficulty.Hard, Minutes: 15),
+            (Id: "challenge_modes", NameKey: "tutorial.challenge_modes", DescKey: "tutorial.challenge_modes.desc", Difficulty: TutorialDifficulty.Hard, Minutes: 8),
         };
 
         foreach (var tutorial in tutorials)
@@ -199,8 +198,10 @@ public partial class ScenariosMenu : Control
                 _ => "📖"
             };
 
-            button.Text = $"{difficultyEmoji} {tutorial.Name}";
-            button.TooltipText = $"{tutorial.Description}\n\n⏱️ Ca. {tutorial.Minutes} Minuten";
+            var tutorialName = _localizationService.Get(tutorial.NameKey);
+            var tutorialDesc = _localizationService.Get(tutorial.DescKey);
+            button.Text = $"{difficultyEmoji} {tutorialName}";
+            button.TooltipText = $"{tutorialDesc}\n\n{_localizationService.Get("scenarios.minutes", tutorial.Minutes)}";
             button.CustomMinimumSize = new Vector2(0, 44);
             button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
@@ -240,6 +241,19 @@ public partial class ScenariosMenu : Control
             child.QueueFree();
         }
         CallDeferred(nameof(CreateTechniqueButtons));
+    }
+
+    private void OnLanguageChanged(int languageIndex)
+    {
+        ApplyLocalization();
+    }
+
+    private void ApplyLocalization()
+    {
+        _title.Text = _localizationService.Get("scenarios.title");
+        _description.Text = _localizationService.Get("scenarios.description");
+        _backButton.Text = _localizationService.Get("menu.back");
+        _backButton.TooltipText = _localizationService.Get("settings.back.tooltip");
     }
 
     private void ApplyTheme()

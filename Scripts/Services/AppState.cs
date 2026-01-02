@@ -1,4 +1,5 @@
 namespace SudokuSen.Services;
+using SudokuSen.UI;
 
 /// <summary>
 /// Autoload: Verwaltet den App-Zustand und die Navigation
@@ -20,8 +21,14 @@ public partial class AppState : Node
     // Aktuelles Spiel
     public SudokuGameState? CurrentGame { get; private set; }
 
+    // Szene, zu der aus dem Spiel zurück navigiert werden soll (z. B. Puzzles-/Szenarien-Übersicht)
+    private string? _returnScenePath;
+
     // Flag für neues Spiel vs fortgesetztes Spiel
     public bool IsNewGame { get; private set; }
+
+    // History replay flag
+    public bool IsHistoryReplay { get; private set; }
 
     // Scene Paths
     public const string SCENE_MAIN_MENU = "res://Scenes/MainMenu.tscn";
@@ -32,6 +39,7 @@ public partial class AppState : Node
     public const string SCENE_STATS = "res://Scenes/StatsMenu.tscn";
     public const string SCENE_TIPS = "res://Scenes/TipsMenu.tscn";
     public const string SCENE_SCENARIOS = "res://Scenes/ScenariosMenu.tscn";
+    public const string SCENE_PUZZLES = "res://Scenes/PuzzlesMenu.tscn";
 
     public override void _Ready()
     {
@@ -43,7 +51,16 @@ public partial class AppState : Node
     /// </summary>
     public void NavigateTo(string scenePath)
     {
+        // Prefer routing through the Main scene container if it is active
+        if (GetTree().CurrentScene is Main main)
+        {
+            main.LoadSceneDirect(scenePath);
+            return;
+        }
+
+        // Fallback: emit signal and change root scene directly
         EmitSignal(SignalName.SceneChangeRequested, scenePath);
+        GetTree().ChangeSceneToFile(scenePath);
     }
 
     /// <summary>
@@ -55,11 +72,39 @@ public partial class AppState : Node
     }
 
     /// <summary>
+    /// Merkt sich die aktuelle Szene als Rücksprungziel, falls wir in ein Spiel wechseln.
+    /// </summary>
+    private void CaptureReturnScene()
+    {
+        _returnScenePath = GetTree().CurrentScene?.SceneFilePath;
+        GD.Print($"[AppState] Captured return scene: {_returnScenePath}");
+    }
+
+    /// <summary>
+    /// Geht zurück zur gemerkten Szene oder gibt false zurück, falls keine hinterlegt ist.
+    /// </summary>
+    public bool TryReturnToCapturedScene()
+    {
+        GD.Print($"[AppState] TryReturnToCapturedScene: _returnScenePath = {_returnScenePath}");
+        if (string.IsNullOrEmpty(_returnScenePath))
+            return false;
+
+        var target = _returnScenePath;
+        _returnScenePath = null;
+        NavigateTo(target!);
+        return true;
+    }
+
+    /// <summary>
     /// Startet ein neues Spiel
     /// </summary>
     public void StartNewGame(Difficulty difficulty)
     {
+        IsHistoryReplay = false;
         var saveService = GetNode<SaveService>("/root/SaveService");
+
+        // Neues Spiel kommt von der Schwierigkeits- oder Hauptmenü-Route -> kein spezieller Rücksprung
+        _returnScenePath = null;
 
         CurrentGame = Logic.SudokuGenerator.Generate(difficulty);
         CurrentGame.IsDeadlyMode = saveService.Settings.DeadlyModeEnabled;
@@ -74,7 +119,10 @@ public partial class AppState : Node
 
     public void StartDailyGame()
     {
+        IsHistoryReplay = false;
         var saveService = GetNode<SaveService>("/root/SaveService");
+
+        _returnScenePath = null;
 
         string date = DateTime.Today.ToString("yyyy-MM-dd");
         int seed = int.Parse(DateTime.Today.ToString("yyyyMMdd"));
@@ -97,13 +145,46 @@ public partial class AppState : Node
     }
 
     /// <summary>
+    /// Startet ein vorgebautes (prebuilt) Puzzle.
+    /// </summary>
+    public void StartPrebuiltPuzzle(string puzzleId)
+    {
+        IsHistoryReplay = false;
+        var saveService = GetNode<SaveService>("/root/SaveService");
+
+        CaptureReturnScene();
+
+        var puzzle = PrebuiltPuzzleLibrary.GetById(puzzleId);
+        if (puzzle == null)
+        {
+            GD.PrintErr($"[AppState] Prebuilt puzzle not found: {puzzleId}");
+            return;
+        }
+
+        CurrentGame = puzzle.ToGameState();
+        CurrentGame.IsDeadlyMode = saveService.Settings.DeadlyModeEnabled;
+        ApplyChallengeSettings(CurrentGame, saveService.Settings);
+        IsNewGame = true;
+        IsHistoryReplay = false;
+
+        // Save prebuilt puzzle games so they can be continued
+        saveService.SaveCurrentGame(CurrentGame);
+
+        EmitSignal(SignalName.GameStarted);
+        NavigateTo(SCENE_GAME);
+    }
+
+    /// <summary>
     /// Startet ein Szenario-Spiel für eine bestimmte Technik
     /// </summary>
     public void StartScenarioGame(string techniqueId)
     {
+        IsHistoryReplay = false;
         var saveService = GetNode<SaveService>("/root/SaveService");
 
-        // Bestimme passende Schwierigkeit basierend auf Technik (1=Easy, 2=Medium, 3=Hard)
+        CaptureReturnScene();
+
+        // Bestimme passende Schwierigkeit basierend auf Technik (1=Easy, 2=Medium, 3=Hard, 4=Insane)
         Difficulty difficulty = Difficulty.Medium;
         if (TechniqueInfo.Techniques.TryGetValue(techniqueId, out var technique))
         {
@@ -112,6 +193,7 @@ public partial class AppState : Node
                 1 => Difficulty.Easy,
                 2 => Difficulty.Medium,
                 3 => Difficulty.Hard,
+                4 => Difficulty.Insane,
                 _ => Difficulty.Medium
             };
         }
@@ -123,6 +205,7 @@ public partial class AppState : Node
         CurrentGame.ScenarioTechnique = techniqueId;
         ApplyChallengeSettings(CurrentGame, saveService.Settings);
         IsNewGame = true;
+        IsHistoryReplay = false;
 
         // Don't save scenario games to regular save slot
         // saveService.SaveCurrentGame(CurrentGame);
@@ -136,8 +219,11 @@ public partial class AppState : Node
     /// </summary>
     public void StartTutorialGame(string tutorialId)
     {
+        IsHistoryReplay = false;
         var saveService = GetNode<SaveService>("/root/SaveService");
         var tutorialService = GetNodeOrNull<TutorialService>("/root/TutorialService");
+
+        CaptureReturnScene();
 
         if (tutorialService == null)
         {
@@ -234,6 +320,7 @@ public partial class AppState : Node
     /// </summary>
     public void ContinueGame()
     {
+        IsHistoryReplay = false;
         var saveService = GetNode<SaveService>("/root/SaveService");
 
         if (saveService.CurrentGame != null)
@@ -251,6 +338,7 @@ public partial class AppState : Node
     /// </summary>
     public void EndGame(GameStatus status)
     {
+        IsHistoryReplay = false;
         if (CurrentGame == null) return;
 
         var saveService = GetNode<SaveService>("/root/SaveService");
@@ -265,6 +353,13 @@ public partial class AppState : Node
         if (status == GameStatus.Won && CurrentGame.IsDaily && !string.IsNullOrWhiteSpace(CurrentGame.DailyDate))
         {
             saveService.Settings.MarkDailyCompleted(CurrentGame.DailyDate!);
+            saveService.SaveSettings();
+        }
+
+        // Prebuilt puzzle completion
+        if (status == GameStatus.Won && !string.IsNullOrWhiteSpace(CurrentGame.PrebuiltPuzzleId))
+        {
+            saveService.Settings.MarkPrebuiltPuzzleCompleted(CurrentGame.PrebuiltPuzzleId!);
             saveService.SaveSettings();
         }
 
@@ -292,6 +387,12 @@ public partial class AppState : Node
     {
         if (CurrentGame == null) return;
 
+        if (IsHistoryReplay)
+        {
+            GD.Print("[AppState] Skip saving during history replay");
+            return;
+        }
+
         // Don't save tutorial or scenario games
         if (CurrentGame.IsTutorial || CurrentGame.IsScenario)
         {
@@ -308,10 +409,34 @@ public partial class AppState : Node
     /// </summary>
     public void UpdateElapsedTime(double elapsed)
     {
-        if (CurrentGame != null)
+        if (CurrentGame != null && !IsHistoryReplay)
         {
             CurrentGame.ElapsedSeconds = elapsed;
         }
+    }
+
+    /// <summary>
+    /// Starts a read-only history replay for a finished puzzle.
+    /// </summary>
+    public void StartHistoryReplay(HistoryEntry entry)
+    {
+        if (!entry.HasReplayData)
+        {
+            GD.PrintErr("[AppState] History entry has no replay data");
+            return;
+        }
+
+        // Explicitly set return to history menu (CaptureReturnScene may get wrong scene)
+        _returnScenePath = SCENE_HISTORY;
+        GD.Print($"[AppState] Set return scene to history: {_returnScenePath}");
+
+        CurrentGame = entry.ToPuzzleState();
+        CurrentGame.Status = GameStatus.InProgress;
+        CurrentGame.IsTutorial = false;
+        IsNewGame = false;
+        IsHistoryReplay = true;
+
+        NavigateTo(SCENE_GAME);
     }
 
     /// <summary>

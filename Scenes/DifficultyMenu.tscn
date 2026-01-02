@@ -18,8 +18,8 @@ offset_left = 16
 offset_top = 16
 offset_right = 116
 offset_bottom = 56
-tooltip_text = "Zurück zum Hauptmenü"
-text = "← Zurück"
+tooltip_text = ""
+text = ""
 
 [node name="Title" type="Label" parent="."]
 layout_mode = 1
@@ -32,7 +32,7 @@ offset_right = 200
 offset_bottom = 56
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 28
-text = "Schwierigkeit wählen"
+text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -62,7 +62,7 @@ theme_override_constants/separation = 16
 
 [node name="Description" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-text = "Wähle den Schwierigkeitsgrad für dein neues Spiel"
+text = ""
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -81,12 +81,12 @@ theme_override_constants/separation = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Perfekt für Anfänger - vereinfachtes 4x4 Raster"
-text = "👶 Kids"
+tooltip_text = ""
+text = ""
 
 [node name="KidsTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/KidsContainer"]
 layout_mode = 2
-text = "4x4 Raster, Zahlen 1-4"
+text = ""
 horizontal_alignment = 1
 
 [node name="EasyContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
@@ -97,12 +97,12 @@ theme_override_constants/separation = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Grundlegende Techniken - ideal zum Einstieg ins 9x9 Sudoku"
-text = "🟢 Leicht"
+tooltip_text = ""
+text = ""
 
 [node name="EasyTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/EasyContainer"]
 layout_mode = 2
-text = "Naked Single, Hidden Single"
+text = ""
 horizontal_alignment = 1
 
 [node name="MediumContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
@@ -113,12 +113,12 @@ theme_override_constants/separation = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Fortgeschrittene Techniken - erfordert Notizen und Paar-Erkennung"
-text = "🟠 Mittel"
+tooltip_text = ""
+text = ""
 
 [node name="MediumTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/MediumContainer"]
 layout_mode = 2
-text = "+ Naked Pair, Pointing Pair"
+text = ""
 horizontal_alignment = 1
 
 [node name="HardContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
@@ -129,10 +129,26 @@ theme_override_constants/separation = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Experten-Techniken - X-Wing, Swordfish und mehr"
-text = "🔴 Schwer"
+tooltip_text = ""
+text = ""
 
 [node name="HardTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/HardContainer"]
 layout_mode = 2
-text = "+ X-Wing, Box/Line Reduction"
+text = ""
+horizontal_alignment = 1
+
+[node name="InsaneContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="InsaneButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/InsaneContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+focus_mode = 2
+tooltip_text = ""
+text = ""
+
+[node name="InsaneTechniques" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/InsaneContainer"]
+layout_mode = 2
+text = ""
 horizontal_alignment = 1

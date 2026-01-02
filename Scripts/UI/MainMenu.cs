@@ -10,10 +10,12 @@ public partial class MainMenu : Control
     private SaveService _saveService = null!;
     private AppState _appState = null!;
     private AudioService _audioService = null!;
+    private LocalizationService _localizationService = null!;
 
     private Button _continueButton = null!;
     private Button _startButton = null!;
     private Button _dailyButton = null!;
+    private Button _puzzlesButton = null!;
     private Button _scenariosButton = null!;
     private Button _settingsButton = null!;
     private Button _historyButton = null!;
@@ -32,6 +34,7 @@ public partial class MainMenu : Control
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
         _audioService = GetNode<AudioService>("/root/AudioService");
+        _localizationService = GetNode<LocalizationService>("/root/LocalizationService");
 
         UiNavigationSfx.Wire(this, _audioService);
 
@@ -48,6 +51,7 @@ public partial class MainMenu : Control
         _continueButton = buttonContainer.GetNode<Button>("ContinueButton");
         _startButton = buttonContainer.GetNode<Button>("StartButton");
         _dailyButton = buttonContainer.GetNode<Button>("DailyButton");
+        _puzzlesButton = buttonContainer.GetNode<Button>("PuzzlesButton");
         _scenariosButton = buttonContainer.GetNode<Button>("ScenariosButton");
         _settingsButton = buttonContainer.GetNode<Button>("SettingsButton");
         _historyButton = buttonContainer.GetNode<Button>("HistoryButton");
@@ -59,6 +63,7 @@ public partial class MainMenu : Control
         _continueButton.Pressed += OnContinuePressed;
         _startButton.Pressed += OnStartPressed;
         _dailyButton.Pressed += OnDailyPressed;
+        _puzzlesButton.Pressed += OnPuzzlesPressed;
         _scenariosButton.Pressed += OnScenariosPressed;
         _settingsButton.Pressed += OnSettingsPressed;
         _historyButton.Pressed += OnHistoryPressed;
@@ -69,10 +74,12 @@ public partial class MainMenu : Control
         // Theme anwenden
         ApplyTheme();
         _themeService.ThemeChanged += OnThemeChanged;
+        _localizationService.LanguageChanged += OnLanguageChanged;
 
         // Continue-Button nur anzeigen wenn SaveGame existiert
         UpdateContinueButton();
         UpdateDailyInfo();
+        UpdateLocalizedText();
 
         // Focus auf ersten verfügbaren Button
         CallDeferred(nameof(SetInitialFocus));
@@ -81,6 +88,38 @@ public partial class MainMenu : Control
     public override void _ExitTree()
     {
         _themeService.ThemeChanged -= OnThemeChanged;
+        _localizationService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(int languageIndex)
+    {
+        UpdateLocalizedText();
+        UpdateDailyInfo();
+    }
+
+    private void UpdateLocalizedText()
+    {
+        var l = _localizationService;
+        _title.Text = l.Get("menu.title");
+        _subtitle.Text = l.Get("menu.subtitle");
+        _continueButton.Text = l.Get("menu.continue");
+        _continueButton.TooltipText = l.Get("menu.continue.tooltip");
+        _startButton.Text = l.Get("menu.new_game");
+        _startButton.TooltipText = l.Get("menu.new_game.tooltip");
+        _puzzlesButton.Text = l.Get("menu.puzzles");
+        _puzzlesButton.TooltipText = l.Get("menu.puzzles.tooltip");
+        _scenariosButton.Text = l.Get("menu.scenarios");
+        _scenariosButton.TooltipText = l.Get("menu.scenarios.tooltip");
+        _historyButton.Text = l.Get("menu.history");
+        _historyButton.TooltipText = l.Get("menu.history.tooltip");
+        _statsButton.Text = l.Get("menu.stats");
+        _statsButton.TooltipText = l.Get("menu.stats.tooltip");
+        _tipsButton.Text = l.Get("menu.tips");
+        _tipsButton.TooltipText = l.Get("menu.tips.tooltip");
+        _settingsButton.Text = l.Get("menu.settings");
+        _settingsButton.TooltipText = l.Get("menu.settings.tooltip");
+        _quitButton.Text = l.Get("menu.quit");
+        _quitButton.TooltipText = l.Get("menu.quit.tooltip");
     }
 
     private void SetInitialFocus()
@@ -99,22 +138,30 @@ public partial class MainMenu : Control
     private void UpdateDailyInfo()
     {
         var settings = _saveService.Settings;
+        var l = _localizationService;
         string today = DateTime.Today.ToString("yyyy-MM-dd");
         bool doneToday = settings.HasCompletedDaily(today);
 
+        string streakLabel = l.Get("stats.streak");
+        string bestLabel = l.Get("stats.best_streak");
         string streak = settings.DailyStreakCurrent > 0
-            ? $"Streak: {settings.DailyStreakCurrent} (Best: {settings.DailyStreakBest})"
-            : "Streak: 0";
+            ? $"{streakLabel}: {settings.DailyStreakCurrent} ({bestLabel}: {settings.DailyStreakBest})"
+            : $"{streakLabel}: 0";
 
+        string doneText = l.Get("stats.today.done");
+        string openText = l.Get("stats.today.open");
+        string dailyLabel = l.Get("menu.daily");
         _dailyInfo.Text = doneToday
-            ? $"Daily erledigt ✅  |  {streak}"
-            : $"Daily offen  |  {streak}";
+            ? $"{dailyLabel} {doneText}  |  {streak}"
+            : $"{dailyLabel} {openText}  |  {streak}";
 
         // Button copy/tooltip
-        _dailyButton.Text = doneToday ? "📅 Daily Sudoku (erledigt)" : "📅 Daily Sudoku";
+        _dailyButton.Text = doneToday
+            ? $"{l.Get("menu.daily")} ({doneText})"
+            : l.Get("menu.daily");
         _dailyButton.TooltipText = doneToday
-            ? "Daily für heute ist bereits erledigt.\nDu kannst es trotzdem erneut spielen (ohne extra Streak)."
-            : "Tägliches Sudoku (deterministisch).";
+            ? l.Get("menu.daily.tooltip.done")
+            : l.Get("menu.daily.tooltip.open");
     }
 
     private void OnThemeChanged(int themeIndex)
@@ -139,6 +186,7 @@ public partial class MainMenu : Control
         ApplyButtonTheme(_continueButton);
         ApplyButtonTheme(_startButton);
         ApplyButtonTheme(_dailyButton);
+        ApplyButtonTheme(_puzzlesButton);
         ApplyButtonTheme(_scenariosButton);
         ApplyButtonTheme(_settingsButton);
         ApplyButtonTheme(_historyButton);
@@ -186,12 +234,13 @@ public partial class MainMenu : Control
         // If challenge mode is active and difficulty is set, skip difficulty selection
         if (hasChallengeActive && settings.ChallengeDifficulty > 0)
         {
-            // ChallengeDifficulty: 1=Easy, 2=Medium, 3=Hard
+            // ChallengeDifficulty: 1=Easy, 2=Medium, 3=Hard, 4=Insane
             var difficulty = settings.ChallengeDifficulty switch
             {
                 1 => Difficulty.Easy,
                 2 => Difficulty.Medium,
                 3 => Difficulty.Hard,
+                4 => Difficulty.Insane,
                 _ => Difficulty.Medium
             };
             GD.Print($"[UI] MainMenu: Challenge mode active, starting with difficulty {difficulty}");
@@ -245,6 +294,13 @@ public partial class MainMenu : Control
         GD.Print("[UI] MainMenu: Tips pressed");
         _audioService.PlayClick();
         _appState.NavigateTo(AppState.SCENE_TIPS);
+    }
+
+    private void OnPuzzlesPressed()
+    {
+        GD.Print("[UI] MainMenu: Puzzles pressed");
+        _audioService.PlayClick();
+        _appState.NavigateTo(AppState.SCENE_PUZZLES);
     }
 
     private void OnScenariosPressed()

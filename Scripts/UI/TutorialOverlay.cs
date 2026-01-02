@@ -22,6 +22,7 @@ public partial class TutorialOverlay : Control
     private TutorialService? _tutorialService;
     private ThemeService? _themeService;
     private AudioService? _audioService;
+    private LocalizationService? _localizationService;
 
     // Animation state
     private bool _isAnimating = false;
@@ -56,6 +57,7 @@ public partial class TutorialOverlay : Control
         _tutorialService = GetNode<TutorialService>("/root/TutorialService");
         _themeService = GetNode<ThemeService>("/root/ThemeService");
         _audioService = GetNode<AudioService>("/root/AudioService");
+        _localizationService = GetNode<LocalizationService>("/root/LocalizationService");
 
         // Set up to cover the entire screen
         SetAnchorsPreset(LayoutPreset.FullRect);
@@ -120,13 +122,13 @@ public partial class TutorialOverlay : Control
         vbox.AddChild(buttonBox);
 
         _skipButton = new Button();
-        _skipButton.Text = "← Zurück";
+        _skipButton.Text = _localizationService?.Get("tutorial.back") ?? "← Back";
         _skipButton.CustomMinimumSize = new Vector2(120, 40);
         _skipButton.Pressed += OnBackPressed;
         buttonBox.AddChild(_skipButton);
 
         _continueButton = new Button();
-        _continueButton.Text = "Weiter →";
+        _continueButton.Text = _localizationService?.Get("tutorial.next") ?? "Next →";
         _continueButton.CustomMinimumSize = new Vector2(120, 40);
         _continueButton.Pressed += OnContinuePressed;
         buttonBox.AddChild(_continueButton);
@@ -309,14 +311,14 @@ public partial class TutorialOverlay : Control
             if (isWaitingForAction)
             {
                 GD.Print($"[TutorialOverlay] Setting button to DISABLED state");
-                _continueButton.Text = "Warten...";
+                _continueButton.Text = _localizationService?.Get("tutorial.waiting") ?? "Waiting...";
                 _continueButton.Disabled = true;
                 ApplyDisabledButtonStyle();
             }
             else
             {
                 GD.Print($"[TutorialOverlay] Setting button to NORMAL state");
-                _continueButton.Text = "Weiter →";
+                _continueButton.Text = _localizationService?.Get("tutorial.next") ?? "Next →";
                 _continueButton.Disabled = false;
                 ApplyNormalButtonStyle();
             }
@@ -494,7 +496,7 @@ public partial class TutorialOverlay : Control
         if (_continueButton != null)
         {
             GD.Print($"[TutorialOverlay] Button BEFORE: Text={_continueButton.Text}, Disabled={_continueButton.Disabled}");
-            _continueButton.Text = "Warten...";
+            _continueButton.Text = _localizationService?.Get("tutorial.waiting") ?? "Waiting...";
             _continueButton.Disabled = true;
             ApplyDisabledButtonStyle();
             GD.Print($"[TutorialOverlay] Button AFTER: Text={_continueButton.Text}, Disabled={_continueButton.Disabled}");
@@ -731,8 +733,8 @@ public partial class TutorialOverlay : Control
     {
         if (_continueButton == null || _themeService == null) return;
 
-        // Set text to "Weiter →"
-        _continueButton.Text = "Weiter →";
+        // Set text to Next
+        _continueButton.Text = _localizationService?.Get("tutorial.next") ?? "Next →";
 
         // Restore focus mode
         _continueButton.FocusMode = Control.FocusModeEnum.All;
@@ -753,8 +755,8 @@ public partial class TutorialOverlay : Control
     {
         if (_continueButton == null) return;
 
-        // Set text to "Warten..."
-        _continueButton.Text = "Warten...";
+        // Set text to Waiting
+        _continueButton.Text = _localizationService?.Get("tutorial.waiting") ?? "Waiting...";
 
         // Grey text for ALL states
         var greyColor = new Color(0.5f, 0.5f, 0.5f, 1.0f); // Grey text

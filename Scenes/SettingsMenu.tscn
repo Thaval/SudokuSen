@@ -18,8 +18,8 @@ offset_left = 16
 offset_top = 16
 offset_right = 116
 offset_bottom = 56
-tooltip_text = "Zurück zum Hauptmenü (Einstellungen werden automatisch gespeichert)"
-text = "← Zurück"
+tooltip_text = ""
+text = ""
 
 [node name="Title" type="Label" parent="."]
 layout_mode = 1
@@ -32,7 +32,7 @@ offset_right = 200
 offset_bottom = 56
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 28
-text = "Einstellungen"
+text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -75,37 +75,37 @@ theme_override_constants/separation = 12
 [node name="StorageTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "📁 Speicherort"
+text = ""
 
 [node name="StoragePathRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
-tooltip_text = "Ändert den Speicherort für Spielstände und Einstellungen"
+tooltip_text = ""
 
 [node name="StoragePathLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/StoragePathRow"]
 layout_mode = 2
 size_flags_horizontal = 0
 custom_minimum_size = Vector2(100, 0)
-text = "Pfad"
+text = ""
 
 [node name="StoragePathEdit" type="LineEdit" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/StoragePathRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(280, 32)
-placeholder_text = "Standard (user://)"
-tooltip_text = "Ändert den Speicherort für Spielstände und Einstellungen"
+placeholder_text = ""
+tooltip_text = ""
 
 [node name="StoragePathBrowse" type="Button" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/StoragePathRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(36, 32)
 text = "..."
-tooltip_text = "Ordner auswählen"
+tooltip_text = ""
 
 [node name="StoragePathInfo" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
-text = "Aktueller Speicherort wird unten angezeigt"
+text = ""
 autowrap_mode = 2
 
 [node name="StorageSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
@@ -115,96 +115,111 @@ theme_override_constants/separation = 16
 [node name="AppearanceTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "🎨 Darstellung"
+text = ""
+
+[node name="LanguageRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+tooltip_text = ""
+
+[node name="LanguageLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/LanguageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = ""
+
+[node name="LanguageOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/LanguageRow"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+tooltip_text = ""
 
 [node name="ThemeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
-tooltip_text = "Wählt das Farbschema der Benutzeroberfläche"
+tooltip_text = ""
 
 [node name="ThemeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ThemeRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Theme"
+text = ""
 
 [node name="ThemeOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ThemeRow"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
-tooltip_text = "Wählt das Farbschema der Benutzeroberfläche"
+tooltip_text = ""
 
 [node name="DeadlyRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Bei aktiviertem Deadly Modus endet das Spiel nach 3 Fehlern"
+tooltip_text = ""
 
 [node name="DeadlyLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/DeadlyRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Deadly Modus (3 Fehler = Game Over)"
+text = ""
 
 [node name="DeadlyCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/DeadlyRow"]
 layout_mode = 2
-tooltip_text = "Bei aktiviertem Deadly Modus endet das Spiel nach 3 Fehlern"
+tooltip_text = ""
 
 [node name="HideRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Zahlen die 9x im Raster vorkommen werden ausgeblendet oder ausgegraut"
+tooltip_text = ""
 
 [node name="HideLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HideRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Vollständige Zahlen ausblenden"
+text = ""
 
 [node name="HideCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HideRow"]
 layout_mode = 2
-tooltip_text = "Zahlen die 9x im Raster vorkommen werden ausgeblendet oder ausgegraut"
+tooltip_text = ""
 
 [node name="HighlightRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Hebt die aktuelle Zeile, Spalte und Block hervor"
+tooltip_text = ""
 
 [node name="HighlightLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HighlightRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Zeile/Spalte/Block highlighten"
+text = ""
 
 [node name="HighlightCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HighlightRow"]
 layout_mode = 2
-tooltip_text = "Hebt die aktuelle Zeile, Spalte und Block hervor"
+tooltip_text = ""
 
 [node name="LearnRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Zeigt eine kurze Erklärung bei Fehlern an"
+tooltip_text = ""
 
 [node name="LearnLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/LearnRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Lernmodus (Erklärung bei Fehlern)"
+text = ""
 
 [node name="LearnCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/LearnRow"]
 layout_mode = 2
-tooltip_text = "Zeigt eine kurze Erklärung bei Fehlern an"
+tooltip_text = ""
 
 [node name="ColorblindRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Verwendet kontrastreiche Farben für bessere Sichtbarkeit"
+tooltip_text = ""
 
 [node name="ColorblindLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ColorblindRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Farbblind-Palette"
+text = ""
 
 [node name="ColorblindCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ColorblindRow"]
 layout_mode = 2
-tooltip_text = "Verwendet kontrastreiche Farben für bessere Sichtbarkeit"
+tooltip_text = ""
 
 [node name="UiScaleRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Skaliert die gesamte Benutzeroberfläche"
+tooltip_text = ""
 
 [node name="UiScaleLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "UI Größe"
+text = ""
 
 [node name="UiScaleValue" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/UiScaleRow"]
 layout_mode = 2
@@ -221,6 +236,29 @@ max_value = 100.0
 step = 5.0
 value = 100.0
 
+[node name="PuzzlesSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="PuzzlesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = ""
+
+[node name="PuzzlesModeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+tooltip_text = ""
+
+[node name="PuzzlesModeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/PuzzlesModeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = ""
+
+[node name="PuzzlesModeOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/PuzzlesModeRow"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+tooltip_text = ""
+
 [node name="AudioSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 16
@@ -228,29 +266,29 @@ theme_override_constants/separation = 16
 [node name="AudioTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "🔊 Audio"
+text = ""
 
 [node name="SfxRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Aktiviert oder deaktiviert alle Sound-Effekte"
+tooltip_text = ""
 
 [node name="SfxLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Sound-Effekte"
+text = ""
 
 [node name="SfxCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxRow"]
 layout_mode = 2
-tooltip_text = "Aktiviert oder deaktiviert alle Sound-Effekte"
+tooltip_text = ""
 
 [node name="SfxVolumeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Lautstärke der Sound-Effekte (0-100%)"
+tooltip_text = ""
 
 [node name="SfxVolumeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxVolumeRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "SFX-Lautstärke"
+text = ""
 
 [node name="SfxVolumeValue" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SfxVolumeRow"]
 layout_mode = 2
@@ -269,25 +307,25 @@ value = 80.0
 
 [node name="MusicRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Aktiviert oder deaktiviert die Hintergrundmusik"
+tooltip_text = ""
 
 [node name="MusicLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Musik"
+text = ""
 
 [node name="MusicCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicRow"]
 layout_mode = 2
-tooltip_text = "Aktiviert oder deaktiviert die Hintergrundmusik"
+tooltip_text = ""
 
 [node name="MusicVolumeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Lautstärke der Hintergrundmusik (0-100%)"
+tooltip_text = ""
 
 [node name="MusicVolumeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicVolumeRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Musik-Lautstärke"
+text = ""
 
 [node name="MusicVolumeValue" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/MusicVolumeRow"]
 layout_mode = 2
@@ -311,33 +349,33 @@ theme_override_constants/separation = 16
 [node name="NotesAssistTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "✏️ Notiz-Assistent"
+text = ""
 
 [node name="SmartCleanupRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Entfernt automatisch Notizen aus Zeile/Spalte/Block wenn eine Zahl gesetzt wird"
+tooltip_text = ""
 
 [node name="SmartCleanupLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SmartCleanupRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Notizen bereinigen (nach Zahl setzen)"
+text = ""
 
 [node name="SmartCleanupCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/SmartCleanupRow"]
 layout_mode = 2
-tooltip_text = "Entfernt automatisch Notizen aus Zeile/Spalte/Block wenn eine Zahl gesetzt wird"
+tooltip_text = ""
 
 [node name="HouseAutoFillRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Zeigt einen Button zum automatischen Ausfüllen von Notizen im Spiel"
+tooltip_text = ""
 
 [node name="HouseAutoFillLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HouseAutoFillRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Auto-Notizen Button im Spiel"
+text = ""
 
 [node name="HouseAutoFillCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/HouseAutoFillRow"]
 layout_mode = 2
-tooltip_text = "Zeigt einen Button zum automatischen Ausfüllen von Notizen im Spiel"
+tooltip_text = ""
 
 [node name="ChallengeSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
@@ -346,75 +384,75 @@ theme_override_constants/separation = 16
 [node name="ChallengeTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "🏆 Challenge Modes (für neue Spiele)"
+text = ""
 
 [node name="ChallengeDifficultyRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Schwierigkeit für Challenge-Spiele. Auto wählt basierend auf deiner Spielhistorie."
+tooltip_text = ""
 
 [node name="ChallengeDifficultyLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeDifficultyRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Schwierigkeit"
+text = ""
 
 [node name="ChallengeDifficultyOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeDifficultyRow"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
-tooltip_text = "Schwierigkeit für Challenge-Spiele. Auto wählt basierend auf deiner Spielhistorie."
+tooltip_text = ""
 
 [node name="ChallengeNoNotesRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Deaktiviert das Notizen-Feature für neue Spiele"
+tooltip_text = ""
 
 [node name="ChallengeNoNotesLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeNoNotesRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Keine Notizen"
+text = ""
 
 [node name="ChallengeNoNotesCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeNoNotesRow"]
 layout_mode = 2
-tooltip_text = "Deaktiviert das Notizen-Feature für neue Spiele"
+tooltip_text = ""
 
 [node name="ChallengePerfectRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Nur ein einziger Fehler beendet das Spiel"
+tooltip_text = ""
 
 [node name="ChallengePerfectLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengePerfectRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Perfect Run (1 Fehler = verloren)"
+text = ""
 
 [node name="ChallengePerfectCheck" type="CheckButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengePerfectRow"]
 layout_mode = 2
-tooltip_text = "Nur ein einziger Fehler beendet das Spiel"
+tooltip_text = ""
 
 [node name="ChallengeHintsRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Begrenzt die Anzahl der verfügbaren Hinweise pro Spiel"
+tooltip_text = ""
 
 [node name="ChallengeHintsLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeHintsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Hint-Limit"
+text = ""
 
 [node name="ChallengeHintsOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeHintsRow"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
-tooltip_text = "Begrenzt die Anzahl der verfügbaren Hinweise pro Spiel"
+tooltip_text = ""
 
 [node name="ChallengeTimeRow" type="HBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
-tooltip_text = "Setzt ein Zeitlimit für das Spiel"
+tooltip_text = ""
 
 [node name="ChallengeTimeLabel" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeTimeRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Time Attack"
+text = ""
 
 [node name="ChallengeTimeOption" type="OptionButton" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer/ChallengeTimeRow"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
-tooltip_text = "Setzt ein Zeitlimit für das Spiel"
+tooltip_text = ""
 
 [node name="TechniquesSeparator" type="HSeparator" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
@@ -423,12 +461,12 @@ theme_override_constants/separation = 16
 [node name="TechniquesTitle" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "🧠 Techniken pro Schwierigkeit"
+text = ""
 
 [node name="TechniquesDescription" type="Label" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 autowrap_mode = 2
-text = "Wähle welche Lösungstechniken pro Schwierigkeit benötigt werden."
+text = ""
 
 [node name="TechniquesContainer" type="VBoxContainer" parent="CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer/SettingsContainer"]
 layout_mode = 2
@@ -441,5 +479,5 @@ layout_mode = 2
 custom_minimum_size = Vector2(200, 36)
 layout_mode = 2
 size_flags_horizontal = 4
-tooltip_text = "Setzt alle Techniken-Einstellungen auf die Standardwerte zurück"
-text = "🔄 Auf Standard zurücksetzen"
+tooltip_text = ""
+text = ""

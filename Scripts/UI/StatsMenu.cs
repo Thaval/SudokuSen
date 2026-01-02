@@ -10,6 +10,7 @@ public partial class StatsMenu : Control
     private AudioService _audioService = null!;
     private SaveService _saveService = null!;
     private AppState _appState = null!;
+    private LocalizationService _localizationService = null!;
 
     private Button _backButton = null!;
     private Label _title = null!;
@@ -28,12 +29,14 @@ public partial class StatsMenu : Control
     private Label _avgTimeEasy = null!;
     private Label _avgTimeMedium = null!;
     private Label _avgTimeHard = null!;
+    private Label _avgTimeInsane = null!;
 
     // Mistakes
     private Label _avgMistakesKids = null!;
     private Label _avgMistakesEasy = null!;
     private Label _avgMistakesMedium = null!;
     private Label _avgMistakesHard = null!;
+    private Label _avgMistakesInsane = null!;
 
     // Daily
     private Label _dailyStreak = null!;
@@ -57,6 +60,7 @@ public partial class StatsMenu : Control
         _audioService = GetNode<AudioService>("/root/AudioService");
         _saveService = GetNode<SaveService>("/root/SaveService");
         _appState = GetNode<AppState>("/root/AppState");
+        _localizationService = GetNode<LocalizationService>("/root/LocalizationService");
 
         UiNavigationSfx.Wire(this, _audioService);
 
@@ -79,12 +83,14 @@ public partial class StatsMenu : Control
         _avgTimeEasy = timeSection.GetNode<Label>("AvgTimeEasy");
         _avgTimeMedium = timeSection.GetNode<Label>("AvgTimeMedium");
         _avgTimeHard = timeSection.GetNode<Label>("AvgTimeHard");
+        _avgTimeInsane = timeSection.GetNode<Label>("AvgTimeInsane");
 
         var mistakesSection = statsContainer.GetNode<VBoxContainer>("MistakesSection");
         _avgMistakesKids = mistakesSection.GetNode<Label>("AvgMistakesKids");
         _avgMistakesEasy = mistakesSection.GetNode<Label>("AvgMistakesEasy");
         _avgMistakesMedium = mistakesSection.GetNode<Label>("AvgMistakesMedium");
         _avgMistakesHard = mistakesSection.GetNode<Label>("AvgMistakesHard");
+        _avgMistakesInsane = mistakesSection.GetNode<Label>("AvgMistakesInsane");
 
         var dailySection = statsContainer.GetNode<VBoxContainer>("DailySection");
         _dailyStreak = dailySection.GetNode<Label>("DailyStreak");
@@ -106,12 +112,16 @@ public partial class StatsMenu : Control
         ApplyTheme();
         _themeService.ThemeChanged += OnThemeChanged;
 
+        _localizationService.LanguageChanged += OnLanguageChanged;
+
+        ApplyLocalization();
         CalculateStats();
     }
 
     public override void _ExitTree()
     {
         _themeService.ThemeChanged -= OnThemeChanged;
+        _localizationService.LanguageChanged -= OnLanguageChanged;
     }
 
     public override void _Input(InputEvent @event)
@@ -127,6 +137,7 @@ public partial class StatsMenu : Control
     {
         var history = _saveService.History;
         var settings = _saveService.Settings;
+        var loc = _localizationService;
 
         // Nur abgeschlossene Spiele, OHNE Tutorials und Szenarien für Hauptstatistiken
         var completed = history.Where(h => h.Status != GameStatus.InProgress && !h.IsTutorial && !h.IsScenario).ToList();
@@ -138,11 +149,11 @@ public partial class StatsMenu : Control
         var scenarioWins = scenarioCompleted.Where(h => h.Status == GameStatus.Won).ToList();
 
         // Übersicht mit Icons
-        _totalGames.Text = $"🎮  Spiele gesamt: {completed.Count}";
-        _winsLosses.Text = $"✅ Gewonnen: {wins.Count}   ❌ Verloren: {losses.Count}";
+        _totalGames.Text = loc.Get("stats.total_games_line", completed.Count);
+        _winsLosses.Text = loc.Get("stats.wins_losses_line", wins.Count, losses.Count);
 
         double winRate = completed.Count > 0 ? (double)wins.Count / completed.Count * 100 : 0;
-        _winRateLabel.Text = $"📊 Gewinnrate: {winRate:F1}%";
+        _winRateLabel.Text = loc.Get("stats.win_rate_line", winRate);
         _winRateBar.Value = winRate;
 
         // Zeiten (nur gewonnene Spiele) mit Icons
@@ -150,32 +161,34 @@ public partial class StatsMenu : Control
         {
             var bestTime = wins.Min(w => w.DurationSeconds);
             var worstTime = wins.Max(w => w.DurationSeconds);
-            _bestTime.Text = $"🏆 Beste Zeit: {FormatTime(bestTime)}";
-            _worstTime.Text = $"🐢 Längste Zeit: {FormatTime(worstTime)}";
+            _bestTime.Text = loc.Get("stats.best_time_line", FormatTime(bestTime));
+            _worstTime.Text = loc.Get("stats.worst_time_line", FormatTime(worstTime));
         }
         else
         {
-            _bestTime.Text = "🏆 Beste Zeit: --:--";
-            _worstTime.Text = "🐢 Längste Zeit: --:--";
+            _bestTime.Text = loc.Get("stats.best_time_line", "--:--");
+            _worstTime.Text = loc.Get("stats.worst_time_line", "--:--");
         }
 
         // Durchschnittliche Zeit pro Schwierigkeit
-        _avgTimeKids.Text = $"    👶 Kids:     {GetAvgTime(wins, Difficulty.Kids)}";
-        _avgTimeEasy.Text = $"    🟢 Leicht:   {GetAvgTime(wins, Difficulty.Easy)}";
-        _avgTimeMedium.Text = $"    🟡 Mittel:   {GetAvgTime(wins, Difficulty.Medium)}";
-        _avgTimeHard.Text = $"    🔴 Schwer:   {GetAvgTime(wins, Difficulty.Hard)}";
+        _avgTimeKids.Text = loc.Get("stats.avg_time_difficulty", loc.GetDifficultyDisplay(Difficulty.Kids), GetAvgTime(wins, Difficulty.Kids));
+        _avgTimeEasy.Text = loc.Get("stats.avg_time_difficulty", loc.GetDifficultyDisplay(Difficulty.Easy), GetAvgTime(wins, Difficulty.Easy));
+        _avgTimeMedium.Text = loc.Get("stats.avg_time_difficulty", loc.GetDifficultyDisplay(Difficulty.Medium), GetAvgTime(wins, Difficulty.Medium));
+        _avgTimeHard.Text = loc.Get("stats.avg_time_difficulty", loc.GetDifficultyDisplay(Difficulty.Hard), GetAvgTime(wins, Difficulty.Hard));
+        _avgTimeInsane.Text = loc.Get("stats.avg_time_difficulty", loc.GetDifficultyDisplay(Difficulty.Insane), GetAvgTime(wins, Difficulty.Insane));
 
         // Durchschnittliche Fehler pro Schwierigkeit
-        _avgMistakesKids.Text = $"    👶 Kids:     {GetAvgMistakes(completed, Difficulty.Kids)} Fehler";
-        _avgMistakesEasy.Text = $"    🟢 Leicht:   {GetAvgMistakes(completed, Difficulty.Easy)} Fehler";
-        _avgMistakesMedium.Text = $"    🟡 Mittel:   {GetAvgMistakes(completed, Difficulty.Medium)} Fehler";
-        _avgMistakesHard.Text = $"    🔴 Schwer:   {GetAvgMistakes(completed, Difficulty.Hard)} Fehler";
+        _avgMistakesKids.Text = loc.Get("stats.avg_mistakes_difficulty", loc.GetDifficultyDisplay(Difficulty.Kids), GetAvgMistakes(completed, Difficulty.Kids));
+        _avgMistakesEasy.Text = loc.Get("stats.avg_mistakes_difficulty", loc.GetDifficultyDisplay(Difficulty.Easy), GetAvgMistakes(completed, Difficulty.Easy));
+        _avgMistakesMedium.Text = loc.Get("stats.avg_mistakes_difficulty", loc.GetDifficultyDisplay(Difficulty.Medium), GetAvgMistakes(completed, Difficulty.Medium));
+        _avgMistakesHard.Text = loc.Get("stats.avg_mistakes_difficulty", loc.GetDifficultyDisplay(Difficulty.Hard), GetAvgMistakes(completed, Difficulty.Hard));
+        _avgMistakesInsane.Text = loc.Get("stats.avg_mistakes_difficulty", loc.GetDifficultyDisplay(Difficulty.Insane), GetAvgMistakes(completed, Difficulty.Insane));
 
         // Daily mit Icons
         string today = DateTime.Today.ToString("yyyy-MM-dd");
         bool doneToday = settings.HasCompletedDaily(today);
-        _dailyStreak.Text = $"🔥 Streak: {settings.DailyStreakCurrent}   ⭐ Best: {settings.DailyStreakBest}";
-        _dailyToday.Text = doneToday ? "📅 Heute: ✅ erledigt" : "📅 Heute: ⏳ offen";
+        _dailyStreak.Text = loc.Get("stats.daily.streak_line", settings.DailyStreakCurrent, settings.DailyStreakBest);
+        _dailyToday.Text = doneToday ? loc.Get("stats.daily.today_done_line") : loc.Get("stats.daily.today_open_line");
         _dailyRecent.Visible = false; // Hide the old text-based calendar
         RenderDailyCalendar(settings);
 
@@ -211,7 +224,7 @@ public partial class StatsMenu : Control
         _dailyCalendarContainer.AddChild(grid);
 
         // Header row: empty + Mo Di Mi Do Fr Sa So
-        string[] dayNames = { "", "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So" };
+        string[] dayNames = GetDayNames();
         foreach (var dayName in dayNames)
         {
             var label = new Label();
@@ -229,7 +242,7 @@ public partial class StatsMenu : Control
         {
             // Week label
             var weekLabel = new Label();
-            weekLabel.Text = $"W{week + 1}";
+            weekLabel.Text = _localizationService.Get("stats.week_label", week + 1);
             weekLabel.CustomMinimumSize = new Vector2(32, 32);
             weekLabel.HorizontalAlignment = HorizontalAlignment.Center;
             weekLabel.VerticalAlignment = VerticalAlignment.Center;
@@ -278,19 +291,24 @@ public partial class StatsMenu : Control
                 dayLabel.AddThemeFontSizeOverride("font_size", done ? 14 : 11);
                 cell.AddChild(dayLabel);
 
-                cell.TooltipText = date.ToString("dd.MM.yyyy") + (done ? " ✓" : (isFuture ? "" : " ✗"));
+                string tooltipDate = _localizationService.CurrentLanguage == Language.German
+                    ? date.ToString("dd.MM.yyyy")
+                    : date.ToString("yyyy-MM-dd");
+                cell.TooltipText = tooltipDate + (done ? " ✓" : (isFuture ? "" : " ✗"));
                 grid.AddChild(cell);
             }
         }
     }
 
-    private static string BuildDailyRecentText(SettingsData settings, int days)
+    private string BuildDailyRecentText(SettingsData settings, int days)
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append("[b]Letzte 2 Wochen:[/b]\n\n");
+        var loc = _localizationService;
+        sb.Append(loc.Get("stats.daily_recent.header"));
 
         // Week labels
-        sb.Append("    Mo  Di  Mi  Do  Fr  Sa  So\n");
+        var dayNames = GetDayNames();
+        sb.Append("    " + string.Join("  ", dayNames.Skip(1)) + "\n");
 
         // Find the Monday of the current week
         var today = DateTime.Today;
@@ -299,7 +317,8 @@ public partial class StatsMenu : Control
 
         for (int week = 0; week < 2; week++)
         {
-            sb.Append(week == 0 ? "W1  " : "W2  ");
+            string weekLabel = loc.Get("stats.week_label", week + 1);
+            sb.Append($"{weekLabel,-4}");
             for (int day = 0; day < 7; day++)
             {
                 var date = weekStart.AddDays(week * 7 + day);
@@ -319,14 +338,14 @@ public partial class StatsMenu : Control
         return sb.ToString();
     }
 
-    private static string BuildTechniqueSummary(SettingsData settings)
+    private string BuildTechniqueSummary(SettingsData settings)
     {
         var shown = settings.TechniqueHintShownCounts;
         var applied = settings.TechniqueHintAppliedCounts;
 
         if (shown.Count == 0)
         {
-            return "[i]Noch keine Technik-Daten.[/i]\n\nNutze 💡 Hinweise im Spiel, um Techniken zu lernen!";
+            return _localizationService.Get("stats.techniques.none");
         }
 
         var top = shown
@@ -335,32 +354,35 @@ public partial class StatsMenu : Control
             .ToList();
 
         var sb = new System.Text.StringBuilder();
-        sb.Append("[b]🎓 Meist gesehene Hinweise:[/b]\n\n");
+        sb.Append(_localizationService.Get("stats.techniques.header"));
         foreach (var kv in top)
         {
             applied.TryGetValue(kv.Key, out int ok);
             double rate = kv.Value > 0 ? (double)ok / kv.Value * 100 : 0;
             string bar = GetProgressBar(rate);
-            sb.Append($"• [b]{kv.Key}[/b]\n");
-            sb.Append($"   Gesehen: {kv.Value}x  Angewendet: {ok}x  ({rate:F0}%)\n");
-            sb.Append($"   {bar}\n\n");
+
+            string techniqueName = TechniqueInfo.Techniques.TryGetValue(kv.Key, out var tech)
+                ? tech.Name
+                : kv.Key;
+
+            sb.Append(_localizationService.Get("stats.techniques.line", techniqueName, kv.Value, ok, rate, bar));
         }
         return sb.ToString();
     }
 
-    private static string BuildScenarioSummary(List<HistoryEntry> scenarioCompleted, List<HistoryEntry> scenarioWins)
+    private string BuildScenarioSummary(List<HistoryEntry> scenarioCompleted, List<HistoryEntry> scenarioWins)
     {
         if (scenarioCompleted.Count == 0)
         {
-            return "[i]Noch keine Szenarien gespielt.[/i]\n\nSpiele 🎯 Übungs-Szenarien im Szenarien-Menü!";
+            return _localizationService.Get("stats.scenario.none");
         }
 
         var sb = new System.Text.StringBuilder();
 
         // Overall stats
         double winRate = scenarioCompleted.Count > 0 ? (double)scenarioWins.Count / scenarioCompleted.Count * 100 : 0;
-        sb.Append($"[b]📊 Übersicht:[/b]\n");
-        sb.Append($"   Gespielt: {scenarioCompleted.Count}   Gewonnen: {scenarioWins.Count}   ({winRate:F0}%)\n\n");
+        sb.Append(_localizationService.Get("stats.scenario.overview_header"));
+        sb.Append(_localizationService.Get("stats.scenario.overview_line", scenarioCompleted.Count, scenarioWins.Count, winRate));
 
         // Group by technique
         var byTechnique = scenarioCompleted
@@ -372,7 +394,7 @@ public partial class StatsMenu : Control
 
         if (byTechnique.Count > 0)
         {
-            sb.Append("[b]🎯 Pro Technik:[/b]\n\n");
+            sb.Append(_localizationService.Get("stats.scenario.by_tech_header"));
             foreach (var group in byTechnique)
             {
                 int total = group.Count();
@@ -386,9 +408,7 @@ public partial class StatsMenu : Control
                     ? FormatTimeStatic(wonEntries.Min(e => e.DurationSeconds))
                     : "--:--";
 
-                sb.Append($"• [b]{group.Key}[/b]\n");
-                sb.Append($"   {won}/{total} gewonnen ({rate:F0}%)  ⏱️ Beste: {bestTimeStr}\n");
-                sb.Append($"   {bar}\n\n");
+                sb.Append(_localizationService.Get("stats.scenario.line", group.Key, won, total, rate, bestTimeStr, bar));
             }
         }
 
@@ -492,6 +512,38 @@ public partial class StatsMenu : Control
     private void OnThemeChanged(int themeIndex)
     {
         ApplyTheme();
+    }
+
+    private void OnLanguageChanged(int languageIndex)
+    {
+        ApplyLocalization();
+        CalculateStats();
+    }
+
+    private void ApplyLocalization()
+    {
+        var loc = _localizationService;
+
+        _title.Text = loc.Get("stats.title");
+        _backButton.Text = loc.Get("menu.back");
+        _backButton.TooltipText = loc.Get("settings.back.tooltip");
+
+        var statsContainer = GetNode<VBoxContainer>("CenterContainer/Panel/ScrollContainer/MarginContainer/VBoxContainer");
+
+        statsContainer.GetNode<Label>("OverviewSection/OverviewTitle").Text = loc.Get("stats.overview");
+        statsContainer.GetNode<Label>("TimeSection/TimeTitle").Text = loc.Get("stats.times");
+        statsContainer.GetNode<Label>("MistakesSection/MistakesTitle").Text = loc.Get("stats.mistakes_title");
+        statsContainer.GetNode<Label>("DailySection/DailyTitle").Text = loc.Get("stats.daily");
+        statsContainer.GetNode<Label>("TechniquesSection/TechniquesTitle").Text = loc.Get("stats.techniques");
+        statsContainer.GetNode<Label>("ScenarioSection/ScenarioTitle").Text = loc.Get("stats.scenarios");
+        statsContainer.GetNode<Label>("HeatmapSection/HeatmapTitle").Text = loc.Get("stats.heatmap");
+    }
+
+    private string[] GetDayNames()
+    {
+        return _localizationService.CurrentLanguage == Language.German
+            ? new[] { "", "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So" }
+            : new[] { "", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su" };
     }
 
     private void ApplyTheme()

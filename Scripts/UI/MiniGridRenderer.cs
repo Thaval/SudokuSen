@@ -1,5 +1,7 @@
 namespace SudokuSen.UI;
 
+using SudokuSen.Services;
+
 public static class MiniGridRenderer
 {
     public static Control CreateMiniGridWithLegends(
@@ -23,7 +25,7 @@ public static class MiniGridRenderer
 
         if (isGiven.GetLength(0) != rows || isGiven.GetLength(1) != cols)
         {
-            return new Label { Text = "(Mini-Grid: invalid data)" };
+            return new Label { Text = LocalizationService.Instance.Get("minigrid.invalid_data") };
         }
 
         int gridSize = Math.Max(rows, cols);

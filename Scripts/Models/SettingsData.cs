@@ -5,9 +5,19 @@ namespace SudokuSen.Models;
 /// </summary>
 public class SettingsData
 {
+    public enum PuzzleSourceMode
+    {
+        Both = 0,
+        PrebuiltOnly = 1,
+        DynamicOnly = 2
+    }
+
     // Storage Configuration (at top - most important)
     /// <summary>Custom storage path for save data. Empty = default (user://)</summary>
     public string CustomStoragePath { get; set; } = "";
+
+    /// <summary>Sprache (0 = Deutsch, 1 = Englisch)</summary>
+    public int LanguageIndex { get; set; } = 0;
 
     /// <summary>Aktuelles Theme (0 = Hell, 1 = Dunkel)</summary>
     public int ThemeIndex { get; set; } = 0;
@@ -48,6 +58,12 @@ public class SettingsData
     /// <summary>UI-Skalierung in Prozent (z.B. 100 = normal)</summary>
     public int UiScalePercent { get; set; } = 100;
 
+    /// <summary>Where new puzzles come from (prebuilt vs. dynamic generation)</summary>
+    public PuzzleSourceMode PuzzlesMode { get; set; } = PuzzleSourceMode.Both;
+
+    /// <summary>Completed prebuilt puzzles (by puzzle id)</summary>
+    public List<string> CompletedPrebuiltPuzzleIds { get; set; } = new();
+
     // Notes assistant
     /// <summary>Nach dem Setzen einer Zahl: entferne diese Zahl automatisch aus Notizen in Zeile/Spalte/Block</summary>
     public bool SmartNoteCleanupEnabled { get; set; } = true;
@@ -79,6 +95,7 @@ public class SettingsData
     public List<string>? TechniquesEasy { get; set; }
     public List<string>? TechniquesMedium { get; set; }
     public List<string>? TechniquesHard { get; set; }
+    public List<string>? TechniquesInsane { get; set; }
 
     // Mistake heatmap (aggregated over games)
     public List<int> MistakeHeatmap9 { get; set; } = new(); // 81 entries
@@ -107,6 +124,21 @@ public class SettingsData
     public bool HasCompletedDaily(string date)
     {
         return DailyCompletedDates.Contains(date);
+    }
+
+    public bool HasCompletedPrebuiltPuzzle(string puzzleId)
+    {
+        if (string.IsNullOrWhiteSpace(puzzleId)) return false;
+        return CompletedPrebuiltPuzzleIds.Contains(puzzleId);
+    }
+
+    public void MarkPrebuiltPuzzleCompleted(string puzzleId)
+    {
+        if (string.IsNullOrWhiteSpace(puzzleId)) return;
+        if (!CompletedPrebuiltPuzzleIds.Contains(puzzleId))
+        {
+            CompletedPrebuiltPuzzleIds.Add(puzzleId);
+        }
     }
 
     public void MarkDailyCompleted(string date)
@@ -179,6 +211,7 @@ public class SettingsData
             Difficulty.Easy => TechniquesEasy,
             Difficulty.Medium => TechniquesMedium,
             Difficulty.Hard => TechniquesHard,
+            Difficulty.Insane => TechniquesInsane,
             _ => null
         };
         return list != null && list.Count > 0 ? new HashSet<string>(list) : null;
@@ -204,6 +237,9 @@ public class SettingsData
             case Difficulty.Hard:
                 TechniquesHard = list;
                 break;
+            case Difficulty.Insane:
+                TechniquesInsane = list;
+                break;
         }
     }
 
@@ -216,6 +252,7 @@ public class SettingsData
         TechniquesEasy = null;
         TechniquesMedium = null;
         TechniquesHard = null;
+        TechniquesInsane = null;
     }
 
     private static void EnsureListSize(List<int> list, int size)
@@ -234,6 +271,7 @@ public class SettingsData
         return new SettingsData
         {
             CustomStoragePath = CustomStoragePath,
+            LanguageIndex = LanguageIndex,
             ThemeIndex = ThemeIndex,
             DeadlyModeEnabled = DeadlyModeEnabled,
             HideCompletedNumbers = HideCompletedNumbers,
@@ -247,6 +285,8 @@ public class SettingsData
             LearnModeEnabled = LearnModeEnabled,
             ColorblindPaletteEnabled = ColorblindPaletteEnabled,
             UiScalePercent = UiScalePercent,
+            PuzzlesMode = PuzzlesMode,
+            CompletedPrebuiltPuzzleIds = new List<string>(CompletedPrebuiltPuzzleIds),
             SmartNoteCleanupEnabled = SmartNoteCleanupEnabled,
             HouseAutoFillEnabled = HouseAutoFillEnabled,
             DailyCompletedDates = new List<string>(DailyCompletedDates),
@@ -264,6 +304,7 @@ public class SettingsData
             TechniquesEasy = TechniquesEasy is { } easy ? new List<string>(easy) : null,
             TechniquesMedium = TechniquesMedium is { } medium ? new List<string>(medium) : null,
             TechniquesHard = TechniquesHard is { } hard ? new List<string>(hard) : null,
+            TechniquesInsane = TechniquesInsane is { } insane ? new List<string>(insane) : null,
             MistakeHeatmap9 = new List<int>(MistakeHeatmap9),
             MistakeHeatmap4 = new List<int>(MistakeHeatmap4)
         };

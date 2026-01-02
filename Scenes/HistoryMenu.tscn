@@ -18,8 +18,8 @@ offset_left = 16
 offset_top = 16
 offset_right = 116
 offset_bottom = 56
-tooltip_text = "Zurück zum Hauptmenü"
-text = "← Zurück"
+tooltip_text = ""
+text = ""
 
 [node name="Title" type="Label" parent="."]
 layout_mode = 1
@@ -32,7 +32,7 @@ offset_right = 200
 offset_bottom = 56
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 28
-text = "Spielverlauf"
+text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -46,7 +46,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(700, 400)
+custom_minimum_size = Vector2(700, 520)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
@@ -69,5 +69,5 @@ theme_override_constants/separation = 8
 
 [node name="EmptyLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/ScrollContainer/HistoryList"]
 layout_mode = 2
-text = "Noch keine Spiele gespielt."
+text = ""
 horizontal_alignment = 1

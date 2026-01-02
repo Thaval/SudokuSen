@@ -7,10 +7,11 @@ namespace SudokuSen.Models;
 /// </summary>
 public enum Difficulty
 {
-    Kids,   // 4x4 Grid (2x2 Blöcke)
-    Easy,
-    Medium,
-    Hard
+    Kids,       // 4x4 Grid (2x2 Blöcke)
+    Easy,       // 9x9, einfach (nur Singles)
+    Medium,     // 9x9, mittel (+ Pairs, Pointing Pairs)
+    Hard,       // 9x9, schwer (+ X-Wing, Swordfish etc.)
+    Insane  // 9x9, insane (alle Techniken, minimale Hinweise)
 }
 
 /// <summary>
@@ -65,6 +66,9 @@ public class SudokuGameState
     // Tutorial
     public bool IsTutorial { get; set; } = false;
     public string? TutorialId { get; set; }
+
+    // Prebuilt puzzles
+    public string? PrebuiltPuzzleId { get; set; }
 
     // Challenge Modes (snapshot at game start)
     public bool ChallengeNoNotes { get; set; } = false;
@@ -177,6 +181,7 @@ public class SudokuGameState
             ScenarioTechnique = ScenarioTechnique,
             IsTutorial = IsTutorial,
             TutorialId = TutorialId,
+            PrebuiltPuzzleId = PrebuiltPuzzleId,
             ChallengeNoNotes = ChallengeNoNotes,
             ChallengePerfectRun = ChallengePerfectRun,
             ChallengeHintLimit = ChallengeHintLimit,

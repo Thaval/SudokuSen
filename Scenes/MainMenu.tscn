@@ -43,14 +43,14 @@ horizontal_alignment = 1
 [node name="Subtitle" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "Ein klassisches Zahlenrätsel"
+text = ""
 horizontal_alignment = 1
 modulate = Color(0.5, 0.5, 0.5, 1)
 
 [node name="DailyInfo" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
-text = "Daily offen"
+text = ""
 horizontal_alignment = 1
 modulate = Color(0.5, 0.5, 0.5, 1)
 
@@ -65,57 +65,64 @@ theme_override_constants/separation = 12
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Setzt dein letztes Spiel fort"
-text = "▶️ Spiel fortsetzen"
+tooltip_text = ""
+text = ""
 
 [node name="StartButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Startet ein neues Sudoku-Rätsel mit wählbarer Schwierigkeit"
-text = "🆕 Neues Spiel"
+tooltip_text = ""
+text = ""
 
 [node name="DailyButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Jeden Tag ein neues Rätsel - für alle Spieler identisch!"
-text = "📅 Daily Sudoku"
+tooltip_text = ""
+text = ""
+
+[node name="PuzzlesButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+focus_mode = 2
+tooltip_text = ""
+text = ""
 
 [node name="ScenariosButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Vordefinierte Puzzle-Situationen zum Üben bestimmter Techniken"
-text = "🎯 Szenarien"
-
-[node name="SettingsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-focus_mode = 2
-tooltip_text = "Spieleinstellungen, Audio und Darstellung anpassen"
-text = "⚙️ Einstellungen"
+tooltip_text = ""
+text = ""
 
 [node name="HistoryButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Zeigt alle gespielten Partien und deren Ergebnisse"
-text = "📜 Verlauf"
+tooltip_text = ""
+text = ""
 
 [node name="StatsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Deine Spielstatistik pro Schwierigkeit"
-text = "📊 Statistik"
+tooltip_text = ""
+text = ""
 
 [node name="TipsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Lerne Sudoku-Strategien und Lösungstechniken"
-text = "💡 Tipps & Tricks"
+tooltip_text = ""
+text = ""
+
+[node name="SettingsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+focus_mode = 2
+tooltip_text = ""
+text = ""
 
 [node name="HSeparator2" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
 layout_mode = 2
@@ -124,5 +131,5 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 2
-tooltip_text = "Beendet das Spiel (aktuelles Spiel wird automatisch gespeichert)"
-text = "🚪 Beenden"
+tooltip_text = ""
+text = ""

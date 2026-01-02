@@ -1,3 +1,5 @@
+using SudokuSen.Services;
+
 namespace SudokuSen.Models;
 
 /// <summary>
@@ -47,6 +49,13 @@ public class HistoryEntry
     /// <summary>Technik-ID wenn IsScenario</summary>
     public string? ScenarioTechnique { get; set; }
 
+    /// <summary>Referenz auf vorgefertigtes Puzzle (falls verwendet)</summary>
+    public string? PrebuiltPuzzleId { get; set; }
+
+    // Puzzle reconstruction for history replay
+    public List<int> SolutionDigits { get; set; } = new(); // flattened row-major, 81 entries for 9x9 or 16 for 4x4
+    public List<bool> Givens { get; set; } = new();        // same length as SolutionDigits
+
     /// <summary>
     /// Erstellt einen HistoryEntry aus einem GameState
     /// </summary>
@@ -66,8 +75,114 @@ public class HistoryEntry
             IsTutorial = state.IsTutorial,
             TutorialId = state.TutorialId,
             IsScenario = state.IsScenario || !string.IsNullOrEmpty(state.ScenarioTechnique),
-            ScenarioTechnique = state.ScenarioTechnique
+            ScenarioTechnique = state.ScenarioTechnique,
+            PrebuiltPuzzleId = state.PrebuiltPuzzleId,
+            SolutionDigits = FlattenSolutions(state),
+            Givens = FlattenGivens(state)
         };
+    }
+
+    private static List<int> FlattenSolutions(SudokuGameState state)
+    {
+        var list = new List<int>(state.GridSize * state.GridSize);
+        int size = state.GridSize;
+        for (int r = 0; r < size; r++)
+        {
+            for (int c = 0; c < size; c++)
+            {
+                list.Add(state.Grid[r, c].Solution);
+            }
+        }
+        return list;
+    }
+
+    private static List<bool> FlattenGivens(SudokuGameState state)
+    {
+        var list = new List<bool>(state.GridSize * state.GridSize);
+        int size = state.GridSize;
+        for (int r = 0; r < size; r++)
+        {
+            for (int c = 0; c < size; c++)
+            {
+                list.Add(state.Grid[r, c].IsGiven);
+            }
+        }
+        return list;
+    }
+
+    public bool HasReplayData =>
+        (SolutionDigits.Count > 0 && SolutionDigits.Count == Givens.Count)
+        || !string.IsNullOrWhiteSpace(PrebuiltPuzzleId);
+
+    /// <summary>
+    /// Rebuilds the original puzzle state (givens + solution) for history replay.
+    /// </summary>
+    public SudokuGameState ToPuzzleState()
+    {
+        if (!HasReplayData)
+            throw new InvalidOperationException("History entry lacks replay data");
+
+        // 1) If solution digits are present, rebuild directly.
+        if (SolutionDigits.Count > 0 && SolutionDigits.Count == Givens.Count)
+        {
+            int count = SolutionDigits.Count;
+            int size = count == 16 ? 4 : 9;
+
+            var state = new SudokuGameState
+            {
+                Difficulty = Difficulty,
+                StartTime = StartTime,
+                Status = GameStatus.InProgress,
+                IsDeadlyMode = WasDeadlyMode,
+                IsDaily = IsDaily,
+                DailyDate = DailyDate,
+                IsScenario = IsScenario,
+                ScenarioTechnique = ScenarioTechnique,
+                IsTutorial = IsTutorial,
+                TutorialId = TutorialId,
+                PrebuiltPuzzleId = PrebuiltPuzzleId
+            };
+
+            for (int r = 0; r < size; r++)
+            {
+                for (int c = 0; c < size; c++)
+                {
+                    int idx = r * size + c;
+                    int sol = SolutionDigits[idx];
+                    bool given = Givens[idx];
+                    state.Grid[r, c] = new SudokuCell
+                    {
+                        Solution = sol,
+                        Value = given ? sol : 0,
+                        IsGiven = given,
+                        Notes = new bool[size == 4 ? 4 : 9]
+                    };
+                }
+            }
+
+            return state;
+        }
+
+        // 2) Otherwise, try prebuilt puzzle reconstruction.
+        if (!string.IsNullOrWhiteSpace(PrebuiltPuzzleId))
+        {
+            var puzzle = PrebuiltPuzzleLibrary.GetById(PrebuiltPuzzleId);
+            if (puzzle == null)
+                throw new InvalidOperationException($"Prebuilt puzzle not found: {PrebuiltPuzzleId}");
+
+            var state = puzzle.ToGameState();
+            state.Difficulty = Difficulty;
+            state.IsDaily = IsDaily;
+            state.DailyDate = DailyDate;
+            state.IsScenario = IsScenario;
+            state.ScenarioTechnique = ScenarioTechnique;
+            state.IsTutorial = IsTutorial;
+            state.TutorialId = TutorialId;
+            state.IsDeadlyMode = WasDeadlyMode;
+            return state;
+        }
+
+        throw new InvalidOperationException("History entry lacks usable replay data");
     }
 
     public string GetFormattedDuration()
@@ -80,25 +195,19 @@ public class HistoryEntry
 
     public string GetStatusText()
     {
+        var loc = LocalizationService.Instance;
         return Status switch
         {
-            GameStatus.Won => "✓ Gewonnen",
-            GameStatus.Lost => "✗ Verloren",
-            GameStatus.Abandoned => "⏸ Abgebrochen",
-            GameStatus.InProgress => "▶ Läuft",
-            _ => "Unbekannt"
+            GameStatus.Won => $"✓ {loc.Get("history.won")}",
+            GameStatus.Lost => $"✗ {loc.Get("history.lost")}",
+            GameStatus.Abandoned => $"⏸ {loc.Get("history.abandoned")}",
+            GameStatus.InProgress => $"▶ {loc.Get("history.in_progress")}",
+            _ => loc.Get("common.unknown")
         };
     }
 
     public string GetDifficultyText()
     {
-        return Difficulty switch
-        {
-            Difficulty.Kids => "👶 Kids",
-            Difficulty.Easy => "🟢 Leicht",
-            Difficulty.Medium => "🟡 Mittel",
-            Difficulty.Hard => "🔴 Schwer",
-            _ => "Unbekannt"
-        };
+        return LocalizationService.Instance.GetDifficultyDisplay(Difficulty);
     }
 }
