@@ -866,6 +866,14 @@ public partial class GameScene : Control
             var colors = _themeService.CurrentColors;
             _hintButton.AddThemeColorOverride("font_color", (limit > 0 && remaining == 0) ? colors.TextSecondary : colors.TextPrimary);
         }
+
+        // Solution path is only available for 9x9 grids (not Kids mode)
+        if (_solutionPathButton != null)
+        {
+            bool is9x9 = _gameState.GridSize == 9;
+            _solutionPathButton.Visible = is9x9;
+            _solutionPathButton.Disabled = !is9x9;
+        }
     }
 
     private void UpdateDifficultyLabel()
@@ -2614,14 +2622,10 @@ public partial class GameScene : Control
             return;
         }
 
-        // Position to the left of the grid
+        // Position to the far left of the screen
         var gridRect = _gridPanel.GetGlobalRect();
-        var backRect = _backButton.GetGlobalRect();
-        float desiredLeft = backRect.Position.X; // align with Back button left edge
-        float maxLeft = gridRect.Position.X - _solutionPathDetailPanel.Size.X - 16; // keep clear of grid
-        float left = Mathf.Min(desiredLeft, maxLeft);
         _solutionPathDetailPanel.Position = new Vector2(
-            Mathf.Max(8, left),  // keep inside viewport
+            8,  // Always at far left with 8px margin
             gridRect.Position.Y   // Align top with grid
         );
 
@@ -2661,19 +2665,8 @@ public partial class GameScene : Control
         var gridRect = _gridPanel.GetGlobalRect();
         var overlaySize = _solutionPathDetailPanel.Size;
 
-        // Try to position to the left of the grid
-        float leftOfGrid = gridRect.Position.X - overlaySize.X - 16;
-
-        float x;
-        if (leftOfGrid >= 8)
-        {
-            x = leftOfGrid;
-        }
-        else
-        {
-            // Not enough room on the left, position at left edge with margin
-            x = 8;
-        }
+        // Position to the far left of the screen
+        float x = 8; // Always at far left with 8px margin
 
         // Vertical positioning: align with grid top, but ensure it's within viewport
         float y = gridRect.Position.Y;

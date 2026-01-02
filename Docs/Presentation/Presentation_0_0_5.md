@@ -1,129 +1,146 @@
-# 🧩 SudokuSen - Benutzerhandbuch
+# 🧩 SudokuSen - User Guide
 
-**Ein modernes Sudoku-Spiel für Desktop – entwickelt mit Godot 4 & C#**
+**A modern Sudoku game for Desktop**
 
 *Version 0.0.5*
 
 ---
 
-## 🏠 Willkommen
+## 📋 Requirements
 
-SudokuSen bietet ein elegantes, benutzerfreundliches Sudoku-Erlebnis mit mehreren Schwierigkeitsstufen, intelligenten Hinweisen und umfangreichen Statistiken.
-
-![Homescreen](screenshots/0.0.5/HomeScreen.png)
-
-### Hauptmenü
-
-Das Hauptmenü bietet alle wichtigen Funktionen auf einen Blick – jetzt mit Icons für bessere Übersicht:
-
-| Menüpunkt | Icon | Beschreibung |
-|-----------|------|--------------|
-| Weiterspielen | ▶️ | Setze dein laufendes Spiel fort |
-| Neues Spiel | 🆕 | Starte ein frisches Sudoku |
-| Tägliches Rätsel | 📅 | Ein neues Puzzle jeden Tag |
-| Szenarien | 🎯 | Trainiere spezifische Techniken |
-| Tipps & Tutorials | 💡 | Lerne Sudoku-Strategien |
-| Puzzles | 🧩 | Vorgefertigte Rätsel spielen |
-| Historie | 📜 | Siehe alle gespielten Partien |
-| Statistik | 📊 | Verfolge deine Fortschritte |
-| Einstellungen | ⚙️ | Passe das Spiel an |
-| Beenden | 🚪 | Spiel schließen |
-
-Falls eine bestehende Partie offen ist, kannst du diese mit **Weiterspielen** direkt fortsetzen.
+- **Windows 10/11** (64-bit)
+- **.NET 8 Runtime** – Download from [Microsoft](https://dotnet.microsoft.com/download/dotnet/8.0) if not installed
 
 ---
 
-## 🎯 Schwierigkeitsstufen
+## 🏠 Welcome
 
-Wähle aus fünf verschiedenen Schwierigkeitsgraden – vom kinderfreundlichen 4×4 bis zum herausfordernden Insane-Modus.
+SudokuSen offers an elegant, user-friendly Sudoku experience with multiple difficulty levels, intelligent hints, and comprehensive statistics.
 
-| Stufe | Raster | Hinweise | Beschreibung |
-|-------|--------|----------|--------------|
-| 👶 **Kids** | 4×4 | 8 | Perfekt für Einsteiger und Kinder (Zahlen 1-4) |
-| 🟢 **Leicht** | 9×9 | 46 | Naked Single, Hidden Single |
-| 🟠 **Mittel** | 9×9 | 36 | + Naked Pair, Pointing Pair |
-| 🔴 **Schwer** | 9×9 | 26 | + X-Wing, Swordfish, XY-Wing |
-| 💀 **Insane** | 9×9 | 21 | Alle Techniken erforderlich |
+![Home Screen](screenshots/0.0.5/HomeScreen.png)
 
----
+### Main Menu
 
-## 👶 Kids-Modus
+The main menu provides all important functions at a glance – now with icons for better overview:
 
-Ein vereinfachtes 4×4-Raster mit großen Zellen – ideal für Kinder und Sudoku-Neulinge.
+| Menu Item | Icon | Description |
+|-----------|------|-------------|
+| Continue | ▶️ | Resume your current game |
+| New Game | 🆕 | Start a fresh Sudoku |
+| Daily Puzzle | 📅 | A new puzzle every day |
+| Scenarios | 🎯 | Train specific techniques |
+| Tips & Tutorials | 💡 | Learn Sudoku strategies |
+| Puzzles | 🧩 | Play pre-built puzzles |
+| History | 📜 | View all played games |
+| Statistics | 📊 | Track your progress |
+| Settings | ⚙️ | Customize the game |
+| Exit | 🚪 | Close the game |
 
-### Kids-Features:
-- Übersichtliches 4×4-Gitter mit 2×2-Blöcken
-- Nur Zahlen 1-4
-- Extra große, gut lesbare Zellen
-- Sanfter Einstieg in die Sudoku-Logik
-
----
-
-## 🎮 Spieloberfläche
-
-Die klassische 9×9-Spielansicht mit allen wichtigen Funktionen auf einen Blick.
-
-![In-Game](screenshots/0.0.5/IngameReplay.png)
-
-### Spielelemente:
-- ⏱️ **Timer** – Messe deine Zeit
-- ❌ **Fehlerzähler** – Behalte deine Fehler im Blick
-- ✏️ **Notizen-Modus** – Markiere mögliche Kandidaten (blau)
-- 📋 **Auto-Kandidaten** – Automatische Anzeige aller Möglichkeiten (grau)
-- 💡 **Hinweise** – Intelligente Tipps mit visueller Erklärung
-- 🔢 **Zahlenpad** – Intuitive Eingabe per Klick oder Tastatur
-- 🛤️ **Lösungspfad** – Zeigt alle Schritte zur Lösung
-
-### Steuerung:
-
-| Aktion | Eingabe |
-|--------|---------|
-| Zelle auswählen | Mausklick |
-| Zahl eingeben | 1-9 (Tastatur oder Numpad) |
-| Zahl löschen | Entf, Backspace oder Radierer |
-| Notizen-Modus | N |
-| Mehrfachauswahl | Ctrl + Klick |
-| Bereichsauswahl | Shift + Klick |
-| Navigation | Pfeiltasten |
-| Zurück | ESC |
-
-### Hervorhebungen:
-- **Ausgewählte Zelle** – Die aktive Zelle wird hervorgehoben
-- **Verwandte Zellen** – Zeile, Spalte und Block werden markiert
-- **Gleiche Zahlen** – Alle identischen Ziffern werden hervorgehoben
-
-### Notizen-Modus:
-Der Notizen-Modus (Taste **N** oder Bleistift-Button) ermöglicht das Eintragen von Kandidaten:
-- Aktiviert: Zahlen werden als kleine Notizen eingetragen
-- Bei Mehrfachauswahl: Notiz wird in alle ausgewählten Zellen eingetragen
-
-**Hinweis**: Bei deaktiviertem Notizen-Modus und Mehrfachauswahl wird die Zahl nur in die zuletzt gewählte Zelle (dunkelblau) eingetragen.
+If you have an ongoing game, you can continue it directly with **Continue**.
 
 ---
 
-## 💡 Hinweis-System
+## 🎯 Difficulty Levels
 
-Das intelligente Hinweis-System hilft dir, ohne die Lösung direkt zu verraten.
+Choose from five different difficulty levels – from kid-friendly 4×4 to challenging Insane mode.
 
-### Hinweise in 4 Schritten:
+| Level | Grid | Clues | Description |
+|-------|------|-------|-------------|
+| 👶 **Kids** | 4×4 | 8 | Perfect for beginners and children (numbers 1-4) |
+| 🟢 **Easy** | 9×9 | 46 | Naked Single, Hidden Single |
+| 🟠 **Medium** | 9×9 | 36 | + Naked Pair, Pointing Pair |
+| 🔴 **Hard** | 9×9 | 26 | + X-Wing, Swordfish, XY-Wing |
+| 💀 **Insane** | 9×9 | 21 | All techniques required |
 
-1. **Zelle zeigen** – Welche Zelle ist relevant? (Du kannst noch selbst knobeln!)
-2. **Kontext zeigen** – Relevante Zellen werden hervorgehoben
-3. **Lösung zeigen** – Die korrekte Zahl wird angezeigt
-4. **Erklärung** – Warum ist diese Lösung korrekt?
+![Choose Difficulty](screenshots/0.0.5/NewGameChooseDifficulty.png)
 
-### Menschenfreundliche Erklärungen
+---
 
-Die Hinweise zeigen jetzt **warum** eine Zahl an einer Stelle steht:
+## 👶 Kids Mode
 
-> "Die 6 kann nur in A2 stehen, weil die 6en bei B6, C9, F3 alle anderen Zellen blockieren."
+A simplified 4×4 grid with large cells – ideal for children and Sudoku beginners.
 
-Die Erklärungen:
-- Referenzieren die **blockierenden Zahlen** im Raster
-- Verwenden **A1-Notation** (wie beim Schach)
-- Machen die Logik **nachvollziehbar**
+![Kids Mode](screenshots/0.0.5/IngameKids.png)
 
-### A1-Notation:
+### Kids Features:
+- Clear 4×4 grid with 2×2 blocks
+- Only numbers 1-4
+- Extra large, easy-to-read cells
+- Gentle introduction to Sudoku logic
+
+Optionally, all candidates can be displayed automatically – helpful for first steps.
+
+![Kids with Auto-Notes](screenshots/0.0.5/IngameKidsAllNotesToggleOn.png)
+
+---
+
+## 🎮 Game Interface
+
+The classic 9×9 game view with all important features at a glance.
+
+![In-Game](screenshots/0.0.5/IngameNormal.png)
+
+### Game Elements:
+- ⏱️ **Timer** – Track your time
+- ❌ **Mistake Counter** – Keep track of your errors
+- ✏️ **Notes Mode** – Mark possible candidates (blue)
+- 📋 **Auto-Candidates** – Automatic display of all possibilities (gray)
+- 💡 **Hints** – Intelligent tips with visual explanation
+- 🔢 **Number Pad** – Intuitive input via click or keyboard
+- 🛤️ **Solution Path** – Shows all steps to solve the puzzle
+
+### Controls:
+
+| Action | Input |
+|--------|-------|
+| Select cell | Mouse click |
+| Enter number | 1-9 (keyboard or numpad) |
+| Delete number | Del, Backspace, or Eraser |
+| Notes mode | N |
+| Multi-select | Ctrl + Click |
+| Range select | Shift + Click |
+| Navigation | Arrow keys |
+| Back | ESC |
+
+### Highlights:
+- **Selected Cell** – The active cell is highlighted
+- **Related Cells** – Row, column, and block are marked
+- **Same Numbers** – All identical digits are highlighted
+
+### Notes Mode:
+Notes mode (key **N** or pencil button) allows entering candidates:
+- Enabled: Numbers are entered as small notes
+- With multi-select: Note is entered in all selected cells
+
+**Note**: With notes mode disabled and multi-select, the number is only entered in the last selected cell (dark blue).
+
+![Notes and Auto-Candidates](screenshots/0.0.5/IngameNormalAllNotesToggled.png)
+
+---
+
+## 💡 Hint System
+
+The intelligent hint system helps you without directly revealing the solution.
+
+### Hints in 4 Steps:
+
+1. **Show Cell** – Which cell is relevant? (You can still figure it out yourself!)
+2. **Show Context** – Relevant cells are highlighted
+3. **Show Solution** – The correct number is displayed
+4. **Explanation** – Why is this solution correct?
+
+### Human-Friendly Explanations
+
+Hints now show **why** a number belongs in a position:
+
+> "The 6 can only go in A2 because the 6s at B6, C9, F3 block all other cells."
+
+The explanations:
+- Reference the **blocking numbers** in the grid
+- Use **A1 notation** (like chess)
+- Make the logic **understandable**
+
+### A1 Notation:
 
 | | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 |--|---|---|---|---|---|---|---|---|---|
@@ -134,209 +151,198 @@ Die Erklärungen:
 
 ---
 
-## 🛤️ Lösungspfad
+## 🛤️ Solution Path
 
-Der Lösungspfad zeigt dir alle Schritte, um das aktuelle Puzzle zu lösen.
+The solution path shows you all steps to solve the current puzzle.
 
-### Funktionen:
-- **Toggle-Button** – Ein Klick öffnet, ein weiterer schließt den Lösungspfad
-- **Klickbare Schritte** – Klicke auf einen Schritt für Details
-- **Detail-Panel** – Zeigt Technik, Zelle und ausführliche Erklärung
+### Features:
+- **Toggle Button** – One click opens, another closes the solution path
+- **Clickable Steps** – Click on a step for details
+- **Detail Panel** – Shows technique, cell, and detailed explanation
 
-### Verwendung:
-1. Klicke auf den **Lösungspfad-Button** (rechts oben)
-2. Das Overlay erscheint mit allen Lösungsschritten
-3. Klicke auf einen Schritt für die detaillierte Erklärung
-4. Das Detail-Panel erscheint links neben dem Raster
+![Solution Path Overlay](screenshots/0.0.5/IngameNormalSolutionPath.png)
 
-Das Detail-Panel zeigt:
-- **Technik-Name** (z.B. "Hidden Single")
-- **Betroffene Zelle** (z.B. "A2 = 6")
-- **Warum** diese Lösung korrekt ist
-- **Verwandte Zellen** die zur Lösung beitragen
+### Usage:
+1. Click the **Solution Path button** (top right)
+2. The overlay appears with all solution steps
+3. Click on a step for the detailed explanation
+4. The detail panel appears to the left of the grid
+
+The detail panel shows:
+- **Technique name** (e.g., "Hidden Single")
+- **Affected cell** (e.g., "A2 = 6")
+- **Why** this solution is correct
+- **Related cells** that contribute to the solution
 
 ---
 
-## 🎯 Szenarien & Tutorials
+## 🎯 Scenarios & Tutorials
 
-Trainiere spezifische Sudoku-Techniken mit vorbereiteten Szenarien.
+Train specific Sudoku techniques with prepared scenarios.
 
-![Szenarien - Tutorials](screenshots/0.0.5/ScenariosTutorials.png)
+![Scenarios - Tutorials](screenshots/0.0.5/ScenariosTutorials.png)
 
-### Tutorial-Szenarien:
-Lerne die Grundlagen mit geführten Tutorials:
-- Einführung in Sudoku-Regeln
-- Erste Schritte mit Notizen
-- Grundlegende Lösungstechniken
+### Tutorial Scenarios:
+Learn the basics with guided tutorials:
+- Introduction to Sudoku rules
+- First steps with notes
+- Basic solving techniques
 
-![Szenarien - Techniken Easy](screenshots/0.0.5/ScenariosTechniquesEasy.png)
+![Scenarios - Techniques Easy](screenshots/0.0.5/ScenariosTechniquesEasy.png)
 
-### Technik-Szenarien:
-Übe spezifische Techniken isoliert:
+### Technique Scenarios:
+Practice specific techniques in isolation:
 - **Level 1** – Naked Single, Hidden Single
 - **Level 2** – Naked Pair, Hidden Pair, Pointing Pair
 - **Level 3** – X-Wing, Swordfish, Box/Line Reduction
-- **Level 4** – Fortgeschrittene Techniken
+- **Level 4** – Advanced techniques
 
 ---
 
-## 🧩 Vorgefertigte Puzzles
+## 🧩 Pre-Built Puzzles
 
-Spiele handverlesene Puzzles mit bekannter Schwierigkeit.
+Play hand-picked puzzles with known difficulty.
 
-![Vorgefertigte Puzzles](screenshots/0.0.5/PreBuiltPuzzles.png)
+![Pre-Built Puzzles](screenshots/0.0.5/PreBuiltPuzzles.png)
 
 ### Features:
-- Sortiert nach Schwierigkeit
-- Fortschritt wird gespeichert
-- Perfekt zum gezielten Üben
+- Sorted by difficulty
+- Progress is saved
+- Perfect for targeted practice
 
 ---
 
-## 📜 Spielverlauf
+## 📜 Game History
 
-Behalte den Überblick über alle deine gespielten Partien.
+Keep track of all your played games.
 
-![Historie](screenshots/0.0.5/GameHistory.png)
+![History](screenshots/0.0.5/GameHistory.png)
 
-### Verlauf-Features:
-- Chronologische Auflistung aller Spiele
-- Schwierigkeit, Zeit und Ergebnis auf einen Blick
-- Farbcodierung: ✅ Gewonnen | ❌ Verloren | ⏸️ Abgebrochen
-- **Replay-Funktion** – Spiele alte Partien erneut
+### History Features:
+- Chronological listing of all games
+- Difficulty, time, and result at a glance
+- Color coding: ✅ Won | ❌ Lost | ⏸️ Abandoned
+- **Replay Function** – Replay old games
 
 ---
 
-## 💡 Tipps & Tricks
+## 💡 Tips & Tricks
 
-Lerne fortgeschrittene Sudoku-Techniken mit interaktiven Erklärungen.
+Learn advanced Sudoku techniques with interactive explanations.
 
-### Enthaltene Techniken:
+![Tips & Tricks Example](screenshots/0.0.5/IngameNormalTippsAndTricks1.png)
+![Tips & Tricks Detail](screenshots/0.0.5/IngameNormalTippsAndTricks3.png)
 
-| Technik | Beschreibung |
-|---------|--------------|
-| **Naked Single** | Nur eine Zahl möglich in einer Zelle |
-| **Hidden Single** | Zahl nur an einer Stelle in Zeile/Spalte/Block |
-| **Naked Pair** | Zwei Zellen mit gleichen Kandidaten |
-| **Hidden Pair** | Zwei Kandidaten nur in zwei Zellen |
-| **Pointing Pair** | Kandidaten zeigen auf eine Richtung |
-| **Box/Line Reduction** | Block-Zeilen-Interaktion |
-| **X-Wing** | Fortgeschrittene Eliminierungstechnik |
-| **Swordfish** | Erweiterte X-Wing-Variante |
-| **XY-Wing** | Drei-Zellen-Kette |
-| **Unique Rectangle** | Verhindert mehrdeutige Lösungen |
-| **Finned X-Wing** | X-Wing mit zusätzlicher "Flosse" |
-| **Remote Pair** | Ketten identischer Kandidaten-Paare |
+### Included Techniques:
+
+| Technique | Description |
+|-----------|-------------|
+| **Naked Single** | Only one number possible in a cell |
+| **Hidden Single** | Number only possible in one place in row/column/block |
+| **Naked Pair** | Two cells with the same candidates |
+| **Hidden Pair** | Two candidates only in two cells |
+| **Pointing Pair** | Candidates point in one direction |
+| **Box/Line Reduction** | Block-row interaction |
+| **X-Wing** | Advanced elimination technique |
+| **Swordfish** | Extended X-Wing variant |
+| **XY-Wing** | Three-cell chain |
+| **Unique Rectangle** | Prevents ambiguous solutions |
+| **Finned X-Wing** | X-Wing with additional "fin" |
+| **Remote Pair** | Chains of identical candidate pairs |
 | **BUG+1** | Bivalue Universal Grave |
 | **ALS-XZ Rule** | Almost Locked Sets |
-| **Forcing Chains** | Wenn-Dann-Ketten |
+| **Forcing Chains** | If-then chains |
 
-Jede Technik wird mit einem visuellen Mini-Board erklärt!
-
----
-
-## ⚙️ Einstellungen
-
-Passe SudokuSen an deinen Spielstil an.
-
-![Einstellungen](screenshots/0.0.5/Settings.png)
-
-### Optionen:
-
-| Einstellung | Beschreibung |
-|-------------|--------------|
-| 🎨 **Theme** | Hell, Dunkel oder System |
-| 🌍 **Sprache** | Deutsch, English |
-| 🔊 **Soundeffekte** | An/Aus |
-| 🎵 **Musik** | An/Aus |
-| 💀 **Deadly-Modus** | Bei 3 Fehlern Game Over |
-| 🔦 **Verwandte Zellen** | Zeile/Spalte hervorheben |
-| 🔢 **Gleiche Zahlen** | Identische Ziffern markieren |
-| 👁️ **Abgeschlossene ausblenden** | Vollständige Zahlen im Numpad verstecken |
-| 📏 **UI-Skalierung** | Interface-Größe anpassen |
+Each technique is explained with a visual mini-board!
 
 ---
 
-## 📊 Statistiken
+## ⚙️ Settings
 
-Verfolge deinen Fortschritt über alle Schwierigkeitsgrade.
+Customize SudokuSen to your play style.
 
-### Angezeigte Werte:
-- Gespielte Partien pro Schwierigkeit
-- Gewinnrate
-- Durchschnittliche Zeit
-- Durchschnittliche Fehler
-- Beste Zeit
-- Aktuelle Gewinnsträhne
+![Settings](screenshots/0.0.5/Settings.png)
+
+### Options:
+
+| Setting | Description |
+|---------|-------------|
+| 🎨 **Theme** | Light, Dark, or System |
+| 🌍 **Language** | German, English |
+| 🔊 **Sound Effects** | On/Off |
+| 🎵 **Music** | On/Off |
+| 💀 **Deadly Mode** | Game Over after 3 mistakes |
+| 🔦 **Related Cells** | Highlight row/column |
+| 🔢 **Same Numbers** | Mark identical digits |
+| 👁️ **Hide Completed** | Hide complete numbers in numpad |
+| 📏 **UI Scale** | Adjust interface size |
 
 ---
 
-## 📅 Tägliches Rätsel
+## 📊 Statistics
 
-Jeden Tag ein neues Puzzle – alle Spieler weltweit bekommen das gleiche!
+Track your progress across all difficulty levels.
+
+### Displayed Values:
+- Games played per difficulty
+- Win rate
+- Average time
+- Average mistakes
+- Best time
+- Current win streak
+
+---
+
+## 📅 Daily Puzzle
+
+A new puzzle every day – all players worldwide get the same one!
 
 ### Features:
-- Neues Puzzle jeden Tag um Mitternacht
-- Streak-Tracking für tägliche Herausforderungen
-- Vergleiche deine Zeit mit anderen
-
----
-
-## 🛠️ Technische Details
-
-| Eigenschaft | Wert |
-|-------------|------|
-| **Engine** | Godot 4.5.1 |
-| **Sprache** | C# / .NET 8 |
-| **Plattform** | Windows (Desktop) |
-| **Speicherung** | Lokale JSON-Dateien |
-
-### Speicherorte:
-- **Einstellungen**: `%APPDATA%/Godot/app_userdata/SudokuSen/settings.json`
-- **Spielstand**: `%APPDATA%/Godot/app_userdata/SudokuSen/savegame.json`
-- **Historie**: `%APPDATA%/Godot/app_userdata/SudokuSen/history.json`
+- New puzzle every day at midnight
+- Streak tracking for daily challenges
+- Compare your time with others
 
 ---
 
 ## 📥 Installation
 
-1. Lade die neueste Version von [GitHub Releases](https://github.com/Thaval/SudokuSen/releases) herunter
-2. Entpacke das ZIP-Archiv in einen beliebigen Ordner
-3. Starte `SudokuSen.exe`
+1. Download the latest version from [GitHub Releases](https://github.com/Thaval/SudokuSen/releases)
+2. Extract the ZIP archive to any folder
+3. Run `SudokuSen.exe`
 
-**Keine Installation erforderlich – einfach spielen!**
+**No installation required – just play!**
 
 ---
 
 ## ❓ FAQ
 
-**Q: Mein Spielstand ist weg!**
-A: Spielstände werden im AppData-Ordner gespeichert. Prüfe `%APPDATA%/Godot/app_userdata/SudokuSen/`.
+**Q: My save is gone!**
+A: Save files are stored in the AppData folder. Check `%APPDATA%/Godot/app_userdata/SudokuSen/`.
 
-**Q: Das Spiel startet nicht.**
-A: Stelle sicher, dass .NET 8 Runtime installiert ist.
+**Q: The game won't start.**
+A: Make sure .NET 8 Runtime is installed.
 
-**Q: Kann ich das Spiel portabel nutzen?**
-A: Ja! Der gesamte Ordner kann kopiert werden. Spielstände bleiben jedoch im AppData.
+**Q: Can I use the game portably?**
+A: Yes! The entire folder can be copied. However, save files remain in AppData.
 
 ---
 
-## 🆕 Neu in Version 0.0.5
+## 🆕 What's New in Version 0.0.5
 
-- **Menü-Icons** – Alle Hauptmenü-Einträge haben jetzt Icons
-- **Lösungspfad-Toggle** – Button öffnet/schließt per Klick
-- **Klickbare Lösungsschritte** – Detail-Panel statt Hover-Tooltips
-- **Menschenfreundliche Erklärungen** – Hinweise zeigen blockierende Zellen
-- **Responsive UI** – Overlays passen sich der Fenstergröße an
-- **Bugfixes** – 15 fehlende Übersetzungen, doppelte Keys entfernt
+- **Menu Icons** – All main menu entries now have icons
+- **Solution Path Toggle** – Button opens/closes with a click
+- **Clickable Solution Steps** – Detail panel instead of hover tooltips
+- **Human-Friendly Explanations** – Hints show blocking cells
+- **Responsive UI** – Overlays adapt to window size
+- **Bug Fixes** – 15 missing translations, duplicate keys removed
 
 ---
 
 <div align="center">
 
-### 🎮 Viel Spaß beim Knobeln!
+### 🎮 Have Fun Puzzling!
 
-*SudokuSen – Dein persönlicher Sudoku-Begleiter*
+*SudokuSen – Your Personal Sudoku Companion*
 
 [GitHub](https://github.com/Thaval/SudokuSen) | [Releases](https://github.com/Thaval/SudokuSen/releases) | [Issues](https://github.com/Thaval/SudokuSen/issues)
 

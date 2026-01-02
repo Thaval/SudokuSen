@@ -88,7 +88,6 @@ MIT License – See [LICENSE](LICENSE) for details.
 Have questions, suggestions, or feedback? Feel free to reach out!
 
 - **GitHub Issues:** [Create an issue](https://github.com/Thaval/SudokuSen/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/Thaval/SudokuSen/discussions)
 
 ---
 
@@ -100,6 +99,7 @@ Enjoying SudokuSen? You can support the project:
   <img src="https://www.paypalobjects.com/en_US/DK/i/btn/btn_donateCC_LG.gif" alt="Donate with PayPal" />
 </a>
 
+<br/>
 <img src="Docs/Pay/QR-Code-PayPalMe.png" alt="PayPal QR Code" width="150" />
 
 ---
